@@ -1,10 +1,18 @@
 import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect } from 'react';
 import 'react-native-reanimated';
+import { 
+  useFonts,
+  ReadexPro_200ExtraLight,
+  ReadexPro_300Light,
+  ReadexPro_400Regular,
+  ReadexPro_500Medium,
+  ReadexPro_600SemiBold,
+  ReadexPro_700Bold
+} from '@expo-google-fonts/readex-pro';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
@@ -68,7 +76,12 @@ function AppContent() {
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    'ReadexPro-Medium': require('../assets/fonts/ReadexPro-Medium.ttf'),
+    ReadexPro_200ExtraLight,
+    ReadexPro_300Light,
+    ReadexPro_400Regular,
+    ReadexPro_500Medium,
+    ReadexPro_600SemiBold,
+    ReadexPro_700Bold,
   });
 
   useEffect(() => {
