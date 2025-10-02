@@ -1,22 +1,17 @@
-// template
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
-import * as SplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-Splaimport { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { useColorScheme } from '../hooks/useColorScheme';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MockAuthProvider } from '../contexts/MockAuthContext';
+
+SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
   const { colors } = useTheme();
@@ -37,6 +32,7 @@ function AppContent() {
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="signin" options={{ headerShown: false }} />
         <Stack.Screen name="signup" options={{ headerShown: false }} />
+        <Stack.Screen name="forgot-password" options={{ headerShown: false }} />
         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="notifications" options={{ headerShown: false }} />
         <Stack.Screen name="symptom-checker" options={{ headerShown: false }} />
@@ -71,12 +67,17 @@ function AppContent() {
 }
 
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, error] = useFonts({
     'ReadexPro-Medium': require('../assets/fonts/ReadexPro-Medium.ttf'),
   });
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  useEffect(() => {
+    if (loaded || error) {
+      SplashScreen.hideAsync();
+    }
+  }, [loaded, error]);
+
+  if (!loaded && !error) {
     return null;
   }
 
@@ -90,30 +91,5 @@ export default function RootLayout() {
         </UserProvider>
       </MockAuthProvider>
     </ThemeProvider>
-  );
-}
-shScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient();
-
-function RootLayoutNav() {
-  return (
-    <Stack screenOptions={{ headerBackTitle: "Back" }}>
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-    </Stack>
-  );
-}
-
-export default function RootLayout() {
-  useEffect(() => {
-    SplashScreen.hideAsync();
-  }, []);
-
-  return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView>
-        <RootLayoutNav />
-      </GestureHandlerRootView>
-    </QueryClientProvider>
   );
 }
