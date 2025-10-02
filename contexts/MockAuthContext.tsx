@@ -23,6 +23,13 @@ export const MockAuthProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const signIn = async (email: string, password: string) => {
     console.log('Mock SignIn:', { email, password });
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    if (email === 'youdoc@gmail.com' && password === 'Password123') {
+      console.log('✅ Login successful');
+      return;
+    }
+    
+    throw new Error('Invalid email or password');
   };
 
   const verifyOTP = async (code: string) => {
