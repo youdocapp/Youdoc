@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import BottomNav from './ui/BottomNav';
@@ -24,14 +24,18 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const { medications } = useMedication();
   const [selectedMonth, setSelectedMonth] = useState<string>('May');
   const [selectedDate, setSelectedDate] = useState<number>(13);
+  const monthsScrollRef = useRef<FlatList>(null);
+  const datesScrollRef = useRef<FlatList>(null);
   
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dates = [
     { day: 11, weekday: 'Sat', dots: 1 },
     { day: 12, weekday: 'Sun', dots: 2 },
     { day: 13, weekday: 'Mon', dots: 0 },
     { day: 14, weekday: 'Tue', dots: 1 },
     { day: 15, weekday: 'Wed', dots: 2 },
+    { day: 16, weekday: 'Thu', dots: 1 },
+    { day: 17, weekday: 'Fri', dots: 0 },
   ];
 
   const styles = StyleSheet.create({
@@ -60,72 +64,80 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#1F2937'
     },
     monthsContainer: {
-      flexDirection: 'row' as const,
+      paddingVertical: 20,
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6'
+    },
+    monthsContentContainer: {
       paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
-      backgroundColor: '#FFFFFF'
+      gap: 12
     },
     monthButton: {
-      paddingHorizontal: 20,
-      paddingVertical: 8,
-      borderRadius: 20,
-      backgroundColor: '#F3F4F6'
+      paddingHorizontal: 24,
+      paddingVertical: 10,
+      borderRadius: 24,
+      backgroundColor: '#F3F4F6',
+      marginRight: 12
     },
     monthButtonActive: {
       backgroundColor: '#4F7FFF'
     },
     monthText: {
-      fontSize: 15,
-      fontWeight: '500' as const,
-      color: '#6B7280'
+      fontSize: 16,
+      fontWeight: '600' as const,
+      color: '#1F2937'
     },
     monthTextActive: {
       color: '#FFFFFF'
     },
     datesContainer: {
-      flexDirection: 'row' as const,
-      paddingHorizontal: 20,
-      paddingVertical: 16,
-      gap: 12,
+      paddingVertical: 20,
       backgroundColor: '#FFFFFF'
     },
+    datesContentContainer: {
+      paddingHorizontal: 20,
+      gap: 12
+    },
     dateCard: {
-      width: 70,
-      paddingVertical: 12,
-      paddingHorizontal: 8,
-      borderRadius: 16,
+      width: 80,
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      borderRadius: 20,
       backgroundColor: '#F9FAFB',
-      alignItems: 'center' as const
+      alignItems: 'center' as const,
+      marginRight: 12
     },
     dateCardActive: {
       backgroundColor: '#4F7FFF'
     },
     dateDay: {
-      fontSize: 24,
+      fontSize: 28,
       fontWeight: '700' as const,
       color: '#1F2937',
-      marginBottom: 4
+      marginBottom: 2
     },
     dateDayActive: {
       color: '#FFFFFF'
     },
     dateWeekday: {
-      fontSize: 13,
+      fontSize: 14,
+      fontWeight: '500' as const,
       color: '#6B7280',
-      marginBottom: 8
+      marginBottom: 10
     },
     dateWeekdayActive: {
       color: '#FFFFFF'
     },
     dotsContainer: {
       flexDirection: 'row' as const,
-      gap: 4
+      gap: 4,
+      minHeight: 6
     },
     dot: {
-      width: 4,
-      height: 4,
-      borderRadius: 2,
+      width: 5,
+      height: 5,
+      borderRadius: 2.5,
       backgroundColor: '#4F7FFF'
     },
     dotActive: {
@@ -236,62 +248,76 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
         <Text style={styles.title}>My Medication</Text>
       </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.monthsContainer}>
-        {months.map((month) => (
-          <TouchableOpacity
-            key={month}
-            style={[
-              styles.monthButton,
-              selectedMonth === month && styles.monthButtonActive
-            ]}
-            onPress={() => setSelectedMonth(month)}
-          >
-            <Text style={[
-              styles.monthText,
-              selectedMonth === month && styles.monthTextActive
-            ]}>
-              {month}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.monthsContainer}>
+        <FlatList
+          ref={monthsScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={months}
+          keyExtractor={(item) => item}
+          contentContainerStyle={styles.monthsContentContainer}
+          renderItem={({ item: month }) => (
+            <TouchableOpacity
+              style={[
+                styles.monthButton,
+                selectedMonth === month && styles.monthButtonActive
+              ]}
+              onPress={() => setSelectedMonth(month)}
+            >
+              <Text style={[
+                styles.monthText,
+                selectedMonth === month && styles.monthTextActive
+              ]}>
+                {month}
+              </Text>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
 
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.datesContainer}>
-        {dates.map((date) => (
-          <TouchableOpacity
-            key={date.day}
-            style={[
-              styles.dateCard,
-              selectedDate === date.day && styles.dateCardActive
-            ]}
-            onPress={() => setSelectedDate(date.day)}
-          >
-            <Text style={[
-              styles.dateDay,
-              selectedDate === date.day && styles.dateDayActive
-            ]}>
-              {date.day}
-            </Text>
-            <Text style={[
-              styles.dateWeekday,
-              selectedDate === date.day && styles.dateWeekdayActive
-            ]}>
-              {date.weekday}
-            </Text>
-            <View style={styles.dotsContainer}>
-              {Array.from({ length: date.dots }).map((_, i) => (
-                <View 
-                  key={i} 
-                  style={[
-                    styles.dot,
-                    selectedDate === date.day && styles.dotActive
-                  ]} 
-                />
-              ))}
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+      <View style={styles.datesContainer}>
+        <FlatList
+          ref={datesScrollRef}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={dates}
+          keyExtractor={(item) => item.day.toString()}
+          contentContainerStyle={styles.datesContentContainer}
+          renderItem={({ item: date }) => (
+            <TouchableOpacity
+              style={[
+                styles.dateCard,
+                selectedDate === date.day && styles.dateCardActive
+              ]}
+              onPress={() => setSelectedDate(date.day)}
+            >
+              <Text style={[
+                styles.dateDay,
+                selectedDate === date.day && styles.dateDayActive
+              ]}>
+                {date.day}
+              </Text>
+              <Text style={[
+                styles.dateWeekday,
+                selectedDate === date.day && styles.dateWeekdayActive
+              ]}>
+                {date.weekday}
+              </Text>
+              <View style={styles.dotsContainer}>
+                {Array.from({ length: date.dots }).map((_, i) => (
+                  <View 
+                    key={i} 
+                    style={[
+                      styles.dot,
+                      selectedDate === date.day && styles.dotActive
+                    ]} 
+                  />
+                ))}
+              </View>
+            </TouchableOpacity>
+          )}
+        />
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Medicine</Text>
