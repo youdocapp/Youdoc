@@ -27,15 +27,13 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const dates = [
-    { day: 11, weekday: 'Sat', dots: 1 },
-    { day: 12, weekday: 'Sun', dots: 2 },
-    { day: 13, weekday: 'Mon', dots: 0 },
-    { day: 14, weekday: 'Tue', dots: 1 },
-    { day: 15, weekday: 'Wed', dots: 2 },
-    { day: 16, weekday: 'Thu', dots: 1 },
-    { day: 17, weekday: 'Fri', dots: 0 },
+    { day: 11, weekday: 'Sun', dots: 1 },
+    { day: 12, weekday: 'Mon', dots: 2 },
+    { day: 13, weekday: 'Tue', dots: 0 },
+    { day: 14, weekday: 'Wed', dots: 1 },
+    { day: 15, weekday: 'Thu', dots: 2 },
   ];
 
   const styles = StyleSheet.create({
@@ -74,20 +72,19 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       gap: 16
     },
     monthButton: {
-      paddingHorizontal: 28,
-      paddingVertical: 12,
-      borderRadius: 28,
-      backgroundColor: '#F9FAFB',
-      marginRight: 16,
-      borderWidth: 1,
-      borderColor: '#E5E7EB'
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 24,
+      backgroundColor: '#F3F4F6',
+      marginRight: 12,
+      borderWidth: 0
     },
     monthButtonActive: {
       backgroundColor: '#4F7FFF',
       borderColor: '#4F7FFF'
     },
     monthText: {
-      fontSize: 17,
+      fontSize: 15,
       fontWeight: '600' as const,
       color: '#6B7280'
     },
@@ -105,35 +102,33 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       gap: 16
     },
     dateCard: {
-      width: 90,
-      paddingVertical: 20,
-      paddingHorizontal: 16,
-      borderRadius: 24,
-      backgroundColor: '#F9FAFB',
+      width: 70,
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+      borderRadius: 20,
+      backgroundColor: '#F3F4F6',
       alignItems: 'center' as const,
-      marginRight: 16,
-      borderWidth: 1,
-      borderColor: '#E5E7EB'
+      marginRight: 12,
+      borderWidth: 0
     },
     dateCardActive: {
       backgroundColor: '#4F7FFF',
       borderColor: '#4F7FFF'
     },
     dateWeekday: {
-      fontSize: 13,
-      fontWeight: '600' as const,
+      fontSize: 11,
+      fontWeight: '500' as const,
       color: '#9CA3AF',
-      marginBottom: 8,
-      textTransform: 'uppercase' as const
+      marginBottom: 6
     },
     dateWeekdayActive: {
       color: '#FFFFFF'
     },
     dateDay: {
-      fontSize: 32,
+      fontSize: 24,
       fontWeight: '700' as const,
       color: '#1F2937',
-      marginBottom: 12
+      marginBottom: 8
     },
     dateDayActive: {
       color: '#FFFFFF'

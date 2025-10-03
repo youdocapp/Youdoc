@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
 import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
+import WheelDatePicker from './ui/WheelDatePicker';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -26,6 +27,21 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNotifications,
   onProfile
 }) => {
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [name, setName] = useState<string>('John Doe');
+  const [email, setEmail] = useState<string>('demo@youdoc.com');
+  const [phone, setPhone] = useState<string>('+1 (555) 123-4567');
+  const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(1990, 4, 15));
+  const [showGenderModal, setShowGenderModal] = useState<boolean>(false);
+  const [gender, setGender] = useState<string>('Male');
+  const [bloodType, setBloodType] = useState<string>('O+');
+  const [height, setHeight] = useState<string>('5\'7"');
+  const [weight, setWeight] = useState<string>('165 lbs');
+  const [address, setAddress] = useState<string>('123 Main Street, New York, NY 10001');
+
+  const handleSave = () => {
+    setIsEditing(false);
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -33,8 +49,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           <ChevronLeft size={24} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.editButton}>
-          <Text style={styles.editButtonText}>Edit</Text>
+        <TouchableOpacity 
+          style={styles.editButton}
+          onPress={() => isEditing ? handleSave() : setIsEditing(true)}
+        >
+          <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -48,8 +67,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <Camera size={16} color="#FFFFFF" />
             </View>
           </View>
-          <Text style={styles.name}>John Doe</Text>
-          <Text style={styles.email}>demo@youdoc.com</Text>
+          <Text style={styles.name}>{name}</Text>
+          <Text style={styles.email}>{email}</Text>
         </View>
 
         <View style={styles.section}>
@@ -60,7 +79,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <User size={20} color="#4F7FFF" />
               </View>
               <Text style={styles.infoLabel}>Name</Text>
-              <Text style={styles.infoValue}>John Doe</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter name"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{name}</Text>
+              )}
             </View>
 
             <View style={styles.divider} />
@@ -70,7 +98,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <Mail size={20} color="#10B981" />
               </View>
               <Text style={styles.infoLabel}>Email</Text>
-              <Text style={styles.infoValue}>demo@youdoc.com</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter email"
+                  keyboardType="email-address"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{email}</Text>
+              )}
             </View>
 
             <View style={styles.divider} />
@@ -80,29 +118,55 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <Phone size={20} color="#F59E0B" />
               </View>
               <Text style={styles.infoLabel}>Phone</Text>
-              <Text style={styles.infoValue}>+1 (555) 123-4567</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="Enter phone"
+                  keyboardType="phone-pad"
+                />
+              ) : (
+                <Text style={styles.infoValue}>{phone}</Text>
+              )}
             </View>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: '#E0E7FF' }]}>
                 <Calendar size={20} color="#6366F1" />
               </View>
               <Text style={styles.infoLabel}>Date of Birth</Text>
-              <Text style={styles.infoValue}>05/15/1990</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-            </TouchableOpacity>
+              {isEditing ? (
+                <View style={{ flex: 1 }}>
+                  <WheelDatePicker
+                    value={dateOfBirth}
+                    onChange={setDateOfBirth}
+                    label=""
+                  />
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.infoValue}>{dateOfBirth.toLocaleDateString('en-US')}</Text>
+                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+                </>
+              )}
+            </View>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.infoRow}>
+            <TouchableOpacity 
+              style={styles.infoRow}
+              onPress={() => isEditing && setShowGenderModal(true)}
+              disabled={!isEditing}
+            >
               <View style={[styles.infoIcon, { backgroundColor: '#FEE2E2' }]}>
                 <Smile size={20} color="#EF4444" />
               </View>
               <Text style={styles.infoLabel}>Gender</Text>
-              <Text style={styles.infoValue}>Male</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+              <Text style={styles.infoValue}>{gender}</Text>
+              {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
           </View>
         </View>
@@ -110,36 +174,69 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Health Information</Text>
           <View style={styles.infoCard}>
-            <TouchableOpacity style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: '#FEE2E2' }]}>
                 <Heart size={20} color="#EF4444" />
               </View>
               <Text style={styles.infoLabel}>Blood Type</Text>
-              <Text style={styles.infoValue}>O+</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-            </TouchableOpacity>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={bloodType}
+                  onChangeText={setBloodType}
+                  placeholder="Enter blood type"
+                />
+              ) : (
+                <>
+                  <Text style={styles.infoValue}>{bloodType}</Text>
+                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+                </>
+              )}
+            </View>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: '#DBEAFE' }]}>
                 <Hand size={20} color="#3B82F6" />
               </View>
               <Text style={styles.infoLabel}>Height</Text>
-              <Text style={styles.infoValue}>5'7"</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-            </TouchableOpacity>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={height}
+                  onChangeText={setHeight}
+                  placeholder="Enter height"
+                />
+              ) : (
+                <>
+                  <Text style={styles.infoValue}>{height}</Text>
+                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+                </>
+              )}
+            </View>
 
             <View style={styles.divider} />
 
-            <TouchableOpacity style={styles.infoRow}>
+            <View style={styles.infoRow}>
               <View style={[styles.infoIcon, { backgroundColor: '#D1FAE5' }]}>
                 <Target size={20} color="#10B981" />
               </View>
               <Text style={styles.infoLabel}>Weight</Text>
-              <Text style={styles.infoValue}>165 lbs</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-            </TouchableOpacity>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={weight}
+                  onChangeText={setWeight}
+                  placeholder="Enter weight"
+                />
+              ) : (
+                <>
+                  <Text style={styles.infoValue}>{weight}</Text>
+                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+                </>
+              )}
+            </View>
 
             <View style={styles.divider} />
 
@@ -148,9 +245,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <MapPin size={20} color="#6B7280" />
               </View>
               <Text style={styles.infoLabel}>Address</Text>
-              <Text style={[styles.infoValue, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>
-                123 Main Street, New York, NY 10001
-              </Text>
+              {isEditing ? (
+                <TextInput
+                  style={[styles.infoInput, { flex: 1 }]}
+                  value={address}
+                  onChangeText={setAddress}
+                  placeholder="Enter address"
+                  multiline
+                />
+              ) : (
+                <Text style={[styles.infoValue, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>
+                  {address}
+                </Text>
+              )}
             </View>
           </View>
         </View>
@@ -219,6 +326,39 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         onNotifications={onNotifications}
         onProfile={onProfile}
       />
+
+      <Modal
+        visible={showGenderModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowGenderModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.genderModal}>
+            <Text style={styles.genderModalTitle}>Select Gender</Text>
+            {['Male', 'Female', 'Other', 'Prefer not to say'].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.genderOption,
+                  gender === option && styles.genderOptionSelected
+                ]}
+                onPress={() => {
+                  setGender(option);
+                  setShowGenderModal(false);
+                }}
+              >
+                <Text style={[
+                  styles.genderOptionText,
+                  gender === option && styles.genderOptionTextSelected
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -378,6 +518,57 @@ const styles = StyleSheet.create({
   actionSubtitle: {
     fontSize: 13,
     color: '#6B7280',
+  },
+  infoInput: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#1F2937',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: '#F9FAFB',
+    minWidth: 120,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  genderModal: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '80%',
+    maxWidth: 300,
+  },
+  genderModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  genderOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    backgroundColor: '#F9FAFB',
+    marginBottom: 12,
+  },
+  genderOptionSelected: {
+    backgroundColor: '#4F7FFF',
+  },
+  genderOptionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1F2937',
+    textAlign: 'center',
+  },
+  genderOptionTextSelected: {
+    color: '#FFFFFF',
   },
 });
 

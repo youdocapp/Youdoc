@@ -10,8 +10,8 @@ const WellnessScreen: React.FC<WellnessScreenProps> = ({ onNext, onSkip }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', paddingTop: 80, paddingBottom: 40 }}>
-        <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', paddingTop: 60, paddingBottom: 40 }}>
+        <View style={{ flex: 1, justifyContent: 'center', paddingTop: 60 }}>
           <Text style={{
             fontSize: 32,
             fontWeight: '700',
