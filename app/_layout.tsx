@@ -1,8 +1,9 @@
-import { DarkTheme, DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { LogBox } from 'react-native';
 import 'react-native-reanimated';
 import { 
   useFonts,
@@ -21,21 +22,27 @@ import { MockAuthProvider } from '../contexts/MockAuthContext';
 
 SplashScreen.preventAutoHideAsync();
 
+LogBox.ignoreLogs([
+  'source.uri should not be an empty string',
+]);
+
 function AppContent() {
   const { colors } = useTheme();
   
+  const navigationTheme = useMemo(() => ({
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: colors.background,
+      card: colors.card,
+      text: colors.text,
+      border: colors.border,
+      primary: colors.primary,
+    }
+  }), [colors]);
+  
   return (
-    <NavigationThemeProvider value={{
-      ...DefaultTheme,
-      colors: {
-        ...DefaultTheme.colors,
-        background: colors.background,
-        card: colors.card,
-        text: colors.text,
-        border: colors.border,
-        primary: colors.primary,
-      }
-    }}>
+    <NavigationThemeProvider value={navigationTheme}>
       <Stack>
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="signin" options={{ headerShown: false }} />
@@ -48,9 +55,8 @@ function AppContent() {
         <Stack.Screen name="add-medication" options={{ headerShown: false }} />
         <Stack.Screen name="settings" options={{ headerShown: false }} />
         <Stack.Screen name="profile" options={{ headerShown: false }} />
-        <Stack.Screen name="connected-devices" options={{ headerShown: false }} />
-        <Stack.Screen name="add-device" options={{ headerShown: false }} />
         <Stack.Screen name="health-records" options={{ headerShown: false }} />
+        <Stack.Screen name="see-doctor" options={{ headerShown: false }} />
         <Stack.Screen name="emergency-contacts" options={{ headerShown: false }} />
         <Stack.Screen name="medical-history" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
