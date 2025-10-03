@@ -12,6 +12,10 @@ const OnboardingFlow: React.FC = () => {
     setCurrentStep(prev => prev + 1);
   };
 
+  const handleSkip = () => {
+    setCurrentStep(3);
+  };
+
   const handleBack = () => {
     setCurrentStep(prev => Math.max(0, prev - 1));
   };
@@ -19,15 +23,15 @@ const OnboardingFlow: React.FC = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 0:
-        return <WelcomeScreen onNext={handleNext} />;
+        return <WelcomeScreen onNext={handleNext} onSkip={handleSkip} />;
       case 1:
-        return <WellnessScreen onNext={handleNext} onBack={handleBack} />;
+        return <WellnessScreen onNext={handleNext} onSkip={handleSkip} />;
       case 2:
-        return <CarepointScreen onNext={handleNext} onBack={handleBack} />;
+        return <CarepointScreen onNext={handleNext} onSkip={handleSkip} />;
       case 3:
         return <AuthScreen onBack={handleBack} />;
       default:
-        return <WelcomeScreen onNext={handleNext} />;
+        return <WelcomeScreen onNext={handleNext} onSkip={handleSkip} />;
     }
   };
 

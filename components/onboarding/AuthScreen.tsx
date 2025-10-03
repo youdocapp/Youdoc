@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
-import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useRouter } from 'expo-router';
 
 interface AuthScreenProps {
@@ -8,49 +7,31 @@ interface AuthScreenProps {
 }
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
-  const { colors } = useAuthTheme();
   const router = useRouter();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', paddingVertical: 48 }}>
-        <TouchableOpacity onPress={onBack} style={{ alignSelf: 'flex-start' }}>
-          <Text style={{ fontSize: 24, color: colors.text }}>←</Text>
-        </TouchableOpacity>
-
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{
-            width: 120,
-            height: 120,
-            borderRadius: 60,
-            backgroundColor: colors.primary,
-            justifyContent: 'center',
-            alignItems: 'center',
-            marginBottom: 32
-          }}>
-            <Text style={{ fontSize: 48, color: 'white' }}>🔐</Text>
-          </View>
-
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <View style={{ flex: 1, paddingHorizontal: 50, justifyContent: 'space-between', paddingTop: 120, paddingBottom: 48 }}>
+        <View style={{ flex: 1 }}>
           <Text style={{
-            fontSize: 28,
-            fontWeight: 'bold',
-            color: colors.text,
-            fontFamily: 'ReadexPro-Medium',
-            textAlign: 'center',
-            marginBottom: 16
+            fontSize: 40,
+            fontWeight: '700',
+            color: '#1F2937',
+            textAlign: 'left',
+            marginBottom: 24,
+            lineHeight: 48
           }}>
-            Secure & Private
+            Smarter <Text style={{ color: '#4F7FFF' }}>Health</Text> Starts Here
           </Text>
 
           <Text style={{
-            fontSize: 16,
-            color: colors.textSecondary,
-            fontFamily: 'ReadexPro-Medium',
-            textAlign: 'center',
-            lineHeight: 24,
+            fontSize: 17,
+            color: '#6B7280',
+            textAlign: 'left',
+            lineHeight: 26,
             marginBottom: 48
           }}>
-            Your health data is encrypted and secure. We never share your information without your permission.
+            Youdoc personalizes your experience based on your interests, data, and wearable devices.
           </Text>
         </View>
 
@@ -59,43 +40,80 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
             onPress={() => router.push('/signup')}
             style={{
               width: '100%',
-              backgroundColor: colors.primary,
-              paddingVertical: 16,
-              borderRadius: 25,
+              backgroundColor: '#4F7FFF',
+              paddingVertical: 18,
+              borderRadius: 28,
               alignItems: 'center'
             }}
           >
             <Text style={{
               color: 'white',
-              fontSize: 16,
-              fontWeight: '500',
-              fontFamily: 'ReadexPro-Medium'
+              fontSize: 17,
+              fontWeight: '600'
             }}>
-              Create Account
+              Sign up with Email
+            </Text>
+          </TouchableOpacity>
+
+          <Text style={{
+            textAlign: 'center',
+            color: '#6B7280',
+            fontSize: 15,
+            fontWeight: '500'
+          }}>
+            Or
+          </Text>
+
+          <TouchableOpacity 
+            style={{
+              width: '100%',
+              backgroundColor: '#1F2937',
+              paddingVertical: 18,
+              borderRadius: 28,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              gap: 12
+            }}
+          >
+            <Text style={{ fontSize: 20 }}>🔍</Text>
+            <Text style={{
+              color: 'white',
+              fontSize: 17,
+              fontWeight: '600'
+            }}>
+              Sign up with Google
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
-            onPress={() => router.push('/signin')}
             style={{
               width: '100%',
-              backgroundColor: colors.inputBackground,
-              paddingVertical: 16,
-              borderRadius: 25,
+              backgroundColor: '#1F2937',
+              paddingVertical: 18,
+              borderRadius: 28,
               alignItems: 'center',
-              borderWidth: 1,
-              borderColor: colors.border
+              flexDirection: 'row',
+              justifyContent: 'center',
+              gap: 12
             }}
           >
+            <Text style={{ fontSize: 20 }}>🍎</Text>
             <Text style={{
-              color: colors.text,
-              fontSize: 16,
-              fontWeight: '500',
-              fontFamily: 'ReadexPro-Medium'
+              color: 'white',
+              fontSize: 17,
+              fontWeight: '600'
             }}>
-              Sign In
+              Sign up with Apple
             </Text>
           </TouchableOpacity>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
+            <Text style={{ color: '#6B7280', fontSize: 15 }}>Already have an account? </Text>
+            <TouchableOpacity onPress={() => router.push('/signin')}>
+              <Text style={{ color: '#1F2937', fontSize: 15, fontWeight: '600' }}>Sign In</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </SafeAreaView>
