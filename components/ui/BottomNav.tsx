@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { Home, Bell, User } from 'lucide-react-native';
-import { useTheme } from '../../contexts/ThemeContext';
 
 interface BottomNavProps {
   activeTab?: string;
@@ -16,18 +15,16 @@ const BottomNav: React.FC<BottomNavProps> = ({
   onNotifications,
   onProfile
 }) => {
-  const { colors } = useTheme();
-
   const styles = StyleSheet.create({
     container: {
       flexDirection: 'row' as const,
       justifyContent: 'space-around' as const,
       alignItems: 'center' as const,
-      paddingVertical: 12,
+      paddingVertical: 16,
       paddingHorizontal: 24,
-      backgroundColor: colors.card,
+      backgroundColor: '#FFFFFF',
       borderTopWidth: 1,
-      borderTopColor: colors.border
+      borderTopColor: '#F3F4F6'
     },
     tab: {
       alignItems: 'center' as const,
@@ -35,19 +32,46 @@ const BottomNav: React.FC<BottomNavProps> = ({
       paddingVertical: 8,
       paddingHorizontal: 16
     },
-    tabIcon: {
-      fontSize: 24,
-      marginBottom: 4
+    notificationTab: {
+      position: 'relative' as const
     },
-    tabLabel: {
-      fontSize: 12,
-      fontWeight: '500' as const
+    notificationBadge: {
+      position: 'absolute' as const,
+      top: 4,
+      right: 12,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      backgroundColor: '#EF4444'
     },
-    activeTab: {
-      color: colors.primary
+    bellIcon: {
+      position: 'relative' as const
     },
-    inactiveTab: {
-      color: colors.textSecondary
+    bellBody: {
+      width: 24,
+      height: 24,
+      borderRadius: 12,
+      backgroundColor: '#4F7FFF',
+      position: 'relative' as const
+    },
+    bellHandle: {
+      position: 'absolute' as const,
+      top: -4,
+      left: 8,
+      width: 8,
+      height: 4,
+      borderTopLeftRadius: 4,
+      borderTopRightRadius: 4,
+      backgroundColor: '#4F7FFF'
+    },
+    bellClapper: {
+      position: 'absolute' as const,
+      bottom: -3,
+      left: 10,
+      width: 4,
+      height: 4,
+      borderRadius: 2,
+      backgroundColor: '#4F7FFF'
     }
   });
 
@@ -56,22 +80,24 @@ const BottomNav: React.FC<BottomNavProps> = ({
       <TouchableOpacity style={styles.tab} onPress={onHome}>
         <Home 
           size={28} 
-          color={activeTab === 'home' ? colors.primary : colors.textSecondary}
-          fill={activeTab === 'home' ? colors.primary : 'transparent'}
+          color={activeTab === 'home' ? '#1F2937' : '#9CA3AF'}
+          fill={activeTab === 'home' ? '#1F2937' : 'transparent'}
         />
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.tab} onPress={onNotifications}>
+      <TouchableOpacity style={[styles.tab, styles.notificationTab]} onPress={onNotifications}>
         <Bell 
           size={28} 
-          color={activeTab === 'notifications' ? colors.primary : colors.textSecondary}
+          color={activeTab === 'notifications' ? '#4F7FFF' : '#9CA3AF'}
+          fill={activeTab === 'notifications' ? '#4F7FFF' : 'transparent'}
         />
+        {activeTab === 'notifications' && <View style={styles.notificationBadge} />}
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.tab} onPress={onProfile}>
         <User 
           size={28} 
-          color={activeTab === 'profile' ? colors.primary : colors.textSecondary}
+          color={activeTab === 'profile' ? '#1F2937' : '#9CA3AF'}
         />
       </TouchableOpacity>
     </View>

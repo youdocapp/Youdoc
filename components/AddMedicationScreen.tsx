@@ -49,7 +49,8 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       frequency,
       time: reminderTimes,
       startDate: startDate,
-      reminderEnabled: true
+      reminderEnabled: true,
+      taken: false
     });
 
     Alert.alert('Success', 'Medication added successfully', [

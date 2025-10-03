@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useMemo } from 'react';
 
 export interface Medication {
   id: string;
@@ -10,6 +10,7 @@ export interface Medication {
   endDate?: string;
   notes?: string;
   reminderEnabled: boolean;
+  taken: boolean;
 }
 
 interface MedicationContextType {
@@ -18,6 +19,7 @@ interface MedicationContextType {
   updateMedication: (id: string, medication: Partial<Medication>) => void;
   deleteMedication: (id: string) => void;
   getMedication: (id: string) => Medication | undefined;
+  toggleMedicationTaken: (id: string) => void;
 }
 
 const MedicationContext = createContext<MedicationContextType | undefined>(undefined);
@@ -47,16 +49,26 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     return medications.find(med => med.id === id);
   };
 
+  const toggleMedicationTaken = (id: string) => {
+    setMedications(prev =>
+      prev.map(med => (med.id === id ? { ...med, taken: !med.taken } : med))
+    );
+  };
+
+  const value = useMemo(
+    () => ({
+      medications,
+      addMedication,
+      updateMedication,
+      deleteMedication,
+      getMedication,
+      toggleMedicationTaken,
+    }),
+    [medications, addMedication, updateMedication, deleteMedication, getMedication, toggleMedicationTaken]
+  );
+
   return (
-    <MedicationContext.Provider
-      value={{
-        medications,
-        addMedication,
-        updateMedication,
-        deleteMedication,
-        getMedication,
-      }}
-    >
+    <MedicationContext.Provider value={value}>
       {children}
     </MedicationContext.Provider>
   );

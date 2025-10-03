@@ -21,7 +21,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   onProfile,
   activeTab = 'home'
 }) => {
-  const { medications } = useMedication();
+  const { medications, toggleMedicationTaken } = useMedication();
   const [selectedMonth, setSelectedMonth] = useState<string>('May');
   const [selectedDate, setSelectedDate] = useState<number>(13);
   const monthsScrollRef = useRef<FlatList>(null);
@@ -167,6 +167,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       shadowRadius: 2,
       elevation: 2
     },
+    medicationCardTaken: {
+      opacity: 0.5
+    },
     medicationIcon: {
       width: 48,
       height: 48,
@@ -188,6 +191,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#1F2937',
       marginBottom: 4
     },
+    medicationNameTaken: {
+      textDecorationLine: 'line-through' as const
+    },
     medicationDose: {
       fontSize: 13,
       color: '#6B7280',
@@ -208,7 +214,22 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       borderRadius: 12,
       borderWidth: 2,
       borderColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF'
+      backgroundColor: '#FFFFFF',
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const
+    },
+    checkboxChecked: {
+      backgroundColor: '#4F7FFF',
+      borderColor: '#4F7FFF'
+    },
+    checkmark: {
+      width: 12,
+      height: 8,
+      borderLeftWidth: 2,
+      borderBottomWidth: 2,
+      borderColor: '#FFFFFF',
+      transform: [{ rotate: '-45deg' }],
+      marginTop: -2
     },
     emptyState: {
       flex: 1,
@@ -328,19 +349,24 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
           </View>
         ) : (
           medications.map((med) => (
-            <View key={med.id} style={styles.medicationCard}>
+            <View key={med.id} style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}>
               <View style={styles.medicationIcon}>
                 <Text style={styles.pillEmoji}>💊</Text>
               </View>
               <View style={styles.medicationInfo}>
-                <Text style={styles.medicationName}>{med.name}</Text>
+                <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
                 <Text style={styles.medicationDose}>{med.dosage}</Text>
                 <View style={styles.medicationTime}>
                   <Clock size={14} color="#9CA3AF" />
                   <Text style={styles.timeText}>{med.time[0] || '08:00'}</Text>
                 </View>
               </View>
-              <View style={styles.checkbox} />
+              <TouchableOpacity 
+                style={[styles.checkbox, med.taken && styles.checkboxChecked]}
+                onPress={() => toggleMedicationTaken(med.id)}
+              >
+                {med.taken && <View style={styles.checkmark} />}
+              </TouchableOpacity>
             </View>
           ))
         )}
