@@ -27,7 +27,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dates = [
     { day: 11, weekday: 'Sat', dots: 1 },
     { day: 12, weekday: 'Sun', dots: 2 },
@@ -64,69 +64,78 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#1F2937'
     },
     monthsContainer: {
-      paddingVertical: 20,
+      paddingVertical: 24,
       backgroundColor: '#FFFFFF',
       borderBottomWidth: 1,
       borderBottomColor: '#F3F4F6'
     },
     monthsContentContainer: {
       paddingHorizontal: 20,
-      gap: 12
+      gap: 16
     },
     monthButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 10,
-      borderRadius: 24,
-      backgroundColor: '#F3F4F6',
-      marginRight: 12
+      paddingHorizontal: 28,
+      paddingVertical: 12,
+      borderRadius: 28,
+      backgroundColor: '#F9FAFB',
+      marginRight: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB'
     },
     monthButtonActive: {
-      backgroundColor: '#4F7FFF'
+      backgroundColor: '#4F7FFF',
+      borderColor: '#4F7FFF'
     },
     monthText: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: '#6B7280'
     },
     monthTextActive: {
       color: '#FFFFFF'
     },
     datesContainer: {
-      paddingVertical: 20,
-      backgroundColor: '#FFFFFF'
+      paddingVertical: 24,
+      backgroundColor: '#FFFFFF',
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6'
     },
     datesContentContainer: {
       paddingHorizontal: 20,
-      gap: 12
+      gap: 16
     },
     dateCard: {
-      width: 80,
-      paddingVertical: 16,
-      paddingHorizontal: 12,
-      borderRadius: 20,
+      width: 90,
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      borderRadius: 24,
       backgroundColor: '#F9FAFB',
       alignItems: 'center' as const,
-      marginRight: 12
+      marginRight: 16,
+      borderWidth: 1,
+      borderColor: '#E5E7EB'
     },
     dateCardActive: {
-      backgroundColor: '#4F7FFF'
-    },
-    dateDay: {
-      fontSize: 28,
-      fontWeight: '700' as const,
-      color: '#1F2937',
-      marginBottom: 2
-    },
-    dateDayActive: {
-      color: '#FFFFFF'
+      backgroundColor: '#4F7FFF',
+      borderColor: '#4F7FFF'
     },
     dateWeekday: {
-      fontSize: 14,
-      fontWeight: '500' as const,
-      color: '#6B7280',
-      marginBottom: 10
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: '#9CA3AF',
+      marginBottom: 8,
+      textTransform: 'uppercase' as const
     },
     dateWeekdayActive: {
+      color: '#FFFFFF'
+    },
+    dateDay: {
+      fontSize: 32,
+      fontWeight: '700' as const,
+      color: '#1F2937',
+      marginBottom: 12
+    },
+    dateDayActive: {
       color: '#FFFFFF'
     },
     dotsContainer: {
@@ -171,33 +180,33 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       opacity: 0.5
     },
     medicationIcon: {
-      width: 48,
-      height: 48,
-      borderRadius: 24,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: '#FEF3C7',
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      marginRight: 12
+      marginRight: 16
     },
     pillEmoji: {
-      fontSize: 24
+      fontSize: 28
     },
     medicationInfo: {
       flex: 1
     },
     medicationName: {
-      fontSize: 16,
+      fontSize: 17,
       fontWeight: '600' as const,
       color: '#1F2937',
-      marginBottom: 4
+      marginBottom: 6
     },
     medicationNameTaken: {
       textDecorationLine: 'line-through' as const
     },
     medicationDose: {
-      fontSize: 13,
+      fontSize: 14,
       color: '#6B7280',
-      marginBottom: 4
+      marginBottom: 6
     },
     medicationTime: {
       flexDirection: 'row' as const,
@@ -209,11 +218,11 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#9CA3AF'
     },
     checkbox: {
-      width: 24,
-      height: 24,
-      borderRadius: 12,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       borderWidth: 2,
-      borderColor: '#E5E7EB',
+      borderColor: '#D1D5DB',
       backgroundColor: '#FFFFFF',
       alignItems: 'center' as const,
       justifyContent: 'center' as const
@@ -223,10 +232,10 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       borderColor: '#4F7FFF'
     },
     checkmark: {
-      width: 12,
-      height: 8,
-      borderLeftWidth: 2,
-      borderBottomWidth: 2,
+      width: 14,
+      height: 10,
+      borderLeftWidth: 2.5,
+      borderBottomWidth: 2.5,
       borderColor: '#FFFFFF',
       transform: [{ rotate: '-45deg' }],
       marginTop: -2
@@ -313,16 +322,16 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
               onPress={() => setSelectedDate(date.day)}
             >
               <Text style={[
-                styles.dateDay,
-                selectedDate === date.day && styles.dateDayActive
-              ]}>
-                {date.day}
-              </Text>
-              <Text style={[
                 styles.dateWeekday,
                 selectedDate === date.day && styles.dateWeekdayActive
               ]}>
                 {date.weekday}
+              </Text>
+              <Text style={[
+                styles.dateDay,
+                selectedDate === date.day && styles.dateDayActive
+              ]}>
+                {date.day}
               </Text>
               <View style={styles.dotsContainer}>
                 {Array.from({ length: date.dots }).map((_, i) => (

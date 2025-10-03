@@ -23,6 +23,14 @@ export default function DashboardPage() {
     router.push('/settings');
   };
 
+  const handleNotifications = () => {
+    router.push('/notifications');
+  };
+
+  const handleProfile = () => {
+    router.push('/profile');
+  };
+
   return (
     <DashboardScreen
       onSymptomChecker={handleSymptomChecker}
@@ -30,6 +38,9 @@ export default function DashboardPage() {
       onSeeDoctor={handleSeeDoctor}
       onHealthArticles={handleHealthArticles}
       onSettings={handleSettings}
+      onNotifications={handleNotifications}
+      onProfile={handleProfile}
+      activeTab="home"
     />
   );
 }

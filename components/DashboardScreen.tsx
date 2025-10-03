@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
+import BottomNav from './ui/BottomNav';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -8,6 +9,9 @@ interface DashboardScreenProps {
   onSeeDoctor?: () => void;
   onHealthArticles?: () => void;
   onSettings?: () => void;
+  onNotifications?: () => void;
+  onProfile?: () => void;
+  activeTab?: string;
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -15,7 +19,10 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onMyMedication,
   onSeeDoctor,
   onHealthArticles,
-  onSettings
+  onSettings,
+  onNotifications,
+  onProfile,
+  activeTab = 'home'
 }) => {
   const styles = StyleSheet.create({
     container: {
@@ -424,7 +431,16 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
           </ScrollView>
         </View>
+
+        <View style={{ height: 80 }} />
       </ScrollView>
+
+      <BottomNav
+        activeTab={activeTab}
+        onHome={() => {}}
+        onNotifications={onNotifications}
+        onProfile={onProfile}
+      />
     </SafeAreaView>
   );
 };
