@@ -11,6 +11,7 @@ export default function SignInPage() {
       <SignInScreen 
         onForgotPassword={() => router.push('/forgot-password')}
         onSignUp={() => router.push('/signup')}
+        onBack={() => router.back()}
       />
     </AuthThemeProvider>
   );
