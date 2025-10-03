@@ -101,14 +101,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScrollView style={{ flex: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 48, paddingBottom: 32 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}>
           <TouchableOpacity onPress={onBack}>
-            <Text style={{ fontSize: 24, color: colors.text }}>←</Text>
+            <Text style={{ fontSize: 24, color: '#000000' }}>←</Text>
           </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: 'bold', color: colors.text, fontFamily: 'ReadexPro-Medium' }}>Great, let's get started</Text>
-          <View></View>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#000000', flex: 1, textAlign: 'center', marginRight: 24 }}>Great, let's get started</Text>
         </View>
 
         <View style={{ flex: 1, paddingHorizontal: 24 }}>
@@ -118,18 +117,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             onChangeText={(value) => handleInputChange('firstName', value)}
             style={{
               width: '100%',
-              paddingHorizontal: 16,
+              paddingHorizontal: 20,
               paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              backgroundColor: colors.inputBackground,
-              color: colors.text,
-              marginBottom: 16,
-              fontSize: 16,
-              fontFamily: 'ReadexPro-Medium'
+              borderWidth: 0,
+              borderRadius: 12,
+              backgroundColor: '#F3F4F6',
+              color: '#000000',
+              marginBottom: 12,
+              fontSize: 16
             }}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="#9CA3AF"
           />
 
           <TextInput
@@ -138,18 +135,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             onChangeText={(value) => handleInputChange('lastName', value)}
             style={{
               width: '100%',
-              paddingHorizontal: 16,
+              paddingHorizontal: 20,
               paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              backgroundColor: colors.inputBackground,
-              color: colors.text,
-              marginBottom: 16,
-              fontSize: 16,
-              fontFamily: 'ReadexPro-Medium'
+              borderWidth: 0,
+              borderRadius: 12,
+              backgroundColor: '#F3F4F6',
+              color: '#000000',
+              marginBottom: 12,
+              fontSize: 16
             }}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="#9CA3AF"
           />
 
           <TextInput
@@ -160,18 +155,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             autoCapitalize="none"
             style={{
               width: '100%',
-              paddingHorizontal: 16,
+              paddingHorizontal: 20,
               paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              backgroundColor: colors.inputBackground,
-              color: colors.text,
-              marginBottom: 16,
-              fontSize: 16,
-              fontFamily: 'ReadexPro-Medium'
+              borderWidth: 0,
+              borderRadius: 12,
+              backgroundColor: '#F3F4F6',
+              color: '#000000',
+              marginBottom: 12,
+              fontSize: 16
             }}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="#9CA3AF"
           />
 
           <TextInput
@@ -181,21 +174,19 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             keyboardType="phone-pad"
             style={{
               width: '100%',
-              paddingHorizontal: 16,
+              paddingHorizontal: 20,
               paddingVertical: 16,
-              borderWidth: 1,
-              borderColor: colors.border,
-              borderRadius: 16,
-              backgroundColor: colors.inputBackground,
-              color: colors.text,
-              marginBottom: 16,
-              fontSize: 16,
-              fontFamily: 'ReadexPro-Medium'
+              borderWidth: 0,
+              borderRadius: 12,
+              backgroundColor: '#F3F4F6',
+              color: '#000000',
+              marginBottom: 12,
+              fontSize: 16
             }}
-            placeholderTextColor={colors.textSecondary}
+            placeholderTextColor="#9CA3AF"
           />
 
-          <View style={{ position: 'relative', marginBottom: 16 }}>
+          <View style={{ position: 'relative', marginBottom: 12 }}>
             <TextInput
               placeholder="Enter password"
               value={formData.password}
@@ -203,18 +194,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               secureTextEntry={!passwordVisible}
               style={{
                 width: '100%',
-                paddingHorizontal: 16,
+                paddingHorizontal: 20,
                 paddingVertical: 16,
                 paddingRight: 48,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 16,
-                backgroundColor: colors.inputBackground,
-                color: colors.text,
-                fontSize: 16,
-                fontFamily: 'ReadexPro-Medium'
+                borderWidth: 0,
+                borderRadius: 12,
+                backgroundColor: '#F3F4F6',
+                color: '#000000',
+                fontSize: 16
               }}
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#9CA3AF"
             />
             <TouchableOpacity
               onPress={() => setPasswordVisible(!passwordVisible)}
@@ -225,13 +214,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
                 transform: [{ translateY: -12 }]
               }}
             >
-              <Text style={{ fontSize: 20, color: colors.textSecondary }}>
+              <Text style={{ fontSize: 20, color: '#6B7280' }}>
                 {passwordVisible ? '👁️' : '👁️‍🗨️'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={{ position: 'relative', marginBottom: 16 }}>
+          <View style={{ position: 'relative', marginBottom: 20 }}>
             <TextInput
               placeholder="Repeat password"
               value={formData.repeatPassword}
@@ -239,18 +228,16 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               secureTextEntry={!repeatPasswordVisible}
               style={{
                 width: '100%',
-                paddingHorizontal: 16,
+                paddingHorizontal: 20,
                 paddingVertical: 16,
                 paddingRight: 48,
-                borderWidth: 1,
-                borderColor: colors.border,
-                borderRadius: 16,
-                backgroundColor: colors.inputBackground,
-                color: colors.text,
-                fontSize: 16,
-                fontFamily: 'ReadexPro-Medium'
+                borderWidth: 0,
+                borderRadius: 12,
+                backgroundColor: '#F3F4F6',
+                color: '#000000',
+                fontSize: 16
               }}
-              placeholderTextColor={colors.textSecondary}
+              placeholderTextColor="#9CA3AF"
             />
             <TouchableOpacity
               onPress={() => setRepeatPasswordVisible(!repeatPasswordVisible)}
@@ -261,14 +248,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
                 transform: [{ translateY: -12 }]
               }}
             >
-              <Text style={{ fontSize: 20, color: colors.textSecondary }}>
+              <Text style={{ fontSize: 20, color: '#6B7280' }}>
                 {repeatPasswordVisible ? '👁️' : '👁️‍🗨️'}
               </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={{ marginTop: 16, marginBottom: 16 }}>
-            <View style={{ width: '100%', height: 4, backgroundColor: colors.border, borderRadius: 2 }}>
+          <View style={{ marginBottom: 16 }}>
+            <View style={{ width: '100%', height: 4, backgroundColor: '#E5E7EB', borderRadius: 2 }}>
               <View 
                 style={{
                   height: 4,
@@ -280,26 +267,26 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             </View>
           </View>
 
-          <View style={{ marginTop: 16, marginBottom: 32 }}>
+          <View style={{ marginBottom: 32 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
                 borderWidth: 2,
-                borderColor: passwordRequirements.minLength ? '#22c55e' : colors.border,
-                backgroundColor: passwordRequirements.minLength ? '#22c55e' : 'transparent',
+                borderColor: passwordRequirements.minLength ? '#22c55e' : '#D1D5DB',
+                backgroundColor: passwordRequirements.minLength ? 'transparent' : 'transparent',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: 8
+                marginRight: 12
               }}>
                 {passwordRequirements.minLength && (
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
                 )}
               </View>
               <Text style={{
                 fontSize: 14,
-                color: passwordRequirements.minLength ? '#16a34a' : colors.textSecondary
+                color: '#6B7280'
               }}>
                 8 characters minimum
               </Text>
@@ -307,23 +294,23 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
                 borderWidth: 2,
-                borderColor: passwordRequirements.hasNumber ? '#22c55e' : colors.border,
-                backgroundColor: passwordRequirements.hasNumber ? '#22c55e' : 'transparent',
+                borderColor: passwordRequirements.hasNumber ? '#22c55e' : '#D1D5DB',
+                backgroundColor: passwordRequirements.hasNumber ? 'transparent' : 'transparent',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: 8
+                marginRight: 12
               }}>
                 {passwordRequirements.hasNumber && (
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
                 )}
               </View>
               <Text style={{
                 fontSize: 14,
-                color: passwordRequirements.hasNumber ? '#16a34a' : colors.textSecondary
+                color: '#6B7280'
               }}>
                 a number
               </Text>
@@ -331,23 +318,23 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <View style={{
-                width: 16,
-                height: 16,
-                borderRadius: 8,
+                width: 20,
+                height: 20,
+                borderRadius: 10,
                 borderWidth: 2,
-                borderColor: passwordRequirements.hasSymbol ? '#22c55e' : colors.border,
-                backgroundColor: passwordRequirements.hasSymbol ? '#22c55e' : 'transparent',
+                borderColor: passwordRequirements.hasSymbol ? '#22c55e' : '#D1D5DB',
+                backgroundColor: passwordRequirements.hasSymbol ? 'transparent' : 'transparent',
                 alignItems: 'center',
                 justifyContent: 'center',
-                marginRight: 8
+                marginRight: 12
               }}>
                 {passwordRequirements.hasSymbol && (
-                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
+                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
                 )}
               </View>
               <Text style={{
                 fontSize: 14,
-                color: passwordRequirements.hasSymbol ? '#16a34a' : colors.textSecondary
+                color: '#6B7280'
               }}>
                 a symbol
               </Text>
@@ -361,9 +348,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           onPress={handleCreateAccount}
           style={{
             width: '100%',
-            backgroundColor: (isFormValid() && !loading) ? colors.primary : colors.border,
+            backgroundColor: (isFormValid() && !loading) ? '#B8C5D6' : '#D1D5DB',
             paddingVertical: 16,
-            borderRadius: 25,
+            borderRadius: 12,
             alignItems: 'center',
             opacity: loading ? 0.7 : 1
           }}
@@ -375,7 +362,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             <Text style={{
               color: 'white',
               fontSize: 16,
-              fontWeight: '500'
+              fontWeight: '600'
             }}>
               Create an account
             </Text>

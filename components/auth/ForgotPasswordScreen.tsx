@@ -5,9 +5,10 @@ import { useAuthTheme } from '../../contexts/AuthThemeContext';
 interface ForgotPasswordScreenProps {
   onNext: (email: string) => void;
   onBack: () => void;
+  onBackToSignIn: () => void;
 }
 
-const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onNext, onBack }) => {
+const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onNext, onBack, onBackToSignIn }) => {
   const { colors } = useAuthTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,51 +42,70 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onNext, onB
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
       <View style={{ flex: 1, paddingHorizontal: 24 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingBottom: 32 }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 16, paddingBottom: 32 }}>
           <TouchableOpacity onPress={onBack}>
-            <Text style={{ fontSize: 24, color: colors.text }}>←</Text>
+            <Text style={{ fontSize: 24, color: '#000000' }}>←</Text>
           </TouchableOpacity>
+          <Text style={{ fontSize: 20, fontWeight: '700', color: '#000000', flex: 1, textAlign: 'center', marginRight: 24 }}>
+            Forgot Password
+          </Text>
         </View>
 
-        <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.text, fontFamily: 'ReadexPro-Medium', marginBottom: 8 }}>
-          Forgot Password?
-        </Text>
-        <Text style={{ fontSize: 16, color: colors.textSecondary, fontFamily: 'ReadexPro-Medium', marginBottom: 32 }}>
-          Enter your email address and we will send you a code to reset your password.
-        </Text>
+        <View style={{ alignItems: 'center', marginBottom: 32 }}>
+          <View style={{
+            width: 120,
+            height: 120,
+            borderRadius: 60,
+            backgroundColor: '#E0E7FF',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: 24
+          }}>
+            <Text style={{ fontSize: 48 }}>🔐</Text>
+          </View>
+          
+          <Text style={{ fontSize: 24, fontWeight: '700', color: '#000000', marginBottom: 16, textAlign: 'center' }}>
+            Reset your password
+          </Text>
+          <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20, paddingHorizontal: 20 }}>
+            Enter your email address and we'll send you a link to reset your password.
+          </Text>
+        </View>
 
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', marginBottom: 8 }}>
+          Email Address
+        </Text>
         <TextInput
-          placeholder="Email Address"
+          placeholder="Enter your email"
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
           style={{
             width: '100%',
-            paddingHorizontal: 16,
+            paddingHorizontal: 20,
             paddingVertical: 16,
-            borderWidth: 1,
-            borderColor: colors.border,
-            borderRadius: 16,
-            backgroundColor: colors.inputBackground,
-            color: colors.text,
+            borderWidth: 0,
+            borderRadius: 12,
+            backgroundColor: '#F3F4F6',
+            color: '#000000',
             marginBottom: 24,
-            fontSize: 16,
-            fontFamily: 'ReadexPro-Medium'
+            fontSize: 16
           }}
-          placeholderTextColor={colors.textSecondary}
+          placeholderTextColor="#9CA3AF"
         />
 
         <TouchableOpacity 
           onPress={handleSendCode}
           style={{
             width: '100%',
-            backgroundColor: (isEmailValid() && !loading) ? colors.primary : colors.border,
+            backgroundColor: (isEmailValid() && !loading) ? '#B8C5D6' : '#D1D5DB',
             paddingVertical: 16,
-            borderRadius: 25,
+            borderRadius: 12,
             alignItems: 'center',
+            marginBottom: 24,
             opacity: loading ? 0.7 : 1
           }}
           disabled={!isEmailValid() || loading}
@@ -96,12 +116,17 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ onNext, onB
             <Text style={{
               color: 'white',
               fontSize: 16,
-              fontWeight: '500',
-              fontFamily: 'ReadexPro-Medium'
+              fontWeight: '600'
             }}>
-              Send Code
+              Send Reset Email
             </Text>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={onBackToSignIn} style={{ alignItems: 'center' }}>
+          <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '500' }}>
+            Back to Sign In
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

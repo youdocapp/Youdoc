@@ -37,6 +37,7 @@ const ForgotPasswordFlow: React.FC<ForgotPasswordFlowProps> = ({
       <ForgotPasswordScreen
         onNext={handleEmailSubmit}
         onBack={onBack}
+        onBackToSignIn={onBack}
       />
     );
   }

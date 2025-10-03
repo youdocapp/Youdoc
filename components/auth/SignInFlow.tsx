@@ -18,6 +18,7 @@ const SignInFlow: React.FC<SignInFlowProps> = ({ onComplete, onBack, onSignUp, o
     <SignInScreen
       onForgotPassword={handleForgotPassword}
       onSignUp={onSignUp}
+      onBack={onBack}
     />
   );
 };
