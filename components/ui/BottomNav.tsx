@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { Home, Bell, User } from 'lucide-react-native';
 import { useTheme } from '../../contexts/ThemeContext';
 
 interface BottomNavProps {
@@ -53,30 +54,25 @@ const BottomNav: React.FC<BottomNavProps> = ({
   return (
     <View style={styles.container}>
       <TouchableOpacity style={styles.tab} onPress={onHome}>
-        <Text style={[styles.tabIcon, activeTab === 'home' ? styles.activeTab : styles.inactiveTab]}>
-          🏠
-        </Text>
-        <Text style={[styles.tabLabel, activeTab === 'home' ? styles.activeTab : styles.inactiveTab]}>
-          Home
-        </Text>
+        <Home 
+          size={28} 
+          color={activeTab === 'home' ? colors.primary : colors.textSecondary}
+          fill={activeTab === 'home' ? colors.primary : 'transparent'}
+        />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.tab} onPress={onNotifications}>
-        <Text style={[styles.tabIcon, activeTab === 'notifications' ? styles.activeTab : styles.inactiveTab]}>
-          🔔
-        </Text>
-        <Text style={[styles.tabLabel, activeTab === 'notifications' ? styles.activeTab : styles.inactiveTab]}>
-          Notifications
-        </Text>
+        <Bell 
+          size={28} 
+          color={activeTab === 'notifications' ? colors.primary : colors.textSecondary}
+        />
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.tab} onPress={onProfile}>
-        <Text style={[styles.tabIcon, activeTab === 'profile' ? styles.activeTab : styles.inactiveTab]}>
-          👤
-        </Text>
-        <Text style={[styles.tabLabel, activeTab === 'profile' ? styles.activeTab : styles.inactiveTab]}>
-          Profile
-        </Text>
+        <User 
+          size={28} 
+          color={activeTab === 'profile' ? colors.primary : colors.textSecondary}
+        />
       </TouchableOpacity>
     </View>
   );

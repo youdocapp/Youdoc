@@ -1,15 +1,26 @@
-import { StyleSheet, Text, View } from 'react-native';
-import { useTheme } from '../../contexts/ThemeContext';
+import { View, StyleSheet } from 'react-native';
+import { useRouter } from 'expo-router';
+import DashboardScreen from '../../components/DashboardScreen';
+import BottomNav from '../../components/ui/BottomNav';
 
 export default function HomeScreen() {
-  const { colors } = useTheme();
+  const router = useRouter();
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Text style={[styles.title, { color: colors.text }]}>YouDoc Home</Text>
-      <Text style={[styles.text, { color: colors.textSecondary }]}>
-        Your health dashboard will appear here
-      </Text>
+    <View style={styles.container}>
+      <DashboardScreen
+        onSymptomChecker={() => router.push('/symptom-checker')}
+        onMyMedication={() => router.push('/my-medication')}
+        onSeeDoctor={() => router.push('/see-doctor')}
+        onHealthArticles={() => router.push('/health-articles')}
+        onSettings={() => router.push('/settings')}
+      />
+      <BottomNav
+        activeTab="home"
+        onHome={() => router.push('/(tabs)/home')}
+        onNotifications={() => router.push('/notifications')}
+        onProfile={() => router.push('/profile')}
+      />
     </View>
   );
 }
@@ -17,17 +28,5 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  text: {
-    fontSize: 16,
-    textAlign: 'center',
-    paddingHorizontal: 20,
   },
 });

@@ -1,126 +1,406 @@
-import React from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { ChevronLeft, ChevronRight, User, Lock, Fingerprint, Bell, Mail, Activity, Clock, Sun, Smartphone, DollarSign, HelpCircle, Info, LogOut, Trash2 } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SettingsScreenProps {
   onBack: () => void;
   onProfile?: () => void;
-  onNotifications?: () => void;
   onPrivacy?: () => void;
   onHelp?: () => void;
   onAbout?: () => void;
   onSubscription?: () => void;
+  onConnectedDevices?: () => void;
+  onSignOut?: () => void;
+  onDeleteAccount?: () => void;
 }
 
 const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onBack,
   onProfile,
-  onNotifications,
   onPrivacy,
   onHelp,
   onAbout,
-  onSubscription
+  onSubscription,
+  onConnectedDevices,
+  onSignOut,
+  onDeleteAccount
 }) => {
   const { colors } = useTheme();
+  const [biometricAuth, setBiometricAuth] = useState<boolean>(false);
+  const [pushNotifications, setPushNotifications] = useState<boolean>(true);
+  const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
+  const [medicationReminders, setMedicationReminders] = useState<boolean>(true);
+  const [appointmentReminders, setAppointmentReminders] = useState<boolean>(true);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [dataSharing, setDataSharing] = useState<boolean>(false);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background
+      backgroundColor: '#F9FAFB'
     },
     header: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      paddingHorizontal: 24,
-      paddingTop: 48,
-      paddingBottom: 24
+      justifyContent: 'center' as const,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 16,
+      backgroundColor: '#FFFFFF',
+      position: 'relative' as const
     },
     backButton: {
-      fontSize: 24,
-      color: colors.text
+      position: 'absolute' as const,
+      left: 20,
+      padding: 8
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold' as const,
-      color: colors.text,
-      marginLeft: 16
+      fontSize: 20,
+      fontWeight: '600' as const,
+      color: '#1F2937'
     },
     section: {
-      marginTop: 24
+      marginTop: 24,
+      paddingHorizontal: 20
     },
     sectionTitle: {
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600' as const,
-      color: colors.textSecondary,
-      paddingHorizontal: 24,
-      marginBottom: 8,
-      textTransform: 'uppercase' as const
+      color: '#9CA3AF',
+      marginBottom: 12,
+      textTransform: 'uppercase' as const,
+      letterSpacing: 0.5
+    },
+    card: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      overflow: 'hidden' as const,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2
     },
     menuItem: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      justifyContent: 'space-between' as const,
-      paddingHorizontal: 24,
+      paddingHorizontal: 16,
       paddingVertical: 16,
-      backgroundColor: colors.card,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border
+      borderBottomColor: '#F3F4F6'
+    },
+    menuItemLast: {
+      borderBottomWidth: 0
+    },
+    menuItemLeft: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      flex: 1
+    },
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      marginRight: 12
+    },
+    menuItemContent: {
+      flex: 1
     },
     menuItemText: {
       fontSize: 16,
-      color: colors.text
+      fontWeight: '500' as const,
+      color: '#1F2937',
+      marginBottom: 2
     },
-    arrow: {
-      fontSize: 18,
-      color: colors.textSecondary
+    menuItemSubtext: {
+      fontSize: 13,
+      color: '#9CA3AF'
+    },
+    menuItemRight: {
+      marginLeft: 12
+    },
+    signOutText: {
+      color: '#EF4444'
+    },
+    deleteText: {
+      color: '#EF4444'
     }
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backButton}>←</Text>
+        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+          <ChevronLeft size={24} color="#1F2937" />
         </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
       </View>
 
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Account</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={onProfile}>
-            <Text style={styles.menuItemText}>Profile</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={onNotifications}>
-            <Text style={styles.menuItemText}>Notifications</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={onSubscription}>
-            <Text style={styles.menuItemText}>Subscription</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.menuItem} onPress={onProfile}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
+                  <User size={20} color="#4F7FFF" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Profile</Text>
+                  <Text style={styles.menuItemSubtext}>Manage your personal information</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem} onPress={onPrivacy}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
+                  <Lock size={20} color="#10B981" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Privacy & Security</Text>
+                  <Text style={styles.menuItemSubtext}>Control your data and security settings</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <View style={[styles.menuItem, styles.menuItemLast]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
+                  <Fingerprint size={20} color="#A855F7" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Biometric Authentication</Text>
+                  <Text style={styles.menuItemSubtext}>Use fingerprint or face ID to unlock</Text>
+                </View>
+              </View>
+              <Switch
+                value={biometricAuth}
+                onValueChange={setBiometricAuth}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacy & Security</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={onPrivacy}>
-            <Text style={styles.menuItemText}>Privacy Settings</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>NOTIFICATIONS</Text>
+          <View style={styles.card}>
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <Bell size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Push Notifications</Text>
+                  <Text style={styles.menuItemSubtext}>Receive notifications on your device</Text>
+                </View>
+              </View>
+              <Switch
+                value={pushNotifications}
+                onValueChange={setPushNotifications}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <Mail size={20} color="#EF4444" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Email Notifications</Text>
+                  <Text style={styles.menuItemSubtext}>Get updates via email</Text>
+                </View>
+              </View>
+              <Switch
+                value={emailNotifications}
+                onValueChange={setEmailNotifications}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <Activity size={20} color="#3B82F6" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Medication Reminders</Text>
+                  <Text style={styles.menuItemSubtext}>Never miss your medications</Text>
+                </View>
+              </View>
+              <Switch
+                value={medicationReminders}
+                onValueChange={setMedicationReminders}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={[styles.menuItem, styles.menuItemLast]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
+                  <Clock size={20} color="#10B981" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Appointment Reminders</Text>
+                  <Text style={styles.menuItemSubtext}>Get notified about upcoming appointments</Text>
+                </View>
+              </View>
+              <Switch
+                value={appointmentReminders}
+                onValueChange={setAppointmentReminders}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </View>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Support</Text>
-          <TouchableOpacity style={styles.menuItem} onPress={onHelp}>
-            <Text style={styles.menuItemText}>Help & Support</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem} onPress={onAbout}>
-            <Text style={styles.menuItemText}>About</Text>
-            <Text style={styles.arrow}>→</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>APP PREFERENCES</Text>
+          <View style={styles.card}>
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
+                  <Sun size={20} color="#4F7FFF" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Dark Mode</Text>
+                  <Text style={styles.menuItemSubtext}>Switch to dark theme</Text>
+                </View>
+              </View>
+              <Switch
+                value={darkMode}
+                onValueChange={setDarkMode}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <Smartphone size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Data Sharing</Text>
+                  <Text style={styles.menuItemSubtext}>Share anonymized data for research</Text>
+                </View>
+              </View>
+              <Switch
+                value={dataSharing}
+                onValueChange={setDataSharing}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onConnectedDevices}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
+                  <Smartphone size={20} color="#10B981" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Connected Devices</Text>
+                  <Text style={styles.menuItemSubtext}>Manage your connected health devices</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
         </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SUBSCRIPTION</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onSubscription}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <DollarSign size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Manage Subscription</Text>
+                  <Text style={styles.menuItemSubtext}>View and manage your YouDoc Pro subscription</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SUPPORT</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.menuItem} onPress={onHelp}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <HelpCircle size={20} color="#3B82F6" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Help & Support</Text>
+                  <Text style={styles.menuItemSubtext}>Get help and contact support</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onAbout}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
+                  <Info size={20} color="#A855F7" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>About YouDoc</Text>
+                  <Text style={styles.menuItemSubtext}>Version 1.0.0</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>ACCOUNT</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.menuItem} onPress={onSignOut}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <LogOut size={20} color="#EF4444" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={[styles.menuItemText, styles.signOutText]}>Sign Out</Text>
+                  <Text style={styles.menuItemSubtext}>Sign out of your account</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onDeleteAccount}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <Trash2 size={20} color="#EF4444" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={[styles.menuItemText, styles.deleteText]}>Delete Account</Text>
+                  <Text style={styles.menuItemSubtext}>Permanently delete your account</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
