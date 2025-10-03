@@ -10,31 +10,32 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, onSkip }) => {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <View style={{ flex: 1, paddingHorizontal: 50, justifyContent: 'space-between', paddingTop: 120, paddingBottom: 48 }}>
+      <View style={{ flex: 1, paddingHorizontal: 32, justifyContent: 'space-between', paddingTop: 100, paddingBottom: 48 }}>
         <View style={{ flex: 1 }}>
           <Text style={{
-            fontSize: 40,
+            fontSize: 36,
             fontWeight: '700',
             color: '#1F2937',
             textAlign: 'left',
-            marginBottom: 24,
-            lineHeight: 48
+            marginBottom: 20,
+            lineHeight: 44
           }}>
-            Welcome to <Text style={{ color: '#4F7FFF' }}>YouDoc</Text>
+            Welcome to{' '}
+            <Text style={{ color: '#4F7FFF' }}>YouDoc</Text>
           </Text>
 
           <Text style={{
-            fontSize: 17,
+            fontSize: 16,
             color: '#6B7280',
             textAlign: 'left',
-            lineHeight: 26
+            lineHeight: 24
           }}>
             Your all-in-one health companion for trusted medical advice, remedies, and symptom checking—right at your fingertips.
           </Text>
         </View>
 
         <View>
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 32, gap: 8 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 32, gap: 8 }}>
             <View style={{ width: 32, height: 4, backgroundColor: '#4F7FFF', borderRadius: 2 }} />
             <View style={{ width: 32, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2 }} />
             <View style={{ width: 32, height: 4, backgroundColor: '#E5E7EB', borderRadius: 2 }} />
@@ -42,22 +43,22 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, onSkip }) => {
 
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <TouchableOpacity onPress={onSkip}>
-              <Text style={{ fontSize: 17, color: '#6B7280', fontWeight: '500' }}>Skip</Text>
+              <Text style={{ fontSize: 16, color: '#6B7280', fontWeight: '500' }}>Skip</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               onPress={onNext}
               style={{
                 backgroundColor: '#4F7FFF',
-                paddingVertical: 16,
-                paddingHorizontal: 48,
-                borderRadius: 28,
+                paddingVertical: 14,
+                paddingHorizontal: 40,
+                borderRadius: 24,
                 alignItems: 'center'
               }}
             >
               <Text style={{
                 color: 'white',
-                fontSize: 17,
+                fontSize: 16,
                 fontWeight: '600'
               }}>
                 Next

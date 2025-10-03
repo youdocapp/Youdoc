@@ -43,6 +43,7 @@ export default function ForgotPasswordPage() {
           <ForgotPasswordScreen 
             onNext={handleForgotNext}
             onBack={() => router.back()}
+            onBackToSignIn={() => router.push('/signin')}
           />
         )}
         {step === 'verify' && (

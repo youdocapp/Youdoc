@@ -1,65 +1,35 @@
 import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
-import { useRouter } from 'expo-router';
+import { router } from 'expo-router';
+import DashboardScreen from '../components/DashboardScreen';
 
 export default function DashboardPage() {
-  const { colors } = useTheme();
-  const router = useRouter();
+  const handleSymptomChecker = () => {
+    router.push('/symptom-checker');
+  };
+
+  const handleMyMedication = () => {
+    router.push('/my-medication');
+  };
+
+  const handleSeeDoctor = () => {
+    router.push('/see-doctor');
+  };
+
+  const handleHealthArticles = () => {
+    router.push('/health-articles');
+  };
+
+  const handleSettings = () => {
+    router.push('/settings');
+  };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
-        <Text style={{
-          fontSize: 32,
-          fontWeight: 'bold',
-          color: colors.text,
-          marginBottom: 16
-        }}>
-          Dashboard
-        </Text>
-
-        <Text style={{
-          fontSize: 16,
-          color: colors.textSecondary,
-          marginBottom: 32
-        }}>
-          Welcome to YouDoc! Your health dashboard is coming soon.
-        </Text>
-
-        <TouchableOpacity
-          onPress={() => router.push('/onboarding')}
-          style={{
-            backgroundColor: colors.primary,
-            paddingVertical: 16,
-            paddingHorizontal: 24,
-            borderRadius: 12,
-            alignItems: 'center',
-            marginBottom: 16
-          }}
-        >
-          <Text style={{ color: 'white', fontSize: 16, fontWeight: '600' }}>
-            View Onboarding
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={() => router.push('/signin')}
-          style={{
-            backgroundColor: colors.card,
-            paddingVertical: 16,
-            paddingHorizontal: 24,
-            borderRadius: 12,
-            alignItems: 'center',
-            borderWidth: 1,
-            borderColor: colors.border
-          }}
-        >
-          <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600' }}>
-            Sign In
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    <DashboardScreen
+      onSymptomChecker={handleSymptomChecker}
+      onMyMedication={handleMyMedication}
+      onSeeDoctor={handleSeeDoctor}
+      onHealthArticles={handleHealthArticles}
+      onSettings={handleSettings}
+    />
   );
 }
