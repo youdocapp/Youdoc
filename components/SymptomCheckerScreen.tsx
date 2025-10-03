@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
 import { ChevronLeft, Home, Bell, User } from 'lucide-react-native';
 
 interface SymptomCheckerScreenProps {
@@ -15,6 +15,12 @@ interface SymptomData {
   symptoms: string[];
   severity: 'mild' | 'moderate' | 'severe' | 'extreme' | null;
   duration: string | null;
+}
+
+interface CustomSymptomModalProps {
+  visible: boolean;
+  onClose: () => void;
+  onAdd: (symptom: string) => void;
 }
 
 const SYMPTOMS = [
@@ -79,6 +85,8 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
     severity: null,
     duration: null,
   });
+  const [showCustomSymptomModal, setShowCustomSymptomModal] = useState<boolean>(false);
+  const [customSymptom, setCustomSymptom] = useState<string>('');
 
   const handleSymptomToggle = (symptom: string) => {
     setSymptomData(prev => ({
@@ -87,6 +95,17 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
         ? prev.symptoms.filter(s => s !== symptom)
         : [...prev.symptoms, symptom],
     }));
+  };
+
+  const handleAddCustomSymptom = () => {
+    if (customSymptom.trim()) {
+      setSymptomData(prev => ({
+        ...prev,
+        symptoms: [...prev.symptoms, customSymptom.trim()],
+      }));
+      setCustomSymptom('');
+      setShowCustomSymptomModal(false);
+    }
   };
 
   const handleSeveritySelect = (severity: 'mild' | 'moderate' | 'severe' | 'extreme') => {
@@ -168,7 +187,10 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
           </TouchableOpacity>
         ))}
 
-        <TouchableOpacity style={styles.symptomButtonDashed}>
+        <TouchableOpacity 
+          style={styles.symptomButtonDashed}
+          onPress={() => setShowCustomSymptomModal(true)}
+        >
           <Text style={styles.symptomButtonDashedText}>+ Others</Text>
         </TouchableOpacity>
       </View>
@@ -302,8 +324,52 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
     );
   };
 
+  const CustomSymptomModal: React.FC<CustomSymptomModalProps> = ({ visible, onClose, onAdd }) => (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalTitle}>Add Custom Symptom</Text>
+          <TextInput
+            style={styles.modalInput}
+            placeholder="Enter symptom name"
+            value={customSymptom}
+            onChangeText={setCustomSymptom}
+            autoFocus
+          />
+          <View style={styles.modalButtons}>
+            <TouchableOpacity 
+              style={styles.modalCancelButton} 
+              onPress={onClose}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.modalAddButton} 
+              onPress={handleAddCustomSymptom}
+            >
+              <Text style={styles.modalAddText}>Add</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
+      <CustomSymptomModal 
+        visible={showCustomSymptomModal}
+        onClose={() => {
+          setShowCustomSymptomModal(false);
+          setCustomSymptom('');
+        }}
+        onAdd={handleAddCustomSymptom}
+      />
       <View style={styles.header}>
         <TouchableOpacity onPress={currentScreen === 'intro' ? onBack : () => {
           if (currentScreen === 'select') setCurrentScreen('intro');
@@ -664,6 +730,66 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
     backgroundColor: '#EF4444',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  modalInput: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#1F2937',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalCancelButton: {
+    flex: 1,
+    backgroundColor: '#F3F4F6',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalCancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  modalAddButton: {
+    flex: 1,
+    backgroundColor: '#4F7FFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  modalAddText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });
 
