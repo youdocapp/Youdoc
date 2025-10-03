@@ -32,10 +32,10 @@ const BottomNav: React.FC<BottomNavProps> = ({
           <View style={styles.bellContainer}>
             <Bell 
               size={28} 
-              color="#4F7FFF"
-              fill="#4F7FFF"
+              color={activeTab === 'notifications' ? '#4F7FFF' : '#4F7FFF'}
+              fill={activeTab === 'notifications' ? '#4F7FFF' : '#4F7FFF'}
             />
-            <View style={styles.notificationBadge} />
+            {activeTab === 'notifications' && <View style={styles.notificationBadge} />}
           </View>
         </TouchableOpacity>
 
@@ -43,6 +43,7 @@ const BottomNav: React.FC<BottomNavProps> = ({
           <User 
             size={28} 
             color={activeTab === 'profile' ? '#1F2937' : '#9CA3AF'}
+            fill={activeTab === 'profile' ? '#1F2937' : 'transparent'}
           />
         </TouchableOpacity>
       </View>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { ChevronLeft, Home, Bell, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
+import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
+import BottomNav from './ui/BottomNav';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -212,20 +213,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={onHome}>
-          <Home size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={onNotifications}>
-          <View>
-            <Bell size={24} color="#9CA3AF" />
-            <View style={styles.notificationDot} />
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={onProfile}>
-          <User size={24} color="#4F7FFF" fill="#4F7FFF" />
-        </TouchableOpacity>
-      </View>
+      <BottomNav
+        activeTab="profile"
+        onHome={onHome}
+        onNotifications={onNotifications}
+        onProfile={onProfile}
+      />
     </SafeAreaView>
   );
 };
@@ -385,27 +378,6 @@ const styles = StyleSheet.create({
   actionSubtitle: {
     fontSize: 13,
     color: '#6B7280',
-  },
-  bottomNav: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  navItem: {
-    padding: 8,
-  },
-  notificationDot: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444',
   },
 });
 
