@@ -20,7 +20,6 @@ import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MockAuthProvider } from '../contexts/MockAuthContext';
-import { trpc, trpcClient } from '../lib/trpc';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -105,18 +104,16 @@ export default function RootLayout() {
   }
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <MockAuthProvider>
-            <UserProvider>
-              <MedicationProvider>
-                <AppContent />
-              </MedicationProvider>
-            </UserProvider>
-          </MockAuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <MockAuthProvider>
+          <UserProvider>
+            <MedicationProvider>
+              <AppContent />
+            </MedicationProvider>
+          </UserProvider>
+        </MockAuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
