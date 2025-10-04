@@ -2,7 +2,7 @@ import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-n
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { LogBox } from 'react-native';
 import 'react-native-reanimated';
 import { 
@@ -14,11 +14,13 @@ import {
   ReadexPro_600SemiBold,
   ReadexPro_700Bold
 } from '@expo-google-fonts/readex-pro';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MockAuthProvider } from '../contexts/MockAuthContext';
+import { trpc, trpcClient } from '../lib/trpc';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -81,6 +83,8 @@ function AppContent() {
 }
 
 export default function RootLayout() {
+  const [queryClient] = useState(() => new QueryClient());
+  
   const [loaded, error] = useFonts({
     ReadexPro_200ExtraLight,
     ReadexPro_300Light,
@@ -101,14 +105,18 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider>
-      <MockAuthProvider>
-        <UserProvider>
-          <MedicationProvider>
-            <AppContent />
-          </MedicationProvider>
-        </UserProvider>
-      </MockAuthProvider>
-    </ThemeProvider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <MockAuthProvider>
+            <UserProvider>
+              <MedicationProvider>
+                <AppContent />
+              </MedicationProvider>
+            </UserProvider>
+          </MockAuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
