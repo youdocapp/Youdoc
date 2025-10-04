@@ -2,6 +2,7 @@ import { createTRPCReact } from "@trpc/react-query";
 import { httpLink } from "@trpc/client";
 import type { AppRouter } from "@/backend/trpc/app-router";
 import superjson from "superjson";
+import { supabase } from "./supabase";
 
 export const trpc = createTRPCReact<AppRouter>();
 
@@ -15,11 +16,26 @@ const getBaseUrl = () => {
   );
 };
 
+async function getAuthHeaders() {
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session?.access_token) {
+    return {
+      authorization: `Bearer ${session.access_token}`,
+    };
+  }
+  
+  return {};
+}
+
 export const trpcClient = trpc.createClient({
   links: [
     httpLink({
       url: `${getBaseUrl()}/api/trpc`,
       transformer: superjson,
+      async headers() {
+        return await getAuthHeaders();
+      },
     }),
   ],
 });
