@@ -259,7 +259,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     medicationDose: {
       fontSize: 14,
-      color: colors.textSecondary,
+      color: '#4F7FFF',
       marginBottom: 6
     },
     medicationDoseTaken: {

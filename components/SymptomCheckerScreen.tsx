@@ -327,7 +327,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
     },
     alertDescription: {
       fontSize: 14,
-      color: colors.text,
+      color: '#000000',
     },
     resultsTitle: {
       fontSize: 18,
