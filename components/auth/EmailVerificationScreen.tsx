@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useMockAuth } from '../../contexts/MockAuthContext';
+import { ChevronLeft } from 'lucide-react-native';
 
 interface EmailVerificationScreenProps {
   email: string;
@@ -12,7 +13,7 @@ interface EmailVerificationScreenProps {
 const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email, onVerified, onBack }) => {
   const { colors } = useAuthTheme();
   const { verifyOTP, resendOTP } = useMockAuth();
-  const [code, setCode] = useState(['', '', '', '', '']);
+  const [code, setCode] = useState(['', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(60);
@@ -36,7 +37,7 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
     newCode[index] = value;
     setCode(newCode);
 
-    if (value && index < 4) {
+    if (value && index < 3) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -49,8 +50,8 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
 
   const handleVerify = async () => {
     const verificationCode = code.join('');
-    if (verificationCode.length !== 5) {
-      Alert.alert('Invalid Code', 'Please enter the complete 5-digit code.');
+    if (verificationCode.length !== 4) {
+      Alert.alert('Invalid Code', 'Please enter the complete 4-digit code.');
       return;
     }
 
@@ -91,43 +92,45 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
   const isCodeComplete = code.every(digit => digit !== '');
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F7FA' }}>
       <View style={{ flex: 1, paddingHorizontal: 24 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 48, paddingBottom: 32 }}>
-          <TouchableOpacity onPress={onBack}>
-            <Text style={{ fontSize: 24, color: colors.text }}>←</Text>
+        <View style={{ paddingTop: 16, paddingBottom: 32 }}>
+          <TouchableOpacity onPress={onBack} style={{ marginBottom: 32 }}>
+            <ChevronLeft size={28} color="#000000" />
           </TouchableOpacity>
+          
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ fontSize: 28, fontWeight: '700', color: '#000000' }}>
+              Check your email
+            </Text>
+            <Text style={{ fontSize: 28, marginLeft: 8 }}>✨</Text>
+          </View>
+          <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 32 }}>
+            We sent a verification link to {email}
+          </Text>
         </View>
-
-        <Text style={{ fontSize: 28, fontWeight: 'bold', color: colors.text, fontFamily: 'ReadexPro-Medium', marginBottom: 8 }}>
-          Verify your email
-        </Text>
-        <Text style={{ fontSize: 16, color: colors.textSecondary, fontFamily: 'ReadexPro-Medium', marginBottom: 32 }}>
-          We sent a code to {email}
-        </Text>
 
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 32 }}>
           {code.map((digit, index) => (
             <TextInput
               key={index}
-              ref={ref => inputRefs.current[index] = ref}
+              ref={ref => { inputRefs.current[index] = ref; }}
               value={digit}
               onChangeText={(value) => handleCodeChange(value, index)}
               onKeyPress={(e) => handleKeyPress(e, index)}
               keyboardType="number-pad"
               maxLength={1}
               style={{
-                width: 56,
-                height: 56,
-                borderWidth: 2,
-                borderColor: digit ? colors.primary : colors.border,
+                width: 70,
+                height: 70,
+                borderWidth: 1,
+                borderColor: digit ? '#3B82F6' : '#E5E7EB',
                 borderRadius: 12,
-                backgroundColor: colors.inputBackground,
-                color: colors.text,
-                fontSize: 24,
-                fontWeight: 'bold',
-                textAlign: 'center',
-                fontFamily: 'ReadexPro-Medium'
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                fontSize: 28,
+                fontWeight: '700',
+                textAlign: 'center'
               }}
             />
           ))}
@@ -137,9 +140,9 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
           onPress={handleVerify}
           style={{
             width: '100%',
-            backgroundColor: (isCodeComplete && !loading) ? colors.primary : colors.border,
+            backgroundColor: (isCodeComplete && !loading) ? '#3B82F6' : '#D1D5DB',
             paddingVertical: 16,
-            borderRadius: 25,
+            borderRadius: 12,
             alignItems: 'center',
             marginBottom: 24,
             opacity: loading ? 0.7 : 1
@@ -152,26 +155,25 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
             <Text style={{
               color: 'white',
               fontSize: 16,
-              fontWeight: '500',
-              fontFamily: 'ReadexPro-Medium'
+              fontWeight: '600'
             }}>
-              Verify
+              Verify email
             </Text>
           )}
         </TouchableOpacity>
 
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 14, fontFamily: 'ReadexPro-Medium' }}>
-            Didn't receive the code?{' '}
+          <Text style={{ color: '#6B7280', fontSize: 14 }}>
+            {"Didn't receive the email? "}
           </Text>
           {timer > 0 ? (
-            <Text style={{ color: colors.textSecondary, fontSize: 14, fontFamily: 'ReadexPro-Medium' }}>
+            <Text style={{ color: '#6B7280', fontSize: 14 }}>
               Resend in {timer}s
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend} disabled={resending}>
-              <Text style={{ color: colors.primary, fontSize: 14, fontWeight: '600', fontFamily: 'ReadexPro-Medium' }}>
-                {resending ? 'Sending...' : 'Resend'}
+              <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '600' }}>
+                {resending ? 'Sending...' : 'Click to resend'}
               </Text>
             </TouchableOpacity>
           )}

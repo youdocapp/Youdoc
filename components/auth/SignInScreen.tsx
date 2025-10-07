@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Aler
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useMockAuth } from '../../contexts/MockAuthContext';
 import { useRouter } from 'expo-router';
-import { Eye, EyeOff } from 'lucide-react-native';
+import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
 
 interface SignInScreenProps {
   onForgotPassword: () => void;
@@ -48,64 +48,73 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#F5F7FA' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}>
         <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
-          <TouchableOpacity onPress={onBack} style={{ marginBottom: 24 }}>
-            <Text style={{ fontSize: 24, color: '#000000' }}>←</Text>
+          <TouchableOpacity onPress={onBack} style={{ marginBottom: 32 }}>
+            <ChevronLeft size={28} color="#000000" />
           </TouchableOpacity>
           
-          <Text style={{ fontSize: 24, fontWeight: '700', color: '#000000', marginBottom: 8, textAlign: 'center' }}>
-            Welcome back
-          </Text>
-          <Text style={{ fontSize: 16, color: '#6B7280', marginBottom: 40, textAlign: 'center' }}>
-            Continue your health journey
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <Text style={{ fontSize: 28, fontWeight: '700', color: '#000000' }}>
+              Log in
+            </Text>
+            <Text style={{ fontSize: 28, marginLeft: 8 }}>✨</Text>
+          </View>
+          <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 32 }}>
+            Welcome back! Please enter your details.
           </Text>
         </View>
 
         <View style={{ flex: 1, paddingHorizontal: 24 }}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', marginBottom: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
             Email
           </Text>
-          <TextInput
-            placeholder="Enter your email"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={{
-              width: '100%',
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              borderWidth: 0,
-              borderRadius: 12,
-              backgroundColor: '#F3F4F6',
-              color: '#000000',
-              marginBottom: 20,
-              fontSize: 16
-            }}
-            placeholderTextColor="#9CA3AF"
-          />
+          <View style={{ position: 'relative', marginBottom: 20 }}>
+            <Mail size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
+            <TextInput
+              placeholder="Enter your email"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={{
+                width: '100%',
+                paddingLeft: 48,
+                paddingRight: 20,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderRadius: 12,
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                fontSize: 15
+              }}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
 
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', marginBottom: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
             Password
           </Text>
           <View style={{ position: 'relative', marginBottom: 16 }}>
+            <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
-              placeholder="Enter your password"
+              placeholder="••••••••"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!passwordVisible}
               style={{
                 width: '100%',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
+                paddingLeft: 48,
                 paddingRight: 48,
-                borderWidth: 0,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
                 borderRadius: 12,
-                backgroundColor: '#F3F4F6',
+                backgroundColor: '#FFFFFF',
                 color: '#000000',
-                fontSize: 16
+                fontSize: 15
               }}
               placeholderTextColor="#9CA3AF"
             />
@@ -114,14 +123,14 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
               style={{
                 position: 'absolute',
                 right: 16,
-                top: '50%',
-                transform: [{ translateY: -12 }]
+                top: 16,
+                zIndex: 1
               }}
             >
               {passwordVisible ? (
-                <Eye size={20} color="#6B7280" />
+                <Eye size={20} color="#9CA3AF" />
               ) : (
-                <EyeOff size={20} color="#6B7280" />
+                <EyeOff size={20} color="#9CA3AF" />
               )}
             </TouchableOpacity>
           </View>
@@ -132,8 +141,8 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
               style={{ flexDirection: 'row', alignItems: 'center' }}
             >
               <View style={{
-                width: 20,
-                height: 20,
+                width: 18,
+                height: 18,
                 borderRadius: 4,
                 borderWidth: 2,
                 borderColor: rememberMe ? '#3B82F6' : '#D1D5DB',
@@ -143,17 +152,17 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
                 justifyContent: 'center'
               }}>
                 {rememberMe && (
-                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                  <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
                 )}
               </View>
               <Text style={{ color: '#6B7280', fontSize: 14 }}>
-                Remember me
+                Remember for 30 days
               </Text>
             </TouchableOpacity>
             
             <TouchableOpacity onPress={onForgotPassword}>
               <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '500' }}>
-                Forgot password?
+                Forgot password
               </Text>
             </TouchableOpacity>
           </View>
@@ -162,7 +171,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
             onPress={handleSignIn}
             style={{
               width: '100%',
-              backgroundColor: (isFormValid() && !loading) ? '#B8C5D6' : '#D1D5DB',
+              backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#D1D5DB',
               paddingVertical: 16,
               borderRadius: 12,
               alignItems: 'center',
@@ -179,60 +188,69 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
                 fontSize: 16,
                 fontWeight: '600'
               }}>
-                Sign In
+                Log In
               </Text>
             )}
           </TouchableOpacity>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
-            <Text style={{ marginHorizontal: 16, color: '#6B7280', fontSize: 14 }}>
-              Or continue with
+            <Text style={{ marginHorizontal: 16, color: '#9CA3AF', fontSize: 13 }}>
+              Or log in with
             </Text>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
           </View>
 
-          <TouchableOpacity
-            style={{
-              width: '100%',
-              paddingVertical: 14,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: '#3B82F6',
-              alignItems: 'center',
-              marginBottom: 12,
-              flexDirection: 'row',
-              justifyContent: 'center'
-            }}
-          >
-            <Text style={{ fontSize: 20, marginRight: 8 }}>G</Text>
-            <Text style={{ color: '#3B82F6', fontSize: 16, fontWeight: '500' }}>
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
+            <TouchableOpacity
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                backgroundColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Text style={{ fontSize: 24 }}>🍎</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={{
-              width: '100%',
-              paddingVertical: 14,
-              borderRadius: 12,
-              borderWidth: 1,
-              borderColor: '#3B82F6',
-              alignItems: 'center',
-              marginBottom: 32,
-              flexDirection: 'row',
-              justifyContent: 'center'
-            }}
-          >
-            <Text style={{ fontSize: 20, marginRight: 8 }}></Text>
-            <Text style={{ color: '#3B82F6', fontSize: 16, fontWeight: '500' }}>
-              Continue with Apple
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                backgroundColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Text style={{ fontSize: 24 }}>G</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                backgroundColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <Text style={{ fontSize: 24 }}>f</Text>
+            </TouchableOpacity>
+          </View>
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
             <Text style={{ color: '#6B7280', fontSize: 14 }}>
-              Don't have an account?{' '}
+              {"Don't have an account? "}
             </Text>
             <TouchableOpacity onPress={onSignUp}>
               <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '600' }}>
