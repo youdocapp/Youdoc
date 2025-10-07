@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
 
 interface SignInScreenProps {
@@ -12,9 +10,7 @@ interface SignInScreenProps {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
-  const { colors } = useAuthTheme();
   const { signIn } = useAuth();
-  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +32,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
       const { error } = await signIn(email, password);
       
       if (error) {
+        setLoading(false);
         if (error.message.includes('Invalid login credentials')) {
           Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
         } else if (error.message.includes('Email not confirmed')) {
@@ -46,13 +43,11 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
         return;
       }
 
-      console.log('✅ Sign in successful, redirecting to dashboard');
-      router.replace('/dashboard');
+      console.log('✅ Sign in successful, auth state will handle navigation');
     } catch (error) {
+      setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Sign in error:', error);
-    } finally {
-      setLoading(false);
     }
   };
 
