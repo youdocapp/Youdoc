@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
-import { ChevronLeft, ChevronRight, Heart, Users, Target, Award, Globe, Github, Twitter, Linkedin } from 'lucide-react-native';
+import { ChevronLeft, Heart, Target, Award, Github, Twitter, Linkedin } from 'lucide-react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface AboutScreenProps {
@@ -10,10 +10,6 @@ interface AboutScreenProps {
 const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
   const { colors } = useTheme();
   
-  const handleWebsite = () => {
-    Linking.openURL('https://youdoc.com');
-  };
-
   const handleTwitter = () => {
     Linking.openURL('https://twitter.com/youdoc');
   };
@@ -271,50 +267,6 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
             <Text style={styles.infoText}>
               Privacy, security, and user empowerment are at the core of everything we do. We&apos;re committed to protecting your health data while providing you with the best possible experience.
             </Text>
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>COMPANY</Text>
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem} onPress={handleWebsite}>
-              <View style={styles.menuItemLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
-                  <Globe size={20} color="#3B82F6" />
-                </View>
-                <View style={styles.menuItemContent}>
-                  <Text style={styles.menuItemText}>Website</Text>
-                  <Text style={styles.menuItemSubtext}>Visit youdoc.com</Text>
-                </View>
-              </View>
-              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.menuItem}>
-              <View style={styles.menuItemLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
-                  <Users size={20} color="#A855F7" />
-                </View>
-                <View style={styles.menuItemContent}>
-                  <Text style={styles.menuItemText}>Our Team</Text>
-                  <Text style={styles.menuItemSubtext}>Meet the people behind YouDoc</Text>
-                </View>
-              </View>
-              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
-              <View style={styles.menuItemLeft}>
-                <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
-                  <Award size={20} color="#EF4444" />
-                </View>
-                <View style={styles.menuItemContent}>
-                  <Text style={styles.menuItemText}>Careers</Text>
-                  <Text style={styles.menuItemSubtext}>Join our team</Text>
-                </View>
-              </View>
-              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
-            </TouchableOpacity>
           </View>
         </View>
 
