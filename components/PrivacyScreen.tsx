@@ -1,86 +1,279 @@
-import React from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { useTheme } from '../contexts/ThemeContext';
+import React, { useState } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { ChevronLeft, ChevronRight, Lock, Eye, EyeOff, Shield, FileText, Scale, Key, Download, Trash2 } from 'lucide-react-native';
 
 interface PrivacyScreenProps {
   onBack: () => void;
+  onPrivacyPolicy?: () => void;
+  onTermsOfService?: () => void;
+  onHIPAACompliance?: () => void;
 }
 
-const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ onBack }) => {
-  const { colors } = useTheme();
+const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ 
+  onBack,
+  onPrivacyPolicy,
+  onTermsOfService,
+  onHIPAACompliance
+}) => {
+  const [shareHealthData, setShareHealthData] = useState<boolean>(false);
+  const [shareAnalytics, setShareAnalytics] = useState<boolean>(true);
+  const [twoFactorAuth, setTwoFactorAuth] = useState<boolean>(false);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.background
+      backgroundColor: '#F9FAFB'
     },
     header: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      paddingHorizontal: 24,
-      paddingTop: 48,
-      paddingBottom: 24
+      justifyContent: 'center' as const,
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 16,
+      backgroundColor: '#FFFFFF',
+      position: 'relative' as const
     },
     backButton: {
-      fontSize: 24,
-      color: colors.text
+      position: 'absolute' as const,
+      left: 20,
+      padding: 8
     },
     title: {
-      fontSize: 24,
-      fontWeight: 'bold' as const,
-      color: colors.text,
-      marginLeft: 16
+      fontSize: 20,
+      fontWeight: '600' as const,
+      color: '#1F2937'
     },
-    content: {
-      paddingHorizontal: 24
+    section: {
+      marginTop: 24,
+      paddingHorizontal: 20
+    },
+    sectionTitle: {
+      fontSize: 13,
+      fontWeight: '600' as const,
+      color: '#9CA3AF',
+      marginBottom: 12,
+      textTransform: 'uppercase' as const,
+      letterSpacing: 0.5
+    },
+    card: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      overflow: 'hidden' as const,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2
     },
     menuItem: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      justifyContent: 'space-between' as const,
+      paddingHorizontal: 16,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: colors.border
+      borderBottomColor: '#F3F4F6'
+    },
+    menuItemLast: {
+      borderBottomWidth: 0
+    },
+    menuItemLeft: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      flex: 1
+    },
+    iconContainer: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center' as const,
+      justifyContent: 'center' as const,
+      marginRight: 12
+    },
+    menuItemContent: {
+      flex: 1
     },
     menuItemText: {
       fontSize: 16,
-      color: colors.text
+      fontWeight: '500' as const,
+      color: '#1F2937',
+      marginBottom: 2
     },
-    arrow: {
-      fontSize: 18,
-      color: colors.textSecondary
+    menuItemSubtext: {
+      fontSize: 13,
+      color: '#9CA3AF'
+    },
+    menuItemRight: {
+      marginLeft: 12
+    },
+    dangerText: {
+      color: '#EF4444'
     }
   });
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={onBack}>
-          <Text style={styles.backButton}>←</Text>
+        <TouchableOpacity style={styles.backButton} onPress={onBack}>
+          <ChevronLeft size={24} color="#1F2937" />
         </TouchableOpacity>
-        <Text style={styles.title}>Privacy Settings</Text>
+        <Text style={styles.title}>Privacy & Security</Text>
       </View>
 
-      <ScrollView style={styles.content}>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Data Sharing</Text>
-          <Text style={styles.arrow}>→</Text>
-        </TouchableOpacity>
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>DATA PRIVACY</Text>
+          <View style={styles.card}>
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <Eye size={20} color="#3B82F6" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Share Health Data</Text>
+                  <Text style={styles.menuItemSubtext}>Share anonymized data for research</Text>
+                </View>
+              </View>
+              <Switch
+                value={shareHealthData}
+                onValueChange={setShareHealthData}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Privacy Policy</Text>
-          <Text style={styles.arrow}>→</Text>
-        </TouchableOpacity>
+            <View style={[styles.menuItem, styles.menuItemLast]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
+                  <EyeOff size={20} color="#A855F7" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Share Analytics</Text>
+                  <Text style={styles.menuItemSubtext}>Help us improve the app</Text>
+                </View>
+              </View>
+              <Switch
+                value={shareAnalytics}
+                onValueChange={setShareAnalytics}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </View>
+        </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Terms of Service</Text>
-          <Text style={styles.arrow}>→</Text>
-        </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>SECURITY</Text>
+          <View style={styles.card}>
+            <View style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
+                  <Key size={20} color="#10B981" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Two-Factor Authentication</Text>
+                  <Text style={styles.menuItemSubtext}>Add an extra layer of security</Text>
+                </View>
+              </View>
+              <Switch
+                value={twoFactorAuth}
+                onValueChange={setTwoFactorAuth}
+                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
 
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>HIPAA Compliance</Text>
-          <Text style={styles.arrow}>→</Text>
-        </TouchableOpacity>
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
+                  <Lock size={20} color="#F59E0B" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Change Password</Text>
+                  <Text style={styles.menuItemSubtext}>Update your account password</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>LEGAL & COMPLIANCE</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.menuItem} onPress={onPrivacyPolicy}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#EEF2FF' }]}>
+                  <FileText size={20} color="#4F7FFF" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Privacy Policy</Text>
+                  <Text style={styles.menuItemSubtext}>How we handle your data</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.menuItem} onPress={onTermsOfService}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#F3E8FF' }]}>
+                  <Scale size={20} color="#A855F7" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Terms of Service</Text>
+                  <Text style={styles.menuItemSubtext}>Our terms and conditions</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onHIPAACompliance}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
+                  <Shield size={20} color="#10B981" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>HIPAA Compliance</Text>
+                  <Text style={styles.menuItemSubtext}>Healthcare data protection</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
+          <View style={styles.card}>
+            <TouchableOpacity style={styles.menuItem}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
+                  <Download size={20} color="#3B82F6" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={styles.menuItemText}>Download My Data</Text>
+                  <Text style={styles.menuItemSubtext}>Export all your health data</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+              <View style={styles.menuItemLeft}>
+                <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
+                  <Trash2 size={20} color="#EF4444" />
+                </View>
+                <View style={styles.menuItemContent}>
+                  <Text style={[styles.menuItemText, styles.dangerText]}>Delete All Data</Text>
+                  <Text style={styles.menuItemSubtext}>Permanently remove all your data</Text>
+                </View>
+              </View>
+              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
   );
