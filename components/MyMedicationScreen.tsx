@@ -62,8 +62,8 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#1F2937'
     },
     monthsContainer: {
-      paddingTop: 20,
-      paddingBottom: 12,
+      paddingTop: 16,
+      paddingBottom: 8,
       backgroundColor: '#FFFFFF'
     },
     monthsContentContainer: {
@@ -92,8 +92,8 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#FFFFFF'
     },
     datesContainer: {
-      paddingTop: 12,
-      paddingBottom: 20,
+      paddingTop: 4,
+      paddingBottom: 16,
       backgroundColor: '#FFFFFF',
       borderBottomWidth: 1,
       borderBottomColor: '#F3F4F6'
@@ -103,34 +103,41 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       gap: 16
     },
     dateCard: {
-      width: 72,
-      paddingVertical: 14,
-      paddingHorizontal: 12,
-      borderRadius: 18,
-      backgroundColor: '#F3F4F6',
+      width: 68,
+      paddingVertical: 12,
+      paddingHorizontal: 10,
+      borderRadius: 16,
+      backgroundColor: '#F9FAFB',
       alignItems: 'center' as const,
-      marginRight: 12,
-      borderWidth: 0
+      marginRight: 10,
+      borderWidth: 1,
+      borderColor: '#E5E7EB'
     },
     dateCardActive: {
       backgroundColor: '#4F7FFF',
-      borderColor: '#4F7FFF'
+      borderColor: '#4F7FFF',
+      shadowColor: '#4F7FFF',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
+      elevation: 3
     },
     dateWeekday: {
-      fontSize: 12,
-      fontWeight: '500' as const,
+      fontSize: 11,
+      fontWeight: '600' as const,
       color: '#9CA3AF',
-      marginBottom: 4,
-      textTransform: 'capitalize' as const
+      marginBottom: 2,
+      textTransform: 'uppercase' as const,
+      letterSpacing: 0.5
     },
     dateWeekdayActive: {
       color: '#FFFFFF'
     },
     dateDay: {
-      fontSize: 26,
+      fontSize: 24,
       fontWeight: '700' as const,
       color: '#1F2937',
-      marginBottom: 6
+      marginBottom: 4
     },
     dateDayActive: {
       color: '#FFFFFF'
@@ -162,28 +169,30 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     medicationCard: {
       backgroundColor: '#FFFFFF',
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 12,
+      borderRadius: 20,
+      padding: 18,
+      marginBottom: 14,
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 8,
+      elevation: 3,
+      borderWidth: 1,
+      borderColor: '#F3F4F6'
     },
     medicationCardTaken: {
       opacity: 0.5
     },
     medicationIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: 28,
+      width: 52,
+      height: 52,
+      borderRadius: 16,
       backgroundColor: '#FEF3C7',
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
-      marginRight: 16
+      marginRight: 14
     },
     pillEmoji: {
       fontSize: 28
@@ -349,33 +358,27 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Medicine</Text>
         
-        {medications.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No medications added yet</Text>
-          </View>
-        ) : (
-          medications.map((med) => (
-            <View key={med.id} style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}>
-              <View style={styles.medicationIcon}>
-                <Text style={styles.pillEmoji}>💊</Text>
-              </View>
-              <View style={styles.medicationInfo}>
-                <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
-                <Text style={styles.medicationDose}>{med.dosage}</Text>
-                <View style={styles.medicationTime}>
-                  <Clock size={14} color="#9CA3AF" />
-                  <Text style={styles.timeText}>{med.time[0] || '08:00'}</Text>
-                </View>
-              </View>
-              <TouchableOpacity 
-                style={[styles.checkbox, med.taken && styles.checkboxChecked]}
-                onPress={() => toggleMedicationTaken(med.id)}
-              >
-                {med.taken && <View style={styles.checkmark} />}
-              </TouchableOpacity>
+        {medications.map((med) => (
+          <View key={med.id} style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}>
+            <View style={styles.medicationIcon}>
+              <Text style={styles.pillEmoji}>💊</Text>
             </View>
-          ))
-        )}
+            <View style={styles.medicationInfo}>
+              <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
+              <Text style={styles.medicationDose}>{med.dosage}</Text>
+              <View style={styles.medicationTime}>
+                <Clock size={14} color="#9CA3AF" />
+                <Text style={styles.timeText}>{med.time[0] || '08:00'}</Text>
+              </View>
+            </View>
+            <TouchableOpacity 
+              style={[styles.checkbox, med.taken && styles.checkboxChecked]}
+              onPress={() => toggleMedicationTaken(med.id)}
+            >
+              {med.taken && <View style={styles.checkmark} />}
+            </TouchableOpacity>
+          </View>
+        ))}
 
         <View style={styles.medicationCard}>
           <View style={styles.medicationIcon}>
