@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Image, Alert } from 'react-native';
 import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
+import * as ImagePicker from 'expo-image-picker';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -40,9 +41,33 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [height, setHeight] = useState<string>('5\'7"');
   const [weight, setWeight] = useState<string>('165 lbs');
   const [address, setAddress] = useState<string>('123 Main Street, New York, NY 10001');
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [showBloodTypeModal, setShowBloodTypeModal] = useState<boolean>(false);
 
   const handleSave = () => {
     setIsEditing(false);
+  };
+
+  const pickImage = async () => {
+    if (!isEditing) return;
+    
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (permissionResult.granted === false) {
+      Alert.alert('Permission Required', 'Permission to access camera roll is required!');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileImage(result.assets[0].uri);
+    }
   };
 
   const DatePickerModal = ({ visible, onClose, onSelect, currentDate }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date }) => {
@@ -336,6 +361,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       fontWeight: '700',
       color: '#FFFFFF',
     },
+    avatarImage: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+    },
     cameraButton: {
       position: 'absolute',
       bottom: 0,
@@ -509,12 +539,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>JD</Text>
-            </View>
-            <View style={styles.cameraButton}>
-              <Camera size={16} color="#FFFFFF" />
-            </View>
+            <TouchableOpacity onPress={pickImage} disabled={!isEditing}>
+              <View style={styles.avatar}>
+                {profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarText}>JD</Text>
+                )}
+              </View>
+              {isEditing && (
+                <View style={styles.cameraButton}>
+                  <Camera size={16} color="#FFFFFF" />
+                </View>
+              )}
+            </TouchableOpacity>
           </View>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.email}>{email}</Text>
@@ -618,26 +656,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Health Information</Text>
           <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
+            <TouchableOpacity 
+              style={styles.infoRow}
+              onPress={() => isEditing && setShowBloodTypeModal(true)}
+              disabled={!isEditing}
+            >
               <View style={[styles.infoIcon, { backgroundColor: '#FEE2E2' }]}>
                 <Heart size={20} color="#EF4444" />
               </View>
               <Text style={styles.infoLabel}>Blood Type</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.infoInput}
-                  value={bloodType}
-                  onChangeText={setBloodType}
-                  placeholder="Enter blood type"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              ) : (
-                <>
-                  <Text style={styles.infoValue}>{bloodType}</Text>
-                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                </>
-              )}
-            </View>
+              <Text style={styles.infoValue}>{bloodType}</Text>
+              {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
@@ -818,6 +848,39 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           currentDate={dateOfBirth}
         />
       )}
+
+      <Modal
+        visible={showBloodTypeModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowBloodTypeModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.genderModal}>
+            <Text style={styles.genderModalTitle}>Select Blood Type</Text>
+            {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.genderOption,
+                  bloodType === option && styles.genderOptionSelected
+                ]}
+                onPress={() => {
+                  setBloodType(option);
+                  setShowBloodTypeModal(false);
+                }}
+              >
+                <Text style={[
+                  styles.genderOptionText,
+                  bloodType === option && styles.genderOptionTextSelected
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
