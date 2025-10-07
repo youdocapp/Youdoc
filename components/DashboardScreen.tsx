@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Moon, Flame, Heart, Footprints, TrendingUp } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
@@ -16,6 +16,7 @@ interface DashboardScreenProps {
   onSettings?: () => void;
   onNotifications?: () => void;
   onProfile?: () => void;
+  onGlossarySearch?: (query: string) => void;
 
   activeTab?: string;
 }
@@ -30,6 +31,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onSettings,
   onNotifications,
   onProfile,
+  onGlossarySearch,
 
   activeTab = 'home'
 }) => {
@@ -466,14 +468,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </TouchableOpacity>
           </View>
 
-          <View style={styles.searchContainer}>
+          <TouchableOpacity 
+            style={styles.searchContainer}
+            onPress={() => onGlossarySearch?.('')}
+          >
             <Search size={20} color={colors.textSecondary} />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search glossary"
-              placeholderTextColor={colors.textSecondary}
-            />
-          </View>
+            <Text style={[styles.searchInput, { color: colors.textSecondary }]}>Search glossary</Text>
+          </TouchableOpacity>
         </View>
 
         <View style={styles.quickActions}>

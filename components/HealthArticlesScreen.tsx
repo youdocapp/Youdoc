@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Search, Bookmark } from 'lucide-react-native';
 import { articles as allArticlesData, categories as categoriesData } from '@/constants/articles';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -44,7 +45,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     },
     header: {
       backgroundColor: colors.background,
-      paddingTop: 60,
+      paddingTop: 16,
       paddingBottom: 20,
       paddingHorizontal: 20
     },
@@ -294,7 +295,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
   });
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>

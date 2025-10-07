@@ -31,6 +31,13 @@ export default function DashboardPage() {
     router.push('/profile');
   };
 
+  const handleGlossarySearch = (query: string) => {
+    router.push({
+      pathname: '/health-glossary',
+      params: { query }
+    });
+  };
+
   return (
     <DashboardScreen
       onSymptomChecker={handleSymptomChecker}
@@ -40,6 +47,7 @@ export default function DashboardPage() {
       onSettings={handleSettings}
       onNotifications={handleNotifications}
       onProfile={handleProfile}
+      onGlossarySearch={handleGlossarySearch}
       activeTab="home"
     />
   );
