@@ -102,9 +102,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
       justifyContent: 'space-between',
       paddingHorizontal: 20,
       paddingVertical: 16,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      backgroundColor: colors.card,
     },
     headerTitle: {
       fontSize: 18,
