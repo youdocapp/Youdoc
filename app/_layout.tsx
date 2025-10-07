@@ -19,7 +19,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
-import { MockAuthProvider } from '../contexts/MockAuthContext';
+import { AuthProvider } from '../contexts/AuthContext';
 import { HealthTrackerProvider } from '../contexts/HealthTrackerContext';
 import { EmergencyContactsProvider } from '../contexts/EmergencyContactsContext';
 import { HealthRecordsProvider } from '../contexts/HealthRecordsContext';
@@ -115,7 +115,7 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <MockAuthProvider>
+        <AuthProvider>
           <UserProvider>
             <MedicationProvider>
               <HealthTrackerProvider>
@@ -129,7 +129,7 @@ export default function RootLayout() {
               </HealthTrackerProvider>
             </MedicationProvider>
           </UserProvider>
-        </MockAuthProvider>
+        </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );

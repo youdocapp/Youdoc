@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
-import { useMockAuth } from '../../contexts/MockAuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
 
@@ -13,7 +13,7 @@ interface SignInScreenProps {
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
   const { colors } = useAuthTheme();
-  const { signIn } = useMockAuth();
+  const { signIn } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -33,14 +33,27 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
 
     setLoading(true);
     try {
-      await signIn(email, password);
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
+        } else if (error.message.includes('Email not confirmed')) {
+          Alert.alert('Email Not Verified', 'Please verify your email before signing in.');
+        } else {
+          Alert.alert('Login Error', error.message || 'Failed to sign in. Please try again.');
+        }
+        return;
+      }
+
+      console.log('✅ Sign in successful, redirecting to dashboard');
       Alert.alert(
-        'Success!',
+        'Welcome Back!',
         'You have been signed in successfully.',
         [{ text: 'OK', onPress: () => router.push('/dashboard') }]
       );
     } catch (error) {
-      Alert.alert('Error', 'Invalid email or password. Please try again.');
+      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Sign in error:', error);
     } finally {
       setLoading(false);

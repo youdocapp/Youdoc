@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
-import { useMockAuth } from '../../contexts/MockAuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeft, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react-native';
 
 interface SignUpScreenProps {
@@ -20,7 +20,7 @@ interface FormData {
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const { colors } = useAuthTheme();
-  const { signUp } = useMockAuth();
+  const { signUp } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -70,9 +70,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
     setLoading(true);
     try {
-      console.log('🚀 Starting signup process with OTP for:', formData.email);
+      console.log('🚀 Starting signup process for:', formData.email);
       
-      await signUp(
+      const { error } = await signUp(
         formData.email,
         formData.password,
         {
@@ -82,10 +82,19 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
         }
       );
 
-      console.log('✅ Mock signup completed, proceeding to verification');
+      if (error) {
+        if (error.message.includes('already registered')) {
+          Alert.alert('Account Exists', 'This email is already registered. Please sign in instead.');
+        } else {
+          Alert.alert('Signup Error', error.message || 'Failed to create account. Please try again.');
+        }
+        return;
+      }
+
+      console.log('✅ Signup completed, proceeding to verification');
       Alert.alert(
-        'Account Created!',
-        'Your account has been created successfully.',
+        'Verify Your Email',
+        'We\'ve sent a verification code to your email. Please check your inbox.',
         [{ text: 'OK', onPress: () => onNext(formData) }]
       );
     } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
-import { useMockAuth } from '../../contexts/MockAuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeft } from 'lucide-react-native';
 
 interface EmailVerificationScreenProps {
@@ -12,8 +12,8 @@ interface EmailVerificationScreenProps {
 
 const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email, onVerified, onBack }) => {
   const { colors } = useAuthTheme();
-  const { verifyOTP, resendOTP } = useMockAuth();
-  const [code, setCode] = useState(['', '', '', '']);
+  const { verifyOTP, resendOTP } = useAuth();
+  const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(60);
@@ -37,7 +37,7 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
     newCode[index] = value;
     setCode(newCode);
 
-    if (value && index < 3) {
+    if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -50,22 +50,22 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
 
   const handleVerify = async () => {
     const verificationCode = code.join('');
-    if (verificationCode.length !== 4) {
-      Alert.alert('Invalid Code', 'Please enter the complete 4-digit code.');
+    if (verificationCode.length !== 6) {
+      Alert.alert('Invalid Code', 'Please enter the complete 6-digit code.');
       return;
     }
 
     setLoading(true);
     try {
-      const result = await verifyOTP(verificationCode);
-      if (result.success) {
+      const { error } = await verifyOTP(email, verificationCode);
+      if (error) {
+        Alert.alert('Verification Failed', error.message || 'Invalid verification code.');
+      } else {
         Alert.alert(
           'Verified!',
           'Your email has been verified successfully.',
           [{ text: 'OK', onPress: onVerified }]
         );
-      } else {
-        Alert.alert('Error', result.error || 'Invalid verification code.');
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
@@ -78,9 +78,13 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
   const handleResend = async () => {
     setResending(true);
     try {
-      await resendOTP();
-      setTimer(60);
-      Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
+      const { error } = await resendOTP(email);
+      if (error) {
+        Alert.alert('Resend Failed', error.message || 'Failed to resend code.');
+      } else {
+        setTimer(60);
+        Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
+      }
     } catch (error) {
       Alert.alert('Error', 'Failed to resend code. Please try again.');
       console.error('Resend error:', error);
@@ -121,8 +125,8 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
               keyboardType="number-pad"
               maxLength={1}
               style={{
-                width: 70,
-                height: 70,
+                width: 50,
+                height: 60,
                 borderWidth: 1,
                 borderColor: digit ? '#3B82F6' : '#E5E7EB',
                 borderRadius: 12,

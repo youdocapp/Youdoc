@@ -2,10 +2,10 @@ import React from 'react';
 import { Alert } from 'react-native';
 import { router } from 'expo-router';
 import SettingsScreen from '../components/SettingsScreen';
-import { useUser } from '../contexts/UserContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsRoute() {
-  const { logout } = useUser();
+  const { signOut, deleteAccount } = useAuth();
 
   const handleBack = () => {
     router.replace('/dashboard');
@@ -35,7 +35,7 @@ export default function SettingsRoute() {
     router.push('/connected-devices');
   };
 
-  const handleSignOut = () => {
+  const handleSignOut = async () => {
     Alert.alert(
       'Sign Out',
       'Are you sure you want to sign out?',
@@ -47,17 +47,23 @@ export default function SettingsRoute() {
         {
           text: 'Sign Out',
           style: 'destructive',
-          onPress: () => {
-            console.log('User signed out');
-            logout();
-            router.replace('/');
+          onPress: async () => {
+            try {
+              console.log('🚀 Signing out user...');
+              await signOut();
+              console.log('✅ User signed out successfully');
+              router.replace('/');
+            } catch (error) {
+              console.error('❌ Sign out error:', error);
+              Alert.alert('Error', 'Failed to sign out. Please try again.');
+            }
           }
         }
       ]
     );
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     Alert.alert(
       'Delete Account',
       'Are you sure you want to permanently delete your account? This action cannot be undone and all your data will be lost.',
@@ -81,10 +87,27 @@ export default function SettingsRoute() {
                 {
                   text: 'Delete Forever',
                   style: 'destructive',
-                  onPress: () => {
-                    console.log('Account deleted');
-                    logout();
-                    router.replace('/');
+                  onPress: async () => {
+                    try {
+                      console.log('🚀 Deleting account...');
+                      const { error } = await deleteAccount();
+                      
+                      if (error) {
+                        console.error('❌ Delete account error:', error);
+                        Alert.alert('Error', error.message || 'Failed to delete account. Please try again.');
+                        return;
+                      }
+                      
+                      console.log('✅ Account deleted successfully');
+                      Alert.alert(
+                        'Account Deleted',
+                        'Your account has been permanently deleted.',
+                        [{ text: 'OK', onPress: () => router.replace('/') }]
+                      );
+                    } catch (error) {
+                      console.error('❌ Unexpected delete account error:', error);
+                      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+                    }
                   }
                 }
               ]
