@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
-import { useAuthTheme } from '../../contexts/AuthThemeContext';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
 import { useMockAuth } from '../../contexts/MockAuthContext';
+import { ArrowLeft, Eye, EyeOff, Calendar } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 interface SignUpScreenProps {
   onNext: (formData: any) => void;
@@ -9,29 +10,26 @@ interface SignUpScreenProps {
 }
 
 interface FormData {
-  firstName: string;
-  lastName: string;
+  fullName: string;
   email: string;
-  mobile: string;
+  birthDate: string;
+  phoneNumber: string;
   password: string;
-  repeatPassword: string;
 }
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
-  const { colors } = useAuthTheme();
+
   const { signUp } = useMockAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     email: '',
-    mobile: '',
-    password: '',
-    repeatPassword: ''
+    birthDate: '',
+    phoneNumber: '',
+    password: ''
   });
 
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [repeatPasswordVisible, setRepeatPasswordVisible] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -40,29 +38,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
     }));
   };
 
-  const passwordRequirements = {
-    minLength: formData.password.length >= 8,
-    hasNumber: /\d/.test(formData.password),
-    hasSymbol: /[!@#$%^&*(),.?":{}|<>]/.test(formData.password)
-  };
-
-  const getPasswordStrength = () => {
-    const validRequirements = Object.values(passwordRequirements).filter(Boolean).length;
-    if (validRequirements === 0) return { width: '0%', color: '#d1d5db' };
-    if (validRequirements === 1) return { width: '33%', color: '#ef4444' };
-    if (validRequirements === 2) return { width: '67%', color: '#eab308' };
-    return { width: '100%', color: '#22c55e' };
-  };
-
   const isFormValid = () => {
-    return formData.firstName && 
-           formData.lastName && 
+    return formData.fullName && 
            formData.email && 
-           formData.mobile && 
-           formData.password && 
-           formData.repeatPassword &&
-           formData.password === formData.repeatPassword &&
-           Object.values(passwordRequirements).every(Boolean);
+           formData.birthDate && 
+           formData.phoneNumber && 
+           formData.password;
   };
 
   const handleCreateAccount = async () => {
@@ -79,8 +60,9 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
         formData.email,
         formData.password,
         {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
+          full_name: formData.fullName,
+          birth_date: formData.birthDate,
+          phone_number: formData.phoneNumber,
         }
       );
 
@@ -98,279 +80,289 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
     }
   };
 
-  const passwordStrength = getPasswordStrength();
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 32 }}>
-          <TouchableOpacity onPress={onBack}>
-            <Text style={{ fontSize: 24, color: '#000000' }}>←</Text>
-          </TouchableOpacity>
-          <Text style={{ fontSize: 20, fontWeight: '700', color: '#000000', flex: 1, textAlign: 'center', marginRight: 24 }}>Great, let's get started</Text>
-        </View>
-
-        <View style={{ flex: 1, paddingHorizontal: 24 }}>
-          <TextInput
-            placeholder="First Name"
-            value={formData.firstName}
-            onChangeText={(value) => handleInputChange('firstName', value)}
-            style={{
-              width: '100%',
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              borderWidth: 0,
-              borderRadius: 12,
-              backgroundColor: '#F3F4F6',
-              color: '#000000',
-              marginBottom: 12,
-              fontSize: 16
-            }}
-            placeholderTextColor="#9CA3AF"
-          />
-
-          <TextInput
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChangeText={(value) => handleInputChange('lastName', value)}
-            style={{
-              width: '100%',
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              borderWidth: 0,
-              borderRadius: 12,
-              backgroundColor: '#F3F4F6',
-              color: '#000000',
-              marginBottom: 12,
-              fontSize: 16
-            }}
-            placeholderTextColor="#9CA3AF"
-          />
-
-          <TextInput
-            placeholder="Email Address Required"
-            value={formData.email}
-            onChangeText={(value) => handleInputChange('email', value)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={{
-              width: '100%',
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              borderWidth: 0,
-              borderRadius: 12,
-              backgroundColor: '#F3F4F6',
-              color: '#000000',
-              marginBottom: 12,
-              fontSize: 16
-            }}
-            placeholderTextColor="#9CA3AF"
-          />
-
-          <TextInput
-            placeholder="Mobile Number"
-            value={formData.mobile}
-            onChangeText={(value) => handleInputChange('mobile', value)}
-            keyboardType="phone-pad"
-            style={{
-              width: '100%',
-              paddingHorizontal: 20,
-              paddingVertical: 16,
-              borderWidth: 0,
-              borderRadius: 12,
-              backgroundColor: '#F3F4F6',
-              color: '#000000',
-              marginBottom: 12,
-              fontSize: 16
-            }}
-            placeholderTextColor="#9CA3AF"
-          />
-
-          <View style={{ position: 'relative', marginBottom: 12 }}>
-            <TextInput
-              placeholder="Enter password"
-              value={formData.password}
-              onChangeText={(value) => handleInputChange('password', value)}
-              secureTextEntry={!passwordVisible}
-              style={{
-                width: '100%',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                paddingRight: 48,
-                borderWidth: 0,
-                borderRadius: 12,
-                backgroundColor: '#F3F4F6',
-                color: '#000000',
-                fontSize: 16
-              }}
-              placeholderTextColor="#9CA3AF"
-            />
-            <TouchableOpacity
-              onPress={() => setPasswordVisible(!passwordVisible)}
-              style={{
-                position: 'absolute',
-                right: 16,
-                top: '50%',
-                transform: [{ translateY: -12 }]
-              }}
-            >
-              <Text style={{ fontSize: 20, color: '#6B7280' }}>
-                {passwordVisible ? '👁️' : '👁️‍🗨️'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ position: 'relative', marginBottom: 20 }}>
-            <TextInput
-              placeholder="Repeat password"
-              value={formData.repeatPassword}
-              onChangeText={(value) => handleInputChange('repeatPassword', value)}
-              secureTextEntry={!repeatPasswordVisible}
-              style={{
-                width: '100%',
-                paddingHorizontal: 20,
-                paddingVertical: 16,
-                paddingRight: 48,
-                borderWidth: 0,
-                borderRadius: 12,
-                backgroundColor: '#F3F4F6',
-                color: '#000000',
-                fontSize: 16
-              }}
-              placeholderTextColor="#9CA3AF"
-            />
-            <TouchableOpacity
-              onPress={() => setRepeatPasswordVisible(!repeatPasswordVisible)}
-              style={{
-                position: 'absolute',
-                right: 16,
-                top: '50%',
-                transform: [{ translateY: -12 }]
-              }}
-            >
-              <Text style={{ fontSize: 20, color: '#6B7280' }}>
-                {repeatPasswordVisible ? '👁️' : '👁️‍🗨️'}
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={{ marginBottom: 16 }}>
-            <View style={{ width: '100%', height: 4, backgroundColor: '#E5E7EB', borderRadius: 2 }}>
-              <View 
-                style={{
-                  height: 4,
-                  backgroundColor: passwordStrength.color,
-                  borderRadius: 2,
-                  width: passwordStrength.width,
-                }}
-              />
-            </View>
-          </View>
-
-          <View style={{ marginBottom: 32 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                borderWidth: 2,
-                borderColor: passwordRequirements.minLength ? '#22c55e' : '#D1D5DB',
-                backgroundColor: passwordRequirements.minLength ? 'transparent' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 12
-              }}>
-                {passwordRequirements.minLength && (
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
-                )}
-              </View>
-              <Text style={{
-                fontSize: 14,
-                color: '#6B7280'
-              }}>
-                8 characters minimum
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                borderWidth: 2,
-                borderColor: passwordRequirements.hasNumber ? '#22c55e' : '#D1D5DB',
-                backgroundColor: passwordRequirements.hasNumber ? 'transparent' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 12
-              }}>
-                {passwordRequirements.hasNumber && (
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
-                )}
-              </View>
-              <Text style={{
-                fontSize: 14,
-                color: '#6B7280'
-              }}>
-                a number
-              </Text>
-            </View>
-
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-              <View style={{
-                width: 20,
-                height: 20,
-                borderRadius: 10,
-                borderWidth: 2,
-                borderColor: passwordRequirements.hasSymbol ? '#22c55e' : '#D1D5DB',
-                backgroundColor: passwordRequirements.hasSymbol ? 'transparent' : 'transparent',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginRight: 12
-              }}>
-                {passwordRequirements.hasSymbol && (
-                  <View style={{ width: 10, height: 10, borderRadius: 5, backgroundColor: '#22c55e' }} />
-                )}
-              </View>
-              <Text style={{
-                fontSize: 14,
-                color: '#6B7280'
-              }}>
-                a symbol
-              </Text>
-            </View>
-          </View>
-        </View>
-      </ScrollView>
-
-      <View style={{ padding: 24 }}>
-        <TouchableOpacity 
-          onPress={handleCreateAccount}
-          style={{
-            width: '100%',
-            backgroundColor: (isFormValid() && !loading) ? '#B8C5D6' : '#D1D5DB',
-            paddingVertical: 16,
-            borderRadius: 12,
-            alignItems: 'center',
-            opacity: loading ? 0.7 : 1
-          }}
-          disabled={!isFormValid() || loading}
+    <LinearGradient
+      colors={['#2563EB', '#06B6D4']}
+      style={styles.gradient}
+    >
+      <SafeAreaView style={styles.container}>
+        <ScrollView 
+          style={styles.scrollView} 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={{
-              color: 'white',
-              fontSize: 16,
-              fontWeight: '600'
-            }}>
-              Create an account
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+          <View style={styles.card}>
+            <TouchableOpacity onPress={onBack} style={styles.backButton}>
+              <ArrowLeft size={24} color="#000000" />
+            </TouchableOpacity>
+
+            <Text style={styles.title}>Sign up</Text>
+            
+            <View style={styles.loginPrompt}>
+              <Text style={styles.promptText}>Already have an account? </Text>
+              <TouchableOpacity onPress={onBack}>
+                <Text style={styles.loginLink}>Login</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.form}>
+              <Text style={styles.label}>Full Name</Text>
+              <TextInput
+                placeholder="Lois Becket"
+                value={formData.fullName}
+                onChangeText={(value) => handleInputChange('fullName', value)}
+                style={styles.input}
+                placeholderTextColor="#9CA3AF"
+              />
+
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                placeholder="Loisbecket@gmail.com"
+                value={formData.email}
+                onChangeText={(value) => handleInputChange('email', value)}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+                placeholderTextColor="#9CA3AF"
+              />
+
+              <Text style={styles.label}>Birth of date</Text>
+              <View style={styles.dateContainer}>
+                <TextInput
+                  placeholder="18/03/2024"
+                  value={formData.birthDate}
+                  onChangeText={(value) => handleInputChange('birthDate', value)}
+                  style={styles.dateInput}
+                  placeholderTextColor="#9CA3AF"
+                />
+                <Calendar size={20} color="#9CA3AF" style={styles.calendarIcon} />
+              </View>
+
+              <Text style={styles.label}>Phone Number</Text>
+              <View style={styles.phoneContainer}>
+                <View style={styles.countryCode}>
+                  <Text style={styles.flag}>🇨🇭</Text>
+                  <Text style={styles.arrow}>▼</Text>
+                </View>
+                <TextInput
+                  placeholder="(454) 726-0592"
+                  value={formData.phoneNumber}
+                  onChangeText={(value) => handleInputChange('phoneNumber', value)}
+                  keyboardType="phone-pad"
+                  style={styles.phoneInput}
+                  placeholderTextColor="#9CA3AF"
+                />
+              </View>
+
+              <Text style={styles.label}>Set Password</Text>
+              <View style={styles.passwordContainer}>
+                <TextInput
+                  placeholder="••••••••"
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  secureTextEntry={!passwordVisible}
+                  style={styles.passwordInput}
+                  placeholderTextColor="#9CA3AF"
+                />
+                <TouchableOpacity
+                  onPress={() => setPasswordVisible(!passwordVisible)}
+                  style={styles.eyeIcon}
+                >
+                  {passwordVisible ? (
+                    <Eye size={20} color="#9CA3AF" />
+                  ) : (
+                    <EyeOff size={20} color="#9CA3AF" />
+                  )}
+                </TouchableOpacity>
+              </View>
+
+              <TouchableOpacity 
+                onPress={handleCreateAccount}
+                style={[
+                  styles.registerButton,
+                  (!isFormValid() || loading) && styles.registerButtonDisabled
+                ]}
+                disabled={!isFormValid() || loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <Text style={styles.registerButtonText}>Register</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </LinearGradient>
   );
 };
+
+const styles = StyleSheet.create({
+  gradient: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 40,
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 5,
+  },
+  backButton: {
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#000000',
+    marginBottom: 8,
+  },
+  loginPrompt: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 32,
+  },
+  promptText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  loginLink: {
+    fontSize: 14,
+    color: '#2563EB',
+    fontWeight: '600',
+  },
+  form: {
+    width: '100%',
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  input: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+    marginBottom: 20,
+    fontSize: 15,
+  },
+  dateContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  dateInput: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingRight: 48,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+    fontSize: 15,
+  },
+  calendarIcon: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  phoneContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  countryCode: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    marginRight: 8,
+  },
+  flag: {
+    fontSize: 20,
+    marginRight: 4,
+  },
+  arrow: {
+    fontSize: 10,
+    color: '#6B7280',
+  },
+  phoneInput: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+    fontSize: 15,
+  },
+  passwordContainer: {
+    position: 'relative',
+    marginBottom: 24,
+  },
+  passwordInput: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingRight: 48,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+    fontSize: 15,
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: '50%',
+    transform: [{ translateY: -10 }],
+  },
+  registerButton: {
+    width: '100%',
+    backgroundColor: '#2563EB',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  registerButtonDisabled: {
+    backgroundColor: '#93C5FD',
+    opacity: 0.6,
+  },
+  registerButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+});
 
 export default SignUpScreen;
