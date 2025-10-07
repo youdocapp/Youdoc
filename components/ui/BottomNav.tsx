@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Home, Bell, User } from 'lucide-react-native';
 
 interface BottomNavProps {
@@ -16,35 +16,46 @@ const BottomNav: React.FC<BottomNavProps> = ({
   onProfile
 }) => {
   return (
-    <View style={styles.container}>
-      <View style={styles.indicator} />
-      
-      <View style={styles.navContent}>
-        <TouchableOpacity style={styles.tab} onPress={onHome}>
-          <Home 
-            size={28} 
-            color={activeTab === 'home' ? '#1F2937' : '#9CA3AF'}
-            fill={activeTab === 'home' ? '#1F2937' : 'transparent'}
-          />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={[styles.tab, styles.notificationTab]} onPress={onNotifications}>
-          <View style={styles.bellContainer}>
-            <Bell 
-              size={28} 
-              color={activeTab === 'notifications' ? '#4F7FFF' : '#4F7FFF'}
-              fill={activeTab === 'notifications' ? '#4F7FFF' : '#4F7FFF'}
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'home' && styles.activeTab]} 
+          onPress={onHome}
+        >
+          <View style={[styles.iconContainer, activeTab === 'home' && styles.activeIconContainer]}>
+            <Home 
+              size={24} 
+              color={activeTab === 'home' ? '#FFFFFF' : '#6B7280'}
+              strokeWidth={2.5}
             />
-            {activeTab === 'notifications' && <View style={styles.notificationBadge} />}
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.tab} onPress={onProfile}>
-          <User 
-            size={28} 
-            color={activeTab === 'profile' ? '#1F2937' : '#9CA3AF'}
-            fill={activeTab === 'profile' ? '#1F2937' : 'transparent'}
-          />
+        <TouchableOpacity 
+          style={styles.centerButton} 
+          onPress={onNotifications}
+        >
+          <View style={styles.centerButtonInner}>
+            <Bell 
+              size={24} 
+              color="#FFFFFF"
+              strokeWidth={2.5}
+            />
+            <View style={styles.notificationBadge} />
+          </View>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'profile' && styles.activeTab]} 
+          onPress={onProfile}
+        >
+          <View style={[styles.iconContainer, activeTab === 'profile' && styles.activeIconContainer]}>
+            <User 
+              size={24} 
+              color={activeTab === 'profile' ? '#FFFFFF' : '#6B7280'}
+              strokeWidth={2.5}
+            />
+          </View>
         </TouchableOpacity>
       </View>
     </View>
@@ -52,45 +63,83 @@ const BottomNav: React.FC<BottomNavProps> = ({
 };
 
 const styles = StyleSheet.create({
+  wrapper: {
+    position: 'absolute' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 20,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 16,
+    backgroundColor: 'transparent'
+  },
   container: {
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6'
-  },
-  indicator: {
-    height: 4,
-    backgroundColor: '#000000',
-    marginHorizontal: 120,
-    marginTop: 8,
-    borderRadius: 2
-  },
-  navContent: {
     flexDirection: 'row' as const,
-    justifyContent: 'space-around' as const,
     alignItems: 'center' as const,
+    justifyContent: 'space-around' as const,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 30,
     paddingVertical: 12,
-    paddingHorizontal: 24
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10
   },
   tab: {
     alignItems: 'center' as const,
     justifyContent: 'center' as const,
     paddingVertical: 8,
-    paddingHorizontal: 16
+    paddingHorizontal: 20
   },
-  notificationTab: {
-    position: 'relative' as const
+  activeTab: {
   },
-  bellContainer: {
-    position: 'relative' as const
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    backgroundColor: 'transparent'
+  },
+  activeIconContainer: {
+    backgroundColor: '#4F7FFF',
+    shadowColor: '#4F7FFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6
+  },
+  centerButton: {
+    marginTop: -30,
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const
+  },
+  centerButtonInner: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#4F7FFF',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+    shadowColor: '#4F7FFF',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 12,
+    borderWidth: 4,
+    borderColor: '#FFFFFF'
   },
   notificationBadge: {
     position: 'absolute' as const,
-    top: 2,
-    right: 2,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#EF4444'
+    top: 12,
+    right: 12,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 2,
+    borderColor: '#FFFFFF'
   }
 });
 
