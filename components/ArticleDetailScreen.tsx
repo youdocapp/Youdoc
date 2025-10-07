@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChevronLeft, Heart, Bookmark, MessageCircle, Send } from 'lucide-react-native';
+import { articles as allArticlesData } from '@/constants/articles';
 
 interface ArticleDetailScreenProps {
   onBack: () => void;
@@ -14,18 +15,6 @@ interface Comment {
   text: string;
   timestamp: string;
   likes: number;
-}
-
-interface Article {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  author: string;
-  readTime: string;
-  image: string;
-  content: string;
-  publishedDate: string;
 }
 
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, articleId }) => {
@@ -59,45 +48,9 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
   const [isLiked, setIsLiked] = useState<boolean>(false);
   const [isBookmarked, setIsBookmarked] = useState<boolean>(false);
 
-  const articles: Article[] = useMemo(() => [
-    {
-      id: '1',
-      title: '5 Ways to Manage Stress Daily',
-      description: 'Learn effective techniques to manage daily stress and improve your mental wellbeing.',
-      category: 'Mental Health',
-      author: 'Dr. Sarah Chen',
-      readTime: '5 min read',
-      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80',
-      publishedDate: 'January 15, 2024',
-      content: 'Stress is an inevitable part of modern life, but managing it effectively can significantly improve your overall wellbeing. Here are five evidence-based strategies to help you manage stress on a daily basis.\n\n1. Practice Mindfulness Meditation\nTaking just 10 minutes each day to practice mindfulness can reduce stress hormones and improve your ability to handle challenging situations. Focus on your breath and observe your thoughts without judgment.\n\n2. Regular Physical Exercise\nExercise releases endorphins, which are natural mood elevators. Aim for at least 30 minutes of moderate activity most days of the week.\n\n3. Maintain a Consistent Sleep Schedule\nQuality sleep is crucial for stress management. Try to go to bed and wake up at the same time each day, even on weekends.\n\n4. Connect with Others\nSocial support is a powerful stress buffer. Make time to connect with friends and family regularly.\n\n5. Set Boundaries\nLearn to say no to commitments that will overextend you. Protecting your time and energy is essential for managing stress.'
-    },
-    {
-      id: '2',
-      title: 'Understanding Heart Health',
-      description: 'Essential information about maintaining a healthy heart and preventing cardiovascular disease.',
-      category: 'Lifestyle',
-      author: 'Dr. Michael Johnson',
-      readTime: '7 min read',
-      image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80',
-      publishedDate: 'January 12, 2024',
-      content: 'Your heart is one of the most vital organs in your body, and taking care of it should be a top priority. Understanding the basics of heart health can help you make informed decisions about your lifestyle and medical care.\n\nThe heart pumps blood throughout your body, delivering oxygen and nutrients to your tissues and removing waste products. Maintaining cardiovascular health involves several key factors including diet, exercise, stress management, and regular medical checkups.\n\nKey factors for heart health include maintaining a healthy weight, eating a balanced diet rich in fruits and vegetables, exercising regularly, managing stress, avoiding smoking, and limiting alcohol consumption.'
-    },
-    {
-      id: '3',
-      title: 'Nutrition Basics for Beginners',
-      description: 'A comprehensive guide to understanding macronutrients and building a balanced diet.',
-      category: 'Nutrition',
-      author: 'Dr. Emily Rodriguez',
-      readTime: '10 min read',
-      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80',
-      publishedDate: 'January 10, 2024',
-      content: 'Understanding nutrition doesn\'t have to be complicated. This guide will help you understand the basics of macronutrients and how to build a balanced diet that supports your health goals.\n\nMacronutrients are the nutrients your body needs in large amounts: carbohydrates, proteins, and fats. Each plays a unique and important role in your body.\n\nCarbohydrates are your body\'s primary energy source. Focus on complex carbs like whole grains, fruits, and vegetables rather than simple sugars.\n\nProteins are essential for building and repairing tissues. Include a variety of protein sources in your diet, including lean meats, fish, legumes, and dairy.\n\nHealthy fats are crucial for hormone production and nutrient absorption. Include sources like avocados, nuts, seeds, and olive oil in your diet.'
-    }
-  ], []);
-
   const article = useMemo(() => {
-    return articles.find(a => a.id === articleId) || articles[0];
-  }, [articleId, articles]);
+    return allArticlesData.find(a => a.id === articleId) || allArticlesData[0];
+  }, [articleId]);
 
   const handleSendComment = () => {
     if (commentText.trim()) {

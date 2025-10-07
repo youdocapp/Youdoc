@@ -1,113 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
 import { ChevronLeft, Search, Bookmark } from 'lucide-react-native';
+import { articles as allArticlesData, categories as categoriesData } from '@/constants/articles';
 
 interface HealthArticlesScreenProps {
   onBack: () => void;
   onArticlePress?: (articleId: string) => void;
 }
 
-interface Article {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  author: string;
-  readTime: string;
-  image: string;
-  featured?: boolean;
-}
-
 const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onArticlePress }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All Articles');
 
-  const categories = [
-    { name: 'All Articles', count: 24 },
-    { name: 'Nutrition', count: 8 },
-    { name: 'Fitness', count: 6 },
-    { name: 'Mental Health', count: 5 },
-    { name: 'Lifestyle', count: 5 }
-  ];
-
-  const allArticles: Article[] = [
-    {
-      id: '1',
-      title: '5 Ways to Manage Stress Daily',
-      description: 'Learn effective techniques to manage daily stress and improve your mental wellbeing.',
-      category: 'Mental Health',
-      author: 'Dr. Sarah Chen',
-      readTime: '5 min read',
-      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80',
-      featured: true
-    },
-    {
-      id: '2',
-      title: 'Understanding Heart Health',
-      description: 'Essential information about maintaining a healthy heart and preventing cardiovascular disease.',
-      category: 'Lifestyle',
-      author: 'Dr. Michael Johnson',
-      readTime: '7 min read',
-      image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=800&q=80'
-    },
-    {
-      id: '3',
-      title: 'Nutrition Basics for Beginners',
-      description: 'A comprehensive guide to understanding macronutrients and building a balanced diet.',
-      category: 'Nutrition',
-      author: 'Dr. Emily Rodriguez',
-      readTime: '10 min read',
-      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80'
-    },
-    {
-      id: '4',
-      title: '10 Healthy Habits to Start Today',
-      description: 'Discover simple yet significant lifestyle changes for better health.',
-      category: 'Lifestyle',
-      author: 'Dr. James Wilson',
-      readTime: '8 min read',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80'
-    },
-    {
-      id: '5',
-      title: 'The Benefits of Regular Exercise',
-      description: 'How consistent physical activity can transform your health and wellbeing.',
-      category: 'Fitness',
-      author: 'Dr. Lisa Anderson',
-      readTime: '6 min read',
-      image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80'
-    },
-    {
-      id: '6',
-      title: 'Sleep Hygiene: Better Rest Tonight',
-      description: 'Practical tips for improving your sleep quality and establishing healthy sleep patterns.',
-      category: 'Mental Health',
-      author: 'Dr. Robert Taylor',
-      readTime: '5 min read',
-      image: 'https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?w=800&q=80'
-    },
-    {
-      id: '7',
-      title: 'Meal Prep Made Simple',
-      description: 'Time-saving strategies for preparing healthy meals throughout the week.',
-      category: 'Nutrition',
-      author: 'Dr. Amanda Lee',
-      readTime: '9 min read',
-      image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=800&q=80'
-    },
-    {
-      id: '8',
-      title: 'Yoga for Beginners',
-      description: 'Start your yoga journey with these foundational poses and breathing techniques.',
-      category: 'Fitness',
-      author: 'Dr. Sarah Chen',
-      readTime: '7 min read',
-      image: 'https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80'
-    }
-  ];
-
   const filteredArticles = useMemo(() => {
-    let filtered = allArticles;
+    let filtered = allArticlesData;
 
     if (selectedCategory !== 'All Articles') {
       filtered = filtered.filter(article => article.category === selectedCategory);
@@ -126,7 +32,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     return filtered;
   }, [selectedCategory, searchQuery]);
 
-  const featuredArticle = allArticles.find(article => article.featured);
+  const featuredArticle = allArticlesData.find(article => article.featured);
   const latestArticles = filteredArticles.filter(article => !article.featured);
 
   const styles = StyleSheet.create({
@@ -444,7 +350,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.categoriesScroll}
           >
-            {categories.map((category) => (
+            {categoriesData.map((category) => (
               <TouchableOpacity
                 key={category.name}
                 style={selectedCategory === category.name ? styles.categoryChipActive : styles.categoryChip}

@@ -1,6 +1,8 @@
 import React from 'react';
+import { useRouter } from 'expo-router';
 import ConnectedDevicesScreen from '@/components/ConnectedDevicesScreen';
 
 export default function ConnectedDevicesPage() {
-  return <ConnectedDevicesScreen />;
+  const router = useRouter();
+  return <ConnectedDevicesScreen onBack={() => router.back()} />;
 }

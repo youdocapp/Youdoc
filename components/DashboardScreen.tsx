@@ -5,6 +5,7 @@ import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
+import { articles } from '@/constants/articles';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -18,15 +19,7 @@ interface DashboardScreenProps {
   activeTab?: string;
 }
 
-interface Article {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  author: string;
-  readTime: string;
-  image: string;
-}
+
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onSymptomChecker,
@@ -48,35 +41,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     return medications.filter(med => med.dateAdded === today);
   }, [medications]);
 
-  const featuredArticles: Article[] = [
-    {
-      id: '1',
-      title: '5 Ways to Manage Stress Daily',
-      description: 'Learn effective techniques to manage daily stress and improve your mental wellbeing.',
-      category: 'Mental Health',
-      author: 'Dr. Sarah Chen',
-      readTime: '5 min read',
-      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80'
-    },
-    {
-      id: '4',
-      title: '10 Healthy Habits to Start Today',
-      description: 'Discover simple yet significant lifestyle changes for better health.',
-      category: 'Lifestyle',
-      author: 'Dr. James Wilson',
-      readTime: '8 min read',
-      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80'
-    },
-    {
-      id: '3',
-      title: 'Nutrition Basics for Beginners',
-      description: 'A comprehensive guide to understanding macronutrients and building a balanced diet.',
-      category: 'Nutrition',
-      author: 'Dr. Emily Rodriguez',
-      readTime: '10 min read',
-      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80'
-    }
-  ];
+  const featuredArticles = useMemo(() => articles.slice(0, 3), []);
   const styles = StyleSheet.create({
     container: {
       flex: 1,

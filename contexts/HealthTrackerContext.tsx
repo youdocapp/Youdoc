@@ -18,7 +18,7 @@ export interface HealthData {
 export interface ConnectedDevice {
   id: string;
   name: string;
-  type: 'apple_health' | 'google_fit' | 'fitbit' | 'garmin' | 'samsung_health';
+  type: 'apple_health' | 'google_fit' | 'fitbit' | 'garmin' | 'samsung_health' | 'custom';
   connected: boolean;
   lastSync: Date | null;
 }
@@ -232,6 +232,23 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     });
   };
 
+  const addCustomDevice = async (deviceName: string) => {
+    const newDevice: ConnectedDevice = {
+      id: Date.now().toString(),
+      name: deviceName,
+      type: 'custom',
+      connected: false,
+      lastSync: null,
+    };
+    const updated = [...connectedDevices, newDevice];
+    setConnectedDevices(updated);
+    try {
+      await AsyncStorage.setItem(CONNECTED_DEVICES_KEY, JSON.stringify(updated));
+    } catch (error) {
+      console.error('Error adding custom device:', error);
+    }
+  };
+
   return {
     healthData,
     connectedDevices,
@@ -240,5 +257,6 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     connectDevice,
     disconnectDevice,
     syncHealthData,
+    addCustomDevice,
   };
 });

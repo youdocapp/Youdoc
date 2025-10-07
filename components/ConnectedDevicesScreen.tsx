@@ -16,11 +16,17 @@ import {
   RefreshCw,
   CheckCircle,
   XCircle,
+  ChevronLeft,
+  Plus,
 } from 'lucide-react-native';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 
-const ConnectedDevicesScreen: React.FC = () => {
-  const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading } =
+interface ConnectedDevicesScreenProps {
+  onBack?: () => void;
+}
+
+const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack }) => {
+  const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
     useHealthTracker();
 
   const getDeviceIcon = (type: string) => {
@@ -70,11 +76,24 @@ const ConnectedDevicesScreen: React.FC = () => {
     );
   }
 
+  const handleAddDevice = () => {
+    const deviceName = `Custom Device ${connectedDevices.length + 1}`;
+    addCustomDevice(deviceName);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.topHeader}>
+        {onBack && (
+          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+            <ChevronLeft size={24} color="#1F2937" />
+          </TouchableOpacity>
+        )}
+        <Text style={styles.topHeaderTitle}>Connected Devices</Text>
+        <View style={styles.backButton} />
+      </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         <View style={styles.header}>
-          <Text style={styles.headerTitle}>Connected Devices</Text>
           <Text style={styles.headerSubtitle}>
             Sync your health data from various devices and apps
           </Text>
@@ -88,6 +107,13 @@ const ConnectedDevicesScreen: React.FC = () => {
         </View>
 
         <View style={styles.devicesSection}>
+          <TouchableOpacity style={styles.addDeviceButton} onPress={handleAddDevice}>
+            <View style={styles.addDeviceIcon}>
+              <Plus size={24} color="#4F7FFF" />
+            </View>
+            <Text style={styles.addDeviceText}>Add New Device</Text>
+          </TouchableOpacity>
+
           {connectedDevices.map((device) => (
             <View key={device.id} style={styles.deviceCard}>
               <View style={styles.deviceIcon}>{getDeviceIcon(device.type)}</View>
@@ -139,6 +165,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F9FAFB',
   },
+  topHeader: {
+    backgroundColor: '#FFFFFF',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  topHeaderTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
   loadingContainer: {
     flex: 1,
     alignItems: 'center',
@@ -146,15 +196,10 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
+    paddingTop: 16,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 8,
   },
   headerSubtitle: {
     fontSize: 14,
@@ -181,6 +226,31 @@ const styles = StyleSheet.create({
   devicesSection: {
     paddingHorizontal: 20,
     gap: 12,
+  },
+  addDeviceButton: {
+    backgroundColor: '#EEF2FF',
+    borderRadius: 16,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#4F7FFF',
+    borderStyle: 'dashed',
+    marginBottom: 12,
+  },
+  addDeviceIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  addDeviceText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#4F7FFF',
   },
   deviceCard: {
     backgroundColor: '#FFFFFF',
