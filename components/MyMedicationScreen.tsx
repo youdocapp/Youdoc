@@ -24,6 +24,8 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const { medications, toggleMedicationTaken } = useMedication();
   const [selectedMonth, setSelectedMonth] = useState<string>('May');
   const [selectedDate, setSelectedDate] = useState<number>(13);
+  const [aspirinTaken, setAspirinTaken] = useState<boolean>(false);
+  const [vitaminDTaken, setVitaminDTaken] = useState<boolean>(false);
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
@@ -266,7 +268,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     fab: {
       position: 'absolute' as const,
       right: 20,
-      bottom: 100,
+      bottom: 140,
       width: 56,
       height: 56,
       borderRadius: 28,
@@ -388,35 +390,47 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
           </TouchableOpacity>
         ))}
 
-        <View style={styles.medicationCard}>
+        <TouchableOpacity 
+          style={[styles.medicationCard, aspirinTaken && styles.medicationCardTaken]}
+          onPress={() => setAspirinTaken(!aspirinTaken)}
+          activeOpacity={0.7}
+        >
           <View style={styles.medicationIcon}>
             <Text style={styles.pillEmoji}>💊</Text>
           </View>
           <View style={styles.medicationInfo}>
-            <Text style={styles.medicationName}>Aspirin</Text>
-            <Text style={styles.medicationDose}>100mg pill, (100mg mg)</Text>
+            <Text style={[styles.medicationName, aspirinTaken && styles.medicationNameTaken]}>Aspirin</Text>
+            <Text style={[styles.medicationDose, aspirinTaken && styles.medicationDoseTaken]}>100mg pill, (100mg mg)</Text>
             <View style={styles.medicationTime}>
               <Clock size={14} color="#9CA3AF" />
-              <Text style={styles.timeText}>08:00</Text>
+              <Text style={[styles.timeText, aspirinTaken && styles.timeTextTaken]}>08:00</Text>
             </View>
           </View>
-          <View style={styles.checkbox} />
-        </View>
+          <View style={[styles.checkbox, aspirinTaken && styles.checkboxChecked]}>
+            {aspirinTaken && <View style={styles.checkmark} />}
+          </View>
+        </TouchableOpacity>
 
-        <View style={styles.medicationCard}>
+        <TouchableOpacity 
+          style={[styles.medicationCard, vitaminDTaken && styles.medicationCardTaken]}
+          onPress={() => setVitaminDTaken(!vitaminDTaken)}
+          activeOpacity={0.7}
+        >
           <View style={styles.medicationIcon}>
             <Text style={styles.pillEmoji}>💊</Text>
           </View>
           <View style={styles.medicationInfo}>
-            <Text style={styles.medicationName}>Vitamin D</Text>
-            <Text style={styles.medicationDose}>1000 IU, (1000 IU IU)</Text>
+            <Text style={[styles.medicationName, vitaminDTaken && styles.medicationNameTaken]}>Vitamin D</Text>
+            <Text style={[styles.medicationDose, vitaminDTaken && styles.medicationDoseTaken]}>1000 IU, (1000 IU IU)</Text>
             <View style={styles.medicationTime}>
               <Clock size={14} color="#9CA3AF" />
-              <Text style={styles.timeText}>09:00</Text>
+              <Text style={[styles.timeText, vitaminDTaken && styles.timeTextTaken]}>09:00</Text>
             </View>
           </View>
-          <View style={styles.checkbox} />
-        </View>
+          <View style={[styles.checkbox, vitaminDTaken && styles.checkboxChecked]}>
+            {vitaminDTaken && <View style={styles.checkmark} />}
+          </View>
+        </TouchableOpacity>
 
         <View style={{ height: 100 }} />
       </ScrollView>
