@@ -4,7 +4,7 @@ import HealthArticlesScreen from '../components/HealthArticlesScreen';
 
 export default function HealthArticlesRoute() {
   const handleBack = () => {
-    router.replace('/dashboard');
+    router.back();
   };
 
   const handleArticlePress = (articleId: string) => {
