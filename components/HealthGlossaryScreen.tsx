@@ -69,12 +69,13 @@ const HealthGlossaryScreen: React.FC<HealthGlossaryScreenProps> = ({ onBack, ini
       marginBottom: 20
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.card,
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      zIndex: 10
     },
     title: {
       fontSize: 24,
@@ -86,8 +87,8 @@ const HealthGlossaryScreen: React.FC<HealthGlossaryScreenProps> = ({ onBack, ini
       textAlign: 'center'
     },
     placeholder: {
-      width: 40,
-      height: 40
+      width: 44,
+      height: 44
     },
     searchContainer: {
       flexDirection: 'row',
@@ -257,7 +258,12 @@ const HealthGlossaryScreen: React.FC<HealthGlossaryScreenProps> = ({ onBack, ini
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={onBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Health Glossary</Text>

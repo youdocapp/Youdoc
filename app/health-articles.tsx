@@ -1,5 +1,5 @@
 import React from 'react';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import HealthArticlesScreen from '../components/HealthArticlesScreen';
 
 export default function HealthArticlesRoute() {
@@ -15,9 +15,12 @@ export default function HealthArticlesRoute() {
   };
 
   return (
-    <HealthArticlesScreen
-      onBack={handleBack}
-      onArticlePress={handleArticlePress}
-    />
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <HealthArticlesScreen
+        onBack={handleBack}
+        onArticlePress={handleArticlePress}
+      />
+    </>
   );
 }

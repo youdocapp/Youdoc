@@ -1,5 +1,5 @@
 import React from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, Stack } from 'expo-router';
 import HealthGlossaryScreen from '../components/HealthGlossaryScreen';
 
 export default function HealthGlossaryRoute() {
@@ -11,9 +11,12 @@ export default function HealthGlossaryRoute() {
   };
 
   return (
-    <HealthGlossaryScreen
-      onBack={handleBack}
-      initialSearchQuery={initialSearchQuery}
-    />
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <HealthGlossaryScreen
+        onBack={handleBack}
+        initialSearchQuery={initialSearchQuery}
+      />
+    </>
   );
 }

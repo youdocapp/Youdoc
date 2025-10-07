@@ -56,12 +56,13 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       marginBottom: 20
     },
     backButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
+      width: 44,
+      height: 44,
+      borderRadius: 22,
       backgroundColor: colors.card,
       alignItems: 'center',
-      justifyContent: 'center'
+      justifyContent: 'center',
+      zIndex: 10
     },
     title: {
       fontSize: 24,
@@ -73,12 +74,8 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       textAlign: 'center'
     },
     searchButton: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      backgroundColor: colors.card,
-      alignItems: 'center',
-      justifyContent: 'center'
+      width: 44,
+      height: 44
     },
     searchContainer: {
       flexDirection: 'row',
@@ -298,7 +295,12 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <TouchableOpacity style={styles.backButton} onPress={onBack}>
+          <TouchableOpacity 
+            style={styles.backButton} 
+            onPress={onBack}
+            activeOpacity={0.7}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Health Articles</Text>
