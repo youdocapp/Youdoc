@@ -4,16 +4,22 @@ import { ChevronLeft, ChevronRight, Lock, Eye, EyeOff, Shield, FileText, Scale, 
 
 interface PrivacyScreenProps {
   onBack: () => void;
+  onChangePassword?: () => void;
   onPrivacyPolicy?: () => void;
   onTermsOfService?: () => void;
   onHIPAACompliance?: () => void;
+  onDownloadData?: () => void;
+  onDeleteData?: () => void;
 }
 
 const PrivacyScreen: React.FC<PrivacyScreenProps> = ({ 
   onBack,
+  onChangePassword,
   onPrivacyPolicy,
   onTermsOfService,
-  onHIPAACompliance
+  onHIPAACompliance,
+  onDownloadData,
+  onDeleteData
 }) => {
   const [shareHealthData, setShareHealthData] = useState<boolean>(false);
   const [shareAnalytics, setShareAnalytics] = useState<boolean>(true);
@@ -183,7 +189,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
               />
             </View>
 
-            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onChangePassword}>
               <View style={styles.menuItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
                   <Lock size={20} color="#F59E0B" />
@@ -245,7 +251,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>DATA MANAGEMENT</Text>
           <View style={styles.card}>
-            <TouchableOpacity style={styles.menuItem}>
+            <TouchableOpacity style={styles.menuItem} onPress={onDownloadData}>
               <View style={styles.menuItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#DBEAFE' }]}>
                   <Download size={20} color="#3B82F6" />
@@ -258,7 +264,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
               <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
             </TouchableOpacity>
 
-            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
+            <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onDeleteData}>
               <View style={styles.menuItemLeft}>
                 <View style={[styles.iconContainer, { backgroundColor: '#FEE2E2' }]}>
                   <Trash2 size={20} color="#EF4444" />
