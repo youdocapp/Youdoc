@@ -38,11 +38,13 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const [reminderTimes, setReminderTimes] = useState<string[]>(['8:00 AM']);
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [notes, setNotes] = useState<string>('');
   const [showTimesDropdown, setShowTimesDropdown] = useState<boolean>(false);
   const [showTimePickerIndex, setShowTimePickerIndex] = useState<number | null>(null);
   const [showStartDatePicker, setShowStartDatePicker] = useState<boolean>(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState<boolean>(false);
+  const [showMultipleDatePicker, setShowMultipleDatePicker] = useState<boolean>(false);
 
   const handleSave = () => {
     if (!name || !dosage) {
@@ -72,6 +74,27 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
   const addReminderTime = () => {
     setReminderTimes([...reminderTimes, '12:00 PM']);
+  };
+
+  const addSelectedDate = (date: Date) => {
+    const dateExists = selectedDates.some(
+      d => d.toDateString() === date.toDateString()
+    );
+    if (!dateExists) {
+      setSelectedDates([...selectedDates, date].sort((a, b) => a.getTime() - b.getTime()));
+    }
+  };
+
+  const removeSelectedDate = (index: number) => {
+    setSelectedDates(selectedDates.filter((_, i) => i !== index));
+  };
+
+  const formatShortDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   const timesPerDayOptions: TimesPerDayType[] = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily'];
@@ -565,6 +588,26 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       fontSize: 15,
       fontWeight: '500' as const
     },
+    dateChip: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      backgroundColor: '#4F7FFF',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 20,
+      gap: 6
+    },
+    dateChipText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '500' as const
+    },
+    dateChipRemove: {
+      color: '#FFFFFF',
+      fontSize: 20,
+      fontWeight: '600' as const,
+      lineHeight: 20
+    },
     textArea: {
       borderWidth: 0,
       borderRadius: 12,
@@ -895,24 +938,51 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
           ))}
         </View>
 
-        <View style={styles.row}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.label}>Start Date</Text>
-            <TouchableOpacity style={styles.dropdown} onPress={() => setShowStartDatePicker(true)}>
-              <Text style={styles.dropdownText}>{formatDate(startDate)}</Text>
-              <ChevronDown size={20} color={colors.textSecondary} />
+        {frequency === 'Daily' ? (
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Start Date</Text>
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowStartDatePicker(true)}>
+                <Text style={styles.dropdownText}>{formatDate(startDate)}</Text>
+                <ChevronDown size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>End Date</Text>
+              <TouchableOpacity style={styles.dropdown} onPress={() => setShowEndDatePicker(true)}>
+                <Text style={[styles.dropdownText, { color: endDate ? colors.text : colors.textSecondary }]}>
+                  {endDate ? formatDate(endDate) : 'Select Date'}
+                </Text>
+                <ChevronDown size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          <View>
+            <Text style={styles.label}>Select Dates</Text>
+            <Text style={styles.subLabel}>Add specific dates for this medication</Text>
+            
+            {selectedDates.length > 0 && (
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, gap: 8 }}>
+                {selectedDates.map((date, index) => (
+                  <View key={index} style={styles.dateChip}>
+                    <Text style={styles.dateChipText}>{formatShortDate(date)}</Text>
+                    <TouchableOpacity onPress={() => removeSelectedDate(index)}>
+                      <Text style={styles.dateChipRemove}>×</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.addTimeButton} 
+              onPress={() => setShowMultipleDatePicker(true)}
+            >
+              <Text style={styles.addTimeText}>+ Add Date</Text>
             </TouchableOpacity>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.label}>End Date</Text>
-            <TouchableOpacity style={styles.dropdown} onPress={() => setShowEndDatePicker(true)}>
-              <Text style={[styles.dropdownText, { color: endDate ? colors.text : colors.textSecondary }]}>
-                {endDate ? formatDate(endDate) : 'Select Date'}
-              </Text>
-              <ChevronDown size={20} color={colors.textSecondary} />
-            </TouchableOpacity>
-          </View>
-        </View>
+        )}
 
         <Text style={styles.label}>Notes (Optional)</Text>
         <TextInput
@@ -1007,6 +1077,19 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
           }}
           currentDate={new Date()}
           title="Select End Date"
+        />
+      )}
+
+      {showMultipleDatePicker && (
+        <DatePickerModal
+          visible={true}
+          onClose={() => setShowMultipleDatePicker(false)}
+          onSelect={(date) => {
+            addSelectedDate(date);
+            setShowMultipleDatePicker(false);
+          }}
+          currentDate={new Date()}
+          title="Add Date"
         />
       )}
     </SafeAreaView>
