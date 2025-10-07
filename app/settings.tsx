@@ -11,10 +11,6 @@ export default function SettingsRoute() {
     router.push('/profile');
   };
 
-  const handleNotifications = () => {
-    router.push('/notifications');
-  };
-
   const handlePrivacy = () => {
     router.push('/privacy');
   };
@@ -31,15 +27,19 @@ export default function SettingsRoute() {
     router.push('/subscription');
   };
 
+  const handleConnectedDevices = () => {
+    router.push('/connected-devices');
+  };
+
   return (
     <SettingsScreen
       onBack={handleBack}
       onProfile={handleProfile}
-      onNotifications={handleNotifications}
       onPrivacy={handlePrivacy}
       onHelp={handleHelp}
       onAbout={handleAbout}
       onSubscription={handleSubscription}
+      onConnectedDevices={handleConnectedDevices}
     />
   );
 }

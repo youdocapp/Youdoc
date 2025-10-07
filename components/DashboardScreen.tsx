@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
-import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
+import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame, ShoppingBag } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
+import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
 
 interface DashboardScreenProps {
@@ -13,6 +14,7 @@ interface DashboardScreenProps {
   onSettings?: () => void;
   onNotifications?: () => void;
   onProfile?: () => void;
+  onMedicalGrocery?: () => void;
   activeTab?: string;
 }
 
@@ -34,9 +36,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onSettings,
   onNotifications,
   onProfile,
+  onMedicalGrocery,
   activeTab = 'home'
 }) => {
   const { medications, toggleMedicationTaken } = useMedication();
+  const { healthData } = useHealthTracker();
   const router = useRouter();
 
   const todayMedications = useMemo(() => {
@@ -428,29 +432,41 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </TouchableOpacity>
         </View>
 
+        <View style={styles.quickActions}>
+          <TouchableOpacity style={styles.actionCard} onPress={onMedicalGrocery}>
+            <View style={styles.actionIcon}>
+              <ShoppingBag size={24} color="#4F7FFF" />
+            </View>
+            <Text style={styles.actionLabel}>Medical{'\n'}Grocery</Text>
+          </TouchableOpacity>
+
+          <View style={styles.actionCard} />
+          <View style={styles.actionCard} />
+        </View>
+
         <Text style={styles.sectionTitle}>Health Tracker</Text>
         <View style={styles.healthTrackerGrid}>
           <View style={styles.trackerCard}>
             <Activity size={24} color="#EF4444" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>734 <Text style={{ fontSize: 16, fontWeight: '400' }}>bpm</Text></Text>
+            <Text style={styles.trackerValue}>{healthData.heartRate} <Text style={{ fontSize: 16, fontWeight: '400' }}>bpm</Text></Text>
             <Text style={styles.trackerLabel}>Heart Rate</Text>
           </View>
 
           <View style={styles.trackerCard}>
             <Activity size={24} color="#4F7FFF" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>12,6 <Text style={{ fontSize: 16, fontWeight: '400' }}>km</Text></Text>
+            <Text style={styles.trackerValue}>{healthData.distance.toFixed(1)} <Text style={{ fontSize: 16, fontWeight: '400' }}>km</Text></Text>
             <Text style={styles.trackerLabel}>Distance</Text>
           </View>
 
           <View style={styles.trackerCard}>
             <Moon size={24} color="#4F7FFF" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>12 <Text style={{ fontSize: 16, fontWeight: '400' }}>hrs</Text></Text>
+            <Text style={styles.trackerValue}>{healthData.sleep.toFixed(1)} <Text style={{ fontSize: 16, fontWeight: '400' }}>hrs</Text></Text>
             <Text style={styles.trackerLabel}>Sleep</Text>
           </View>
 
           <View style={styles.trackerCard}>
             <Flame size={24} color="#F97316" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>540 <Text style={{ fontSize: 16, fontWeight: '400' }}>cals</Text></Text>
+            <Text style={styles.trackerValue}>{healthData.calories} <Text style={{ fontSize: 16, fontWeight: '400' }}>cals</Text></Text>
             <Text style={styles.trackerLabel}>Calories</Text>
           </View>
         </View>

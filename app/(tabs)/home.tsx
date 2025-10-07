@@ -14,6 +14,7 @@ export default function HomeScreen() {
         onSeeDoctor={() => router.push('/see-doctor')}
         onHealthArticles={() => router.push('/health-articles')}
         onSettings={() => router.push('/settings')}
+        onMedicalGrocery={() => router.push('/medical-grocery')}
       />
       <BottomNav
         activeTab="home"

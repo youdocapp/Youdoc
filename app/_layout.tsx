@@ -20,6 +20,7 @@ import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MockAuthProvider } from '../contexts/MockAuthContext';
+import { HealthTrackerProvider } from '../contexts/HealthTrackerContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -69,6 +70,8 @@ function AppContent() {
         <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
         <Stack.Screen name="terms-of-service" options={{ headerShown: false }} />
         <Stack.Screen name="hipaa-compliance" options={{ headerShown: false }} />
+        <Stack.Screen name="medical-grocery" options={{ headerShown: false }} />
+        <Stack.Screen name="connected-devices" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
@@ -109,7 +112,9 @@ export default function RootLayout() {
         <MockAuthProvider>
           <UserProvider>
             <MedicationProvider>
-              <AppContent />
+              <HealthTrackerProvider>
+                <AppContent />
+              </HealthTrackerProvider>
             </MedicationProvider>
           </UserProvider>
         </MockAuthProvider>
