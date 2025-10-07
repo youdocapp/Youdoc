@@ -1,8 +1,9 @@
 import React, { useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
+import { useRouter } from 'expo-router';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -13,6 +14,16 @@ interface DashboardScreenProps {
   onNotifications?: () => void;
   onProfile?: () => void;
   activeTab?: string;
+}
+
+interface Article {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  author: string;
+  readTime: string;
+  image: string;
 }
 
 const DashboardScreen: React.FC<DashboardScreenProps> = ({
@@ -26,11 +37,42 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   activeTab = 'home'
 }) => {
   const { medications, toggleMedicationTaken } = useMedication();
+  const router = useRouter();
 
   const todayMedications = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
     return medications.filter(med => med.dateAdded === today);
   }, [medications]);
+
+  const featuredArticles: Article[] = [
+    {
+      id: '1',
+      title: '5 Ways to Manage Stress Daily',
+      description: 'Learn effective techniques to manage daily stress and improve your mental wellbeing.',
+      category: 'Mental Health',
+      author: 'Dr. Sarah Chen',
+      readTime: '5 min read',
+      image: 'https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=800&q=80'
+    },
+    {
+      id: '4',
+      title: '10 Healthy Habits to Start Today',
+      description: 'Discover simple yet significant lifestyle changes for better health.',
+      category: 'Lifestyle',
+      author: 'Dr. James Wilson',
+      readTime: '8 min read',
+      image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80'
+    },
+    {
+      id: '3',
+      title: 'Nutrition Basics for Beginners',
+      description: 'A comprehensive guide to understanding macronutrients and building a balanced diet.',
+      category: 'Nutrition',
+      author: 'Dr. Emily Rodriguez',
+      readTime: '10 min read',
+      image: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=800&q=80'
+    }
+  ];
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -282,24 +324,28 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     articleImage: {
       width: '100%',
-      height: 140,
+      height: 160,
       backgroundColor: '#E5E7EB'
     },
     articleContent: {
       padding: 16
     },
     articleTag: {
-      alignSelf: 'flex-start',
-      backgroundColor: '#F3F4F6',
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
       marginBottom: 8
     },
+    categoryIcon: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#8B5CF6',
+      marginRight: 6
+    },
     articleTagText: {
-      fontSize: 11,
-      color: '#6B7280',
-      fontWeight: '500'
+      fontSize: 12,
+      color: '#8B5CF6',
+      fontWeight: '600'
     },
     articleTitle: {
       fontSize: 16,
@@ -312,7 +358,17 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       fontSize: 13,
       color: '#6B7280',
       lineHeight: 18,
-      marginBottom: 8
+      marginBottom: 12
+    },
+    articleFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    articleAuthor: {
+      fontSize: 12,
+      color: '#4F7FFF',
+      fontWeight: '500'
     },
     articleReadTime: {
       fontSize: 12,
@@ -443,33 +499,35 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </View>
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={styles.articleCard}>
-              <View style={styles.articleImage} />
-              <View style={styles.articleContent}>
-                <View style={styles.articleTag}>
-                  <Text style={styles.articleTagText}>Mental Health</Text>
+            {featuredArticles.map((article) => (
+              <TouchableOpacity
+                key={article.id}
+                style={styles.articleCard}
+                onPress={() => router.push(`/article-detail?id=${article.id}`)}
+              >
+                <Image
+                  source={{ uri: article.image }}
+                  style={styles.articleImage}
+                  resizeMode="cover"
+                />
+                <View style={styles.articleContent}>
+                  <View style={styles.articleTag}>
+                    <View style={styles.categoryIcon} />
+                    <Text style={styles.articleTagText}>{article.category}</Text>
+                  </View>
+                  <Text style={styles.articleTitle} numberOfLines={2}>
+                    {article.title}
+                  </Text>
+                  <Text style={styles.articleDescription} numberOfLines={2}>
+                    {article.description}
+                  </Text>
+                  <View style={styles.articleFooter}>
+                    <Text style={styles.articleAuthor}>By {article.author}</Text>
+                    <Text style={styles.articleReadTime}>{article.readTime}</Text>
+                  </View>
                 </View>
-                <Text style={styles.articleTitle}>5 Ways to Manage Stress Daily</Text>
-                <Text style={styles.articleDescription}>
-                  Learn effective techniques to manage daily stress and improve your mental wellbeing.
-                </Text>
-                <Text style={styles.articleReadTime}>5 min read</Text>
-              </View>
-            </View>
-
-            <View style={styles.articleCard}>
-              <View style={styles.articleImage} />
-              <View style={styles.articleContent}>
-                <View style={styles.articleTag}>
-                  <Text style={styles.articleTagText}>Lifestyle</Text>
-                </View>
-                <Text style={styles.articleTitle}>10 Healthy Habits to Start Today</Text>
-                <Text style={styles.articleDescription}>
-                  Discover simple yet significant lifestyle changes for better health.
-                </Text>
-                <Text style={styles.articleReadTime}>8 min read</Text>
-              </View>
-            </View>
+              </TouchableOpacity>
+            ))}
           </ScrollView>
         </View>
 
