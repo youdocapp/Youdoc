@@ -58,7 +58,7 @@ const HealthGlossaryScreen: React.FC<HealthGlossaryScreenProps> = ({ onBack, ini
     },
     header: {
       backgroundColor: colors.background,
-      paddingTop: 60,
+      paddingTop: 16,
       paddingBottom: 20,
       paddingHorizontal: 20
     },
