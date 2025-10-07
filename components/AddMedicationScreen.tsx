@@ -27,7 +27,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   activeTab = 'home'
 }) => {
   const { addMedication } = useMedication();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [name, setName] = useState<string>('');
   const [medicationType, setMedicationType] = useState<MedicationType>('Pill');
   const [quantity, setQuantity] = useState<string>('1');
@@ -479,7 +479,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     medicationTypeText: {
       fontSize: 15,
       fontWeight: '600' as const,
-      color: colors.text
+      color: isDark ? '#4F7FFF' : colors.text
     },
     row: {
       flexDirection: 'row' as const,
@@ -493,7 +493,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       padding: 16,
       fontSize: 15,
       color: colors.text,
-      backgroundColor: '#F3F4F6'
+      backgroundColor: colors.card
     },
     frequencyContainer: {
       flexDirection: 'row' as const,
