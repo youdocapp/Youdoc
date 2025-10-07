@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert } from 'react-native';
-import { ChevronLeft, ChevronDown } from 'lucide-react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal } from 'react-native';
+import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import BottomNav from './ui/BottomNav';
 
 type MedicationType = 'Pill' | 'Injection' | 'Drops' | 'Inhaler' | 'Cream' | 'Spray';
 type FrequencyType = 'Daily' | 'Weekly' | 'As needed';
+type TimesPerDayType = 'Once daily' | 'Twice daily' | 'Three times daily' | 'Four times daily';
 
 interface AddMedicationScreenProps {
   onBack: () => void;
@@ -31,11 +32,15 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const [dosage, setDosage] = useState<string>('10');
   const [unit, setUnit] = useState<string>('mg');
   const [frequency, setFrequency] = useState<FrequencyType>('Daily');
-  const [timesPerDay, setTimesPerDay] = useState<string>('Once daily');
+  const [timesPerDay, setTimesPerDay] = useState<TimesPerDayType>('Once daily');
   const [reminderTimes, setReminderTimes] = useState<string[]>(['8:00 AM']);
-  const [startDate, setStartDate] = useState<string>('May 13, 2024');
-  const [endDate, setEndDate] = useState<string>('Select Date');
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [notes, setNotes] = useState<string>('');
+  const [showTimesDropdown, setShowTimesDropdown] = useState<boolean>(false);
+  const [showTimePickerIndex, setShowTimePickerIndex] = useState<number | null>(null);
+  const [showStartDatePicker, setShowStartDatePicker] = useState<boolean>(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState<boolean>(false);
 
   const handleSave = () => {
     if (!name || !dosage) {
@@ -48,7 +53,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       dosage: `${dosage}${unit}`,
       frequency,
       time: reminderTimes,
-      startDate: startDate,
+      startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       reminderEnabled: true,
       taken: false
     });
@@ -60,6 +65,284 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
   const addReminderTime = () => {
     setReminderTimes([...reminderTimes, '12:00 PM']);
+  };
+
+  const timesPerDayOptions: TimesPerDayType[] = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily'];
+
+  const handleTimesPerDayChange = (option: TimesPerDayType) => {
+    setTimesPerDay(option);
+    const count = option === 'Once daily' ? 1 : option === 'Twice daily' ? 2 : option === 'Three times daily' ? 3 : 4;
+    const defaultTimes = ['8:00 AM', '12:00 PM', '4:00 PM', '8:00 PM'];
+    setReminderTimes(defaultTimes.slice(0, count));
+    setShowTimesDropdown(false);
+  };
+
+  const updateReminderTime = (index: number, time: string) => {
+    const newTimes = [...reminderTimes];
+    newTimes[index] = time;
+    setReminderTimes(newTimes);
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const TimePickerModal = ({ visible, onClose, onSelect, currentTime }: { visible: boolean; onClose: () => void; onSelect: (time: string) => void; currentTime: string }) => {
+    const [selectedHour, setSelectedHour] = useState<number>(parseInt(currentTime.split(':')[0]));
+    const [selectedMinute, setSelectedMinute] = useState<number>(parseInt(currentTime.split(':')[1].split(' ')[0]));
+    const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(currentTime.includes('AM') ? 'AM' : 'PM');
+
+    const hours = Array.from({ length: 12 }, (_, i) => i + 1);
+    const minutes = Array.from({ length: 60 }, (_, i) => i);
+
+    const handleConfirm = () => {
+      const time = `${selectedHour}:${selectedMinute.toString().padStart(2, '0')} ${selectedPeriod}`;
+      onSelect(time);
+      onClose();
+    };
+
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <View style={timePickerStyles.modalOverlay}>
+          <View style={timePickerStyles.modalContent}>
+            <Text style={timePickerStyles.modalTitle}>Select Time</Text>
+            
+            <View style={timePickerStyles.wheelContainer}>
+              <View style={timePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {hours.map((hour) => (
+                    <TouchableOpacity
+                      key={hour}
+                      style={[
+                        timePickerStyles.wheelItem,
+                        selectedHour === hour && timePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedHour(hour)}
+                    >
+                      <Text style={[
+                        timePickerStyles.wheelItemText,
+                        selectedHour === hour && timePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {hour}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={timePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {minutes.map((minute) => (
+                    <TouchableOpacity
+                      key={minute}
+                      style={[
+                        timePickerStyles.wheelItem,
+                        selectedMinute === minute && timePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedMinute(minute)}
+                    >
+                      <Text style={[
+                        timePickerStyles.wheelItemText,
+                        selectedMinute === minute && timePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {minute.toString().padStart(2, '0')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={timePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {(['AM', 'PM'] as const).map((period) => (
+                    <TouchableOpacity
+                      key={period}
+                      style={[
+                        timePickerStyles.wheelItem,
+                        selectedPeriod === period && timePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedPeriod(period)}
+                    >
+                      <Text style={[
+                        timePickerStyles.wheelItemText,
+                        selectedPeriod === period && timePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {period}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={timePickerStyles.timePreview}>
+              <Text style={timePickerStyles.timePreviewText}>
+                {selectedHour}:{selectedMinute.toString().padStart(2, '0')} {selectedPeriod}
+              </Text>
+            </View>
+
+            <View style={timePickerStyles.modalButtons}>
+              <TouchableOpacity
+                style={[timePickerStyles.modalButton, timePickerStyles.cancelButton]}
+                onPress={onClose}
+              >
+                <Text style={timePickerStyles.buttonTextDark}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[timePickerStyles.modalButton, timePickerStyles.confirmButton]}
+                onPress={handleConfirm}
+              >
+                <Text style={timePickerStyles.buttonTextWhite}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const DatePickerModal = ({ visible, onClose, onSelect, currentDate, title }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date; title: string }) => {
+    const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
+    const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+    const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+
+    const days = Array.from({ length: 31 }, (_, i) => i + 1);
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() + 10 - i);
+
+    const handleConfirm = () => {
+      const monthIndex = months.indexOf(selectedMonth);
+      const newDate = new Date(selectedYear, monthIndex, selectedDay);
+      onSelect(newDate);
+      onClose();
+    };
+
+    return (
+      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+        <View style={datePickerStyles.modalOverlay}>
+          <View style={datePickerStyles.modalContent}>
+            <Text style={datePickerStyles.modalTitle}>{title}</Text>
+            
+            <View style={datePickerStyles.wheelContainer}>
+              <View style={datePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {days.map((day) => (
+                    <TouchableOpacity
+                      key={day}
+                      style={[
+                        datePickerStyles.wheelItem,
+                        selectedDay === day && datePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedDay(day)}
+                    >
+                      <Text style={[
+                        datePickerStyles.wheelItemText,
+                        selectedDay === day && datePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {day}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={datePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {months.map((month) => (
+                    <TouchableOpacity
+                      key={month}
+                      style={[
+                        datePickerStyles.wheelItem,
+                        selectedMonth === month && datePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedMonth(month)}
+                    >
+                      <Text style={[
+                        datePickerStyles.wheelItemText,
+                        selectedMonth === month && datePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {month}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={datePickerStyles.wheelColumn}>
+                <ScrollView 
+                  showsVerticalScrollIndicator={false}
+                  snapToInterval={50}
+                  decelerationRate="fast"
+                >
+                  {years.map((year) => (
+                    <TouchableOpacity
+                      key={year}
+                      style={[
+                        datePickerStyles.wheelItem,
+                        selectedYear === year && datePickerStyles.wheelItemSelected
+                      ]}
+                      onPress={() => setSelectedYear(year)}
+                    >
+                      <Text style={[
+                        datePickerStyles.wheelItemText,
+                        selectedYear === year && datePickerStyles.wheelItemTextSelected
+                      ]}>
+                        {year}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            </View>
+
+            <View style={datePickerStyles.datePreview}>
+              <Text style={datePickerStyles.datePreviewText}>
+                {selectedDay} {selectedMonth} {selectedYear}
+              </Text>
+            </View>
+
+            <View style={datePickerStyles.modalButtons}>
+              <TouchableOpacity
+                style={[datePickerStyles.modalButton, datePickerStyles.cancelButton]}
+                onPress={onClose}
+              >
+                <Text style={datePickerStyles.buttonTextDark}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[datePickerStyles.modalButton, datePickerStyles.confirmButton]}
+                onPress={handleConfirm}
+              >
+                <Text style={datePickerStyles.buttonTextWhite}>Confirm</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
   };
 
   const medicationTypes: { type: MedicationType; emoji: string; bgColor: string }[] = [
@@ -202,11 +485,11 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     },
     reminderTimeButton: {
       backgroundColor: '#4F7FFF',
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
       paddingVertical: 10,
       borderRadius: 20,
-      marginRight: 8,
-      marginBottom: 12
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const
     },
     reminderTimeText: {
       color: '#FFFFFF',
@@ -249,6 +532,223 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       color: '#FFFFFF',
       fontSize: 16,
       fontWeight: '600' as const
+    },
+    dropdownModalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const
+    },
+    dropdownModalContent: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 16,
+      width: '80%',
+      maxWidth: 300,
+      overflow: 'hidden' as const
+    },
+    dropdownOption: {
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: '#F3F4F6'
+    },
+    dropdownOptionText: {
+      fontSize: 16,
+      color: '#1F2937'
+    },
+    dropdownOptionTextActive: {
+      color: '#4F7FFF',
+      fontWeight: '600' as const
+    }
+  });
+
+  const timePickerStyles = StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      width: '85%',
+      maxWidth: 400
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937',
+      textAlign: 'center' as const,
+      paddingTop: 20,
+      paddingBottom: 16
+    },
+    wheelContainer: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-around' as const,
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      gap: 8
+    },
+    wheelColumn: {
+      flex: 1,
+      height: 200,
+      backgroundColor: '#F9FAFB',
+      borderRadius: 12,
+      overflow: 'hidden' as const
+    },
+    wheelItem: {
+      height: 50,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: 8
+    },
+    wheelItemText: {
+      fontSize: 16,
+      color: '#6B7280'
+    },
+    wheelItemSelected: {
+      backgroundColor: 'rgba(79, 127, 255, 0.1)'
+    },
+    wheelItemTextSelected: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937'
+    },
+    timePreview: {
+      paddingVertical: 20,
+      paddingHorizontal: 24,
+      borderTopWidth: 1,
+      borderTopColor: '#F3F4F6',
+      alignItems: 'center' as const
+    },
+    timePreviewText: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937'
+    },
+    modalButtons: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 16
+    },
+    cancelButton: {
+      backgroundColor: '#F3F4F6',
+      borderBottomLeftRadius: 20
+    },
+    confirmButton: {
+      backgroundColor: '#4F7FFF',
+      borderBottomRightRadius: 20
+    },
+    buttonTextWhite: {
+      color: 'white',
+      textAlign: 'center' as const,
+      fontWeight: '600' as const,
+      fontSize: 16
+    },
+    buttonTextDark: {
+      color: '#1F2937',
+      textAlign: 'center' as const,
+      fontWeight: '600' as const,
+      fontSize: 16
+    }
+  });
+
+  const datePickerStyles = StyleSheet.create({
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const
+    },
+    modalContent: {
+      backgroundColor: '#FFFFFF',
+      borderRadius: 20,
+      width: '85%',
+      maxWidth: 400
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937',
+      textAlign: 'center' as const,
+      paddingTop: 20,
+      paddingBottom: 16
+    },
+    wheelContainer: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-around' as const,
+      paddingVertical: 20,
+      paddingHorizontal: 16,
+      gap: 8
+    },
+    wheelColumn: {
+      flex: 1,
+      height: 200,
+      backgroundColor: '#F9FAFB',
+      borderRadius: 12,
+      overflow: 'hidden' as const
+    },
+    wheelItem: {
+      height: 50,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: 8
+    },
+    wheelItemText: {
+      fontSize: 16,
+      color: '#6B7280'
+    },
+    wheelItemSelected: {
+      backgroundColor: 'rgba(79, 127, 255, 0.1)'
+    },
+    wheelItemTextSelected: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937'
+    },
+    datePreview: {
+      paddingVertical: 20,
+      paddingHorizontal: 24,
+      borderTopWidth: 1,
+      borderTopColor: '#F3F4F6',
+      alignItems: 'center' as const
+    },
+    datePreviewText: {
+      fontSize: 18,
+      fontWeight: '600' as const,
+      color: '#1F2937'
+    },
+    modalButtons: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const
+    },
+    modalButton: {
+      flex: 1,
+      paddingVertical: 16
+    },
+    cancelButton: {
+      backgroundColor: '#F3F4F6',
+      borderBottomLeftRadius: 20
+    },
+    confirmButton: {
+      backgroundColor: '#4F7FFF',
+      borderBottomRightRadius: 20
+    },
+    buttonTextWhite: {
+      color: 'white',
+      textAlign: 'center' as const,
+      fontWeight: '600' as const,
+      fontSize: 16
+    },
+    buttonTextDark: {
+      color: '#1F2937',
+      textAlign: 'center' as const,
+      fontWeight: '600' as const,
+      fontSize: 16
     }
   });
 
@@ -344,35 +844,39 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
         <Text style={styles.label}>Reminder Times</Text>
         <Text style={styles.subLabel}>How many times per day?</Text>
-        <TouchableOpacity style={styles.dropdown}>
+        <TouchableOpacity style={styles.dropdown} onPress={() => setShowTimesDropdown(true)}>
           <Text style={styles.dropdownText}>{timesPerDay}</Text>
           <ChevronDown size={20} color="#9CA3AF" />
         </TouchableOpacity>
 
         <Text style={styles.subLabel}>Set your reminder times</Text>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, gap: 8 }}>
           {reminderTimes.map((time, index) => (
-            <View key={index} style={styles.reminderTimeButton}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.reminderTimeButton}
+              onPress={() => setShowTimePickerIndex(index)}
+            >
+              <Clock size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
               <Text style={styles.reminderTimeText}>{time}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.addTimeButton} onPress={addReminderTime}>
-          <Text style={styles.addTimeText}>+ Add another time</Text>
-        </TouchableOpacity>
 
         <View style={styles.row}>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>Start Date</Text>
-            <TouchableOpacity style={styles.dropdown}>
-              <Text style={styles.dropdownText}>{startDate}</Text>
+            <TouchableOpacity style={styles.dropdown} onPress={() => setShowStartDatePicker(true)}>
+              <Text style={styles.dropdownText}>{formatDate(startDate)}</Text>
               <ChevronDown size={20} color="#9CA3AF" />
             </TouchableOpacity>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>End Date</Text>
-            <TouchableOpacity style={styles.dropdown}>
-              <Text style={[styles.dropdownText, { color: '#9CA3AF' }]}>{endDate}</Text>
+            <TouchableOpacity style={styles.dropdown} onPress={() => setShowEndDatePicker(true)}>
+              <Text style={[styles.dropdownText, { color: endDate ? '#1F2937' : '#9CA3AF' }]}>
+                {endDate ? formatDate(endDate) : 'Select Date'}
+              </Text>
               <ChevronDown size={20} color="#9CA3AF" />
             </TouchableOpacity>
           </View>
@@ -400,6 +904,74 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         onNotifications={onNotifications}
         onProfile={onProfile}
       />
+
+      <Modal
+        visible={showTimesDropdown}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowTimesDropdown(false)}
+      >
+        <TouchableOpacity 
+          style={styles.dropdownModalOverlay} 
+          activeOpacity={1}
+          onPress={() => setShowTimesDropdown(false)}
+        >
+          <View style={styles.dropdownModalContent}>
+            {timesPerDayOptions.map((option) => (
+              <TouchableOpacity
+                key={option}
+                style={styles.dropdownOption}
+                onPress={() => handleTimesPerDayChange(option)}
+              >
+                <Text style={[
+                  styles.dropdownOptionText,
+                  timesPerDay === option && styles.dropdownOptionTextActive
+                ]}>
+                  {option}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
+      {showTimePickerIndex !== null && (
+        <TimePickerModal
+          visible={true}
+          onClose={() => setShowTimePickerIndex(null)}
+          onSelect={(time) => {
+            updateReminderTime(showTimePickerIndex, time);
+            setShowTimePickerIndex(null);
+          }}
+          currentTime={reminderTimes[showTimePickerIndex]}
+        />
+      )}
+
+      {showStartDatePicker && (
+        <DatePickerModal
+          visible={true}
+          onClose={() => setShowStartDatePicker(false)}
+          onSelect={(date) => {
+            setStartDate(date);
+            setShowStartDatePicker(false);
+          }}
+          currentDate={startDate}
+          title="Select Start Date"
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DatePickerModal
+          visible={true}
+          onClose={() => setShowEndDatePicker(false)}
+          onSelect={(date) => {
+            setEndDate(date);
+            setShowEndDatePicker(false);
+          }}
+          currentDate={endDate || new Date()}
+          title="Select End Date"
+        />
+      )}
     </SafeAreaView>
   );
 };
