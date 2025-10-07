@@ -271,6 +271,9 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
       color: colors.text,
       marginBottom: 4,
     },
+    optionTitleSelected: {
+      color: '#4F7FFF',
+    },
     optionDescription: {
       fontSize: 13,
       color: colors.textSecondary,
@@ -591,7 +594,10 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
           >
             <View style={[styles.optionDot, { backgroundColor: option.color }]} />
             <View style={styles.optionContent}>
-              <Text style={styles.optionTitle}>{option.title}</Text>
+              <Text style={[
+                styles.optionTitle,
+                symptomData.severity === option.level && styles.optionTitleSelected
+              ]}>{option.title}</Text>
               <Text style={styles.optionDescription}>{option.description}</Text>
             </View>
           </TouchableOpacity>

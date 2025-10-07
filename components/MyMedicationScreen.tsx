@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
 
 interface MyMedicationScreenProps {
@@ -22,6 +23,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   activeTab = 'home'
 }) => {
   const { medications, toggleMedicationTaken } = useMedication();
+  const { colors } = useTheme();
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
@@ -76,7 +78,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.background
     },
     header: {
       flexDirection: 'row' as const,
@@ -85,7 +87,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       position: 'relative' as const
     },
     backButton: {
@@ -96,12 +98,12 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     monthsContainer: {
       paddingTop: 16,
       paddingBottom: 8,
-      backgroundColor: '#FFFFFF'
+      backgroundColor: colors.background
     },
     monthsContentContainer: {
       paddingHorizontal: 20,
@@ -111,7 +113,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       paddingHorizontal: 22,
       paddingVertical: 10,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       marginRight: 12,
       borderWidth: 0
     },
@@ -122,7 +124,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     monthText: {
       fontSize: 14,
       fontWeight: '600' as const,
-      color: '#6B7280',
+      color: colors.textSecondary,
       letterSpacing: 0.3
     },
     monthTextActive: {
@@ -131,9 +133,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     datesContainer: {
       paddingTop: 4,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     datesContentContainer: {
       paddingHorizontal: 20,
@@ -144,11 +146,11 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       paddingVertical: 12,
       paddingHorizontal: 10,
       borderRadius: 16,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: colors.card,
       alignItems: 'center' as const,
       marginRight: 10,
       borderWidth: 1,
-      borderColor: '#E5E7EB'
+      borderColor: colors.border
     },
     dateCardActive: {
       backgroundColor: '#4F7FFF',
@@ -162,7 +164,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     dateWeekday: {
       fontSize: 11,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 2,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
@@ -173,7 +175,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     dateDay: {
       fontSize: 24,
       fontWeight: '700' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 4
     },
     dateDayActive: {
@@ -210,11 +212,11 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     sectionTitle: {
       fontSize: 20,
       fontWeight: '700' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 16
     },
     medicationCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderRadius: 20,
       padding: 18,
       marginBottom: 14,
@@ -226,7 +228,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       shadowRadius: 8,
       elevation: 3,
       borderWidth: 1,
-      borderColor: '#F3F4F6'
+      borderColor: colors.border
     },
     medicationCardTaken: {
       opacity: 0.5
@@ -249,7 +251,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     medicationName: {
       fontSize: 17,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 6
     },
     medicationNameTaken: {
@@ -257,7 +259,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     medicationDose: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       marginBottom: 6
     },
     medicationDoseTaken: {
@@ -270,7 +272,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     timeText: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     timeTextTaken: {
       textDecorationLine: 'line-through' as const
@@ -306,7 +308,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     emptyText: {
       fontSize: 16,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       textAlign: 'center' as const
     },
     fab: {
@@ -331,7 +333,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>My Medication</Text>
       </View>
@@ -443,7 +445,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
                 <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
                 <Text style={[styles.medicationDose, med.taken && styles.medicationDoseTaken]}>{med.dosage}</Text>
                 <View style={styles.medicationTime}>
-                  <Clock size={14} color="#9CA3AF" />
+                  <Clock size={14} color={colors.textSecondary} />
                   <Text style={[styles.timeText, med.taken && styles.timeTextTaken]}>{med.time[0] || '08:00'}</Text>
                 </View>
               </View>

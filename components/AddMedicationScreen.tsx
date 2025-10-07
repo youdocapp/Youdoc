@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
 
 type MedicationType = 'Pill' | 'Injection' | 'Drops' | 'Inhaler' | 'Cream' | 'Spray';
@@ -26,6 +27,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   activeTab = 'home'
 }) => {
   const { addMedication } = useMedication();
+  const { colors } = useTheme();
   const [name, setName] = useState<string>('');
   const [medicationType, setMedicationType] = useState<MedicationType>('Pill');
   const [quantity, setQuantity] = useState<string>('1');
@@ -410,7 +412,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.background
     },
     header: {
       flexDirection: 'row' as const,
@@ -419,7 +421,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       position: 'relative' as const
     },
     backButton: {
@@ -430,7 +432,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     content: {
       flex: 1,
@@ -440,7 +442,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     label: {
       fontSize: 16,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 12
     },
     input: {
@@ -448,8 +450,8 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderRadius: 12,
       padding: 16,
       fontSize: 15,
-      color: '#1F2937',
-      backgroundColor: '#F3F4F6',
+      color: colors.text,
+      backgroundColor: colors.card,
       marginBottom: 24
     },
     medicationTypesGrid: {
@@ -477,7 +479,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     medicationTypeText: {
       fontSize: 15,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     row: {
       flexDirection: 'row' as const,
@@ -490,7 +492,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderRadius: 12,
       padding: 16,
       fontSize: 15,
-      color: '#1F2937',
+      color: colors.text,
       backgroundColor: '#F3F4F6'
     },
     frequencyContainer: {
@@ -503,7 +505,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       paddingVertical: 12,
       paddingHorizontal: 16,
       borderRadius: 12,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       alignItems: 'center' as const
     },
     frequencyButtonActive: {
@@ -512,14 +514,14 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     frequencyText: {
       fontSize: 15,
       fontWeight: '500' as const,
-      color: '#6B7280'
+      color: colors.textSecondary
     },
     frequencyTextActive: {
       color: '#FFFFFF'
     },
     subLabel: {
       fontSize: 14,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12
     },
     dropdown: {
@@ -529,12 +531,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderWidth: 0,
       borderRadius: 12,
       padding: 16,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       marginBottom: 16
     },
     dropdownText: {
       fontSize: 15,
-      color: '#1F2937'
+      color: colors.text
     },
     reminderTimeButton: {
       backgroundColor: '#4F7FFF',
@@ -568,8 +570,8 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderRadius: 12,
       padding: 16,
       fontSize: 15,
-      color: '#1F2937',
-      backgroundColor: '#F3F4F6',
+      color: colors.text,
+      backgroundColor: colors.card,
       marginBottom: 24,
       minHeight: 100,
       textAlignVertical: 'top' as const
@@ -593,7 +595,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       alignItems: 'center' as const
     },
     dropdownModalContent: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderRadius: 16,
       width: '80%',
       maxWidth: 300,
@@ -603,11 +605,11 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       paddingVertical: 16,
       paddingHorizontal: 20,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     dropdownOptionText: {
       fontSize: 16,
-      color: '#1F2937'
+      color: colors.text
     },
     dropdownOptionTextActive: {
       color: '#4F7FFF',
@@ -622,7 +624,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       justifyContent: 'flex-end' as const
     },
     modalContent: {
-      backgroundColor: '#F9FAFB',
+      backgroundColor: colors.background,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       paddingBottom: Platform.OS === 'ios' ? 34 : 20
@@ -634,13 +636,13 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       paddingHorizontal: 20,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF'
+      borderBottomColor: colors.border,
+      backgroundColor: colors.card
     },
     modalTitle: {
       fontSize: 17,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     cancelText: {
       fontSize: 17,
@@ -654,7 +656,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     },
     pickerContainer: {
       position: 'relative' as const,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       marginTop: 1
     },
     selectionIndicator: {
@@ -667,7 +669,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       backgroundColor: 'rgba(0, 0, 0, 0.03)',
       borderTopWidth: 1,
       borderBottomWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: colors.border,
       zIndex: 1,
       pointerEvents: 'none' as const
     },
@@ -687,12 +689,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     },
     wheelItemText: {
       fontSize: 20,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     wheelItemTextSelected: {
       fontSize: 23,
       fontWeight: '500' as const,
-      color: '#1F2937'
+      color: colors.text
     }
   });
 
@@ -703,7 +705,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       justifyContent: 'flex-end' as const
     },
     modalContent: {
-      backgroundColor: '#F9FAFB',
+      backgroundColor: colors.background,
       borderTopLeftRadius: 20,
       borderTopRightRadius: 20,
       paddingBottom: Platform.OS === 'ios' ? 34 : 20
@@ -715,13 +717,13 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       paddingHorizontal: 20,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-      backgroundColor: '#FFFFFF'
+      borderBottomColor: colors.border,
+      backgroundColor: colors.card
     },
     modalTitle: {
       fontSize: 17,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     cancelText: {
       fontSize: 17,
@@ -735,7 +737,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     },
     pickerContainer: {
       position: 'relative' as const,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       marginTop: 1
     },
     selectionIndicator: {
@@ -748,7 +750,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       backgroundColor: 'rgba(0, 0, 0, 0.03)',
       borderTopWidth: 1,
       borderBottomWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: colors.border,
       zIndex: 1,
       pointerEvents: 'none' as const
     },
@@ -768,12 +770,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     },
     wheelItemText: {
       fontSize: 20,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     wheelItemTextSelected: {
       fontSize: 23,
       fontWeight: '500' as const,
-      color: '#1F2937'
+      color: colors.text
     }
   });
 
@@ -781,7 +783,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Add Medication</Text>
       </View>
@@ -796,7 +798,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         <TextInput
           style={styles.input}
           placeholder="Enter medication name"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textSecondary}
           value={name}
           onChangeText={setName}
         />
@@ -825,7 +827,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             <TextInput
               style={styles.inputSmall}
               placeholder="1"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
               value={quantity}
               onChangeText={setQuantity}
               keyboardType="numeric"
@@ -836,7 +838,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             <TextInput
               style={styles.inputSmall}
               placeholder="10"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
               value={dosage}
               onChangeText={setDosage}
               keyboardType="numeric"
@@ -846,7 +848,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             <Text style={styles.label}>Unit</Text>
             <TouchableOpacity style={styles.dropdown}>
               <Text style={styles.dropdownText}>{unit}</Text>
-              <ChevronDown size={20} color="#9CA3AF" />
+              <ChevronDown size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -898,16 +900,16 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             <Text style={styles.label}>Start Date</Text>
             <TouchableOpacity style={styles.dropdown} onPress={() => setShowStartDatePicker(true)}>
               <Text style={styles.dropdownText}>{formatDate(startDate)}</Text>
-              <ChevronDown size={20} color="#9CA3AF" />
+              <ChevronDown size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.label}>End Date</Text>
             <TouchableOpacity style={styles.dropdown} onPress={() => setShowEndDatePicker(true)}>
-              <Text style={[styles.dropdownText, { color: endDate ? '#1F2937' : '#9CA3AF' }]}>
+              <Text style={[styles.dropdownText, { color: endDate ? colors.text : colors.textSecondary }]}>
                 {endDate ? formatDate(endDate) : 'Select Date'}
               </Text>
-              <ChevronDown size={20} color="#9CA3AF" />
+              <ChevronDown size={20} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
@@ -916,7 +918,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         <TextInput
           style={styles.textArea}
           placeholder="Add any special instructions or notes..."
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.textSecondary}
           value={notes}
           onChangeText={setNotes}
           multiline

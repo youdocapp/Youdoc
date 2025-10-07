@@ -1,16 +1,19 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { ChevronLeft, Shield, Lock, Eye, FileCheck, AlertCircle } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HIPAAComplianceScreenProps {
   onBack: () => void;
 }
 
 const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack }) => {
+  const { colors } = useTheme();
+  
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.background
     },
     header: {
       flexDirection: 'row' as const,
@@ -19,7 +22,7 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       position: 'relative' as const
     },
     backButton: {
@@ -30,7 +33,7 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     content: {
       paddingHorizontal: 20,
@@ -60,7 +63,7 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
       lineHeight: 20
     },
     featureCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderRadius: 12,
       padding: 16,
       marginBottom: 12,
@@ -81,12 +84,12 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
     featureTitle: {
       fontSize: 16,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 4
     },
     featureText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 20
     },
     section: {
@@ -96,17 +99,17 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
     sectionTitle: {
       fontSize: 18,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 12
     },
     sectionText: {
       fontSize: 15,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 24
     },
     bulletPoint: {
       fontSize: 15,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 24,
       marginLeft: 16,
       marginBottom: 8
@@ -135,7 +138,7 @@ const HIPAAComplianceScreen: React.FC<HIPAAComplianceScreenProps> = ({ onBack })
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>HIPAA Compliance</Text>
       </View>

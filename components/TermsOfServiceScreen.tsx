@@ -13,7 +13,7 @@ const TermsOfServiceScreen: React.FC<TermsOfServiceScreenProps> = ({ onBack }) =
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: colors.card
+      backgroundColor: colors.background
     },
     header: {
       flexDirection: 'row' as const,
@@ -23,9 +23,7 @@ const TermsOfServiceScreen: React.FC<TermsOfServiceScreenProps> = ({ onBack }) =
       paddingTop: 16,
       paddingBottom: 16,
       backgroundColor: colors.background,
-      position: 'relative' as const,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border
+      position: 'relative' as const
     },
     backButton: {
       position: 'absolute' as const,
