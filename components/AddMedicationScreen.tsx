@@ -218,12 +218,21 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   };
 
   const DatePickerModal = ({ visible, onClose, onSelect, currentDate, title }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date; title: string }) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentYear = new Date().getFullYear();
+    
     const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
     const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
     const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
 
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const currentYear = new Date().getFullYear();
+    React.useEffect(() => {
+      if (visible) {
+        setSelectedDay(currentDate.getDate());
+        setSelectedMonth(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+        setSelectedYear(currentDate.getFullYear());
+      }
+    }, [visible, currentDate]);
+
     const monthIndex = months.indexOf(selectedMonth);
     const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
