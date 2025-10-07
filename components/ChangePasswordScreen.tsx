@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Alert } from 'react-native';
 import { ChevronLeft, Eye, EyeOff, Lock, CheckCircle } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ChangePasswordScreenProps {
   onBack: () => void;
@@ -44,10 +45,12 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     }, 1500);
   };
 
+  const { colors } = useTheme();
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -56,7 +59,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       position: 'relative' as const
     },
     backButton: {
@@ -67,14 +70,14 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     content: {
       paddingHorizontal: 20,
       paddingTop: 24
     },
     infoCard: {
-      backgroundColor: '#EEF2FF',
+      backgroundColor: colors.primaryLight,
       borderRadius: 12,
       padding: 16,
       marginBottom: 24,
@@ -88,7 +91,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     infoText: {
       flex: 1,
       fontSize: 14,
-      color: '#4F7FFF',
+      color: colors.primary,
       lineHeight: 20
     },
     inputGroup: {
@@ -97,16 +100,16 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     label: {
       fontSize: 14,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8
     },
     inputContainer: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 12,
       borderWidth: 1,
-      borderColor: '#E5E7EB',
+      borderColor: colors.border,
       paddingHorizontal: 16,
       height: 52
     },
@@ -116,21 +119,23 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     input: {
       flex: 1,
       fontSize: 16,
-      color: '#1F2937'
+      color: colors.text
     },
     eyeButton: {
       padding: 4
     },
     requirementsCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 12,
       padding: 16,
-      marginBottom: 24
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     requirementsTitle: {
       fontSize: 14,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 12
     },
     requirement: {
@@ -140,14 +145,14 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     },
     requirementText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       marginLeft: 8
     },
     requirementMet: {
       color: '#10B981'
     },
     saveButton: {
-      backgroundColor: '#4F7FFF',
+      backgroundColor: colors.primary,
       borderRadius: 12,
       height: 52,
       alignItems: 'center' as const,
@@ -155,7 +160,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
       marginTop: 8
     },
     saveButtonDisabled: {
-      backgroundColor: '#E5E7EB'
+      backgroundColor: colors.border
     },
     saveButtonText: {
       fontSize: 16,
@@ -163,7 +168,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
       color: '#FFFFFF'
     },
     saveButtonTextDisabled: {
-      color: '#9CA3AF'
+      color: colors.textSecondary
     }
   });
 
@@ -174,7 +179,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Change Password</Text>
       </View>
@@ -182,7 +187,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.content}>
           <View style={styles.infoCard}>
-            <Lock size={20} color="#4F7FFF" style={styles.infoIcon} />
+            <Lock size={20} color={colors.primary} style={styles.infoIcon} />
             <Text style={styles.infoText}>
               Choose a strong password to keep your account secure. We recommend using a mix of letters, numbers, and symbols.
             </Text>
@@ -191,11 +196,11 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Current Password</Text>
             <View style={styles.inputContainer}>
-              <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter current password"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showCurrentPassword}
                 value={currentPassword}
                 onChangeText={setCurrentPassword}
@@ -206,9 +211,9 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
                 onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               >
                 {showCurrentPassword ? (
-                  <EyeOff size={20} color="#9CA3AF" />
+                  <EyeOff size={20} color={colors.textSecondary} />
                 ) : (
-                  <Eye size={20} color="#9CA3AF" />
+                  <Eye size={20} color={colors.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -217,11 +222,11 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
           <View style={styles.inputGroup}>
             <Text style={styles.label}>New Password</Text>
             <View style={styles.inputContainer}>
-              <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Enter new password"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showNewPassword}
                 value={newPassword}
                 onChangeText={setNewPassword}
@@ -232,9 +237,9 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
                 onPress={() => setShowNewPassword(!showNewPassword)}
               >
                 {showNewPassword ? (
-                  <EyeOff size={20} color="#9CA3AF" />
+                  <EyeOff size={20} color={colors.textSecondary} />
                 ) : (
-                  <Eye size={20} color="#9CA3AF" />
+                  <Eye size={20} color={colors.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -243,11 +248,11 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Confirm New Password</Text>
             <View style={styles.inputContainer}>
-              <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
+              <Lock size={20} color={colors.textSecondary} style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
                 placeholder="Confirm new password"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
                 secureTextEntry={!showConfirmPassword}
                 value={confirmPassword}
                 onChangeText={setConfirmPassword}
@@ -258,9 +263,9 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
-                  <EyeOff size={20} color="#9CA3AF" />
+                  <EyeOff size={20} color={colors.textSecondary} />
                 ) : (
-                  <Eye size={20} color="#9CA3AF" />
+                  <Eye size={20} color={colors.textSecondary} />
                 )}
               </TouchableOpacity>
             </View>
@@ -271,7 +276,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
             <View style={styles.requirement}>
               <CheckCircle 
                 size={16} 
-                color={newPassword.length >= 8 ? '#10B981' : '#9CA3AF'} 
+                color={newPassword.length >= 8 ? '#10B981' : colors.textSecondary} 
               />
               <Text style={[
                 styles.requirementText,
@@ -283,7 +288,7 @@ const ChangePasswordScreen: React.FC<ChangePasswordScreenProps> = ({ onBack }) =
             <View style={styles.requirement}>
               <CheckCircle 
                 size={16} 
-                color={newPassword === confirmPassword && newPassword ? '#10B981' : '#9CA3AF'} 
+                color={newPassword === confirmPassword && newPassword ? '#10B981' : colors.textSecondary} 
               />
               <Text style={[
                 styles.requirementText,

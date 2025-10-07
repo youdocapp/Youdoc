@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { ChevronLeft, Download, FileText, CheckCircle, Calendar, Activity, Pill, FileCheck } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface DownloadDataScreenProps {
   onBack: () => void;
@@ -15,6 +16,7 @@ interface DataCategory {
 }
 
 const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
+  const { colors } = useTheme();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories, setCategories] = useState<DataCategory[]>([
     {
@@ -82,7 +84,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -91,7 +93,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       position: 'relative' as const
     },
     backButton: {
@@ -102,14 +104,14 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     content: {
       paddingHorizontal: 20,
       paddingTop: 24
     },
     infoCard: {
-      backgroundColor: '#EEF2FF',
+      backgroundColor: colors.primaryLight,
       borderRadius: 12,
       padding: 16,
       marginBottom: 24
@@ -117,32 +119,32 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
     infoTitle: {
       fontSize: 16,
       fontWeight: '600' as const,
-      color: '#4F7FFF',
+      color: colors.primary,
       marginBottom: 8
     },
     infoText: {
       fontSize: 14,
-      color: '#4F7FFF',
+      color: colors.primary,
       lineHeight: 20
     },
     sectionTitle: {
       fontSize: 13,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
     },
     categoryCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 12,
       marginBottom: 12,
       overflow: 'hidden' as const,
       borderWidth: 2,
-      borderColor: '#E5E7EB'
+      borderColor: colors.border
     },
     categoryCardSelected: {
-      borderColor: '#4F7FFF'
+      borderColor: colors.primary
     },
     categoryContent: {
       flexDirection: 'row' as const,
@@ -163,46 +165,48 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
     categoryName: {
       fontSize: 16,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     categoryDescription: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     checkbox: {
       width: 24,
       height: 24,
       borderRadius: 12,
       borderWidth: 2,
-      borderColor: '#E5E7EB',
+      borderColor: colors.border,
       alignItems: 'center' as const,
       justifyContent: 'center' as const
     },
     checkboxSelected: {
-      backgroundColor: '#4F7FFF',
-      borderColor: '#4F7FFF'
+      backgroundColor: colors.primary,
+      borderColor: colors.primary
     },
     formatCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 12,
       padding: 16,
       marginTop: 24,
-      marginBottom: 24
+      marginBottom: 24,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     formatTitle: {
       fontSize: 14,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8
     },
     formatText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 20
     },
     downloadButton: {
-      backgroundColor: '#4F7FFF',
+      backgroundColor: colors.primary,
       borderRadius: 12,
       height: 52,
       flexDirection: 'row' as const,
@@ -211,7 +215,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
       marginTop: 8
     },
     downloadButtonDisabled: {
-      backgroundColor: '#E5E7EB'
+      backgroundColor: colors.border
     },
     downloadButtonText: {
       fontSize: 16,
@@ -220,7 +224,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
       marginLeft: 8
     },
     downloadButtonTextDisabled: {
-      color: '#9CA3AF'
+      color: colors.textSecondary
     }
   });
 
@@ -230,7 +234,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Download My Data</Text>
       </View>
@@ -258,7 +262,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
               <View style={styles.categoryContent}>
                 <View style={[
                   styles.iconContainer,
-                  { backgroundColor: category.selected ? '#EEF2FF' : '#F9FAFB' }
+                  { backgroundColor: category.selected ? colors.primaryLight : colors.card }
                 ]}>
                   {category.icon}
                 </View>
@@ -293,7 +297,7 @@ const DownloadDataScreen: React.FC<DownloadDataScreenProps> = ({ onBack }) => {
             onPress={handleDownload}
             disabled={selectedCount === 0 || isLoading}
           >
-            <Download size={20} color={selectedCount === 0 || isLoading ? '#9CA3AF' : '#FFFFFF'} />
+            <Download size={20} color={selectedCount === 0 || isLoading ? colors.textSecondary : '#FFFFFF'} />
             <Text style={[
               styles.downloadButtonText,
               (selectedCount === 0 || isLoading) && styles.downloadButtonTextDisabled

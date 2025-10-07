@@ -46,10 +46,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: colors.background,
-      position: 'relative' as const,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border
+      backgroundColor: colors.card,
+      position: 'relative' as const
     },
     backButton: {
       position: 'absolute' as const,
