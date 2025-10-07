@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,10 @@ import {
   StyleSheet,
   Switch,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  Alert,
+  Platform,
 } from 'react-native';
 import {
   Smartphone,
@@ -18,6 +22,8 @@ import {
   XCircle,
   ChevronLeft,
   Plus,
+  Bluetooth,
+  X,
 } from 'lucide-react-native';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 
@@ -28,6 +34,10 @@ interface ConnectedDevicesScreenProps {
 const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack }) => {
   const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
     useHealthTracker();
+  const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
+  const [deviceName, setDeviceName] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [availableDevices, setAvailableDevices] = useState<{ id: string; name: string }[]>([]);
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
@@ -77,8 +87,46 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
   }
 
   const handleAddDevice = () => {
-    const deviceName = `Custom Device ${connectedDevices.length + 1}`;
-    addCustomDevice(deviceName);
+    setShowAddDeviceModal(true);
+  };
+
+  const handleScanBluetooth = () => {
+    if (Platform.OS === 'web') {
+      Alert.alert('Not Available', 'Bluetooth scanning is not available on web. Please use the mobile app.');
+      return;
+    }
+    
+    setIsScanning(true);
+    setAvailableDevices([
+      { id: '1', name: 'Fitness Band Pro' },
+      { id: '2', name: 'Smart Watch X' },
+      { id: '3', name: 'Health Monitor 3000' },
+      { id: '4', name: 'BP Monitor Plus' },
+    ]);
+    
+    setTimeout(() => {
+      setIsScanning(false);
+    }, 2000);
+  };
+
+  const handleConnectBluetoothDevice = (device: { id: string; name: string }) => {
+    addCustomDevice(device.name);
+    setShowAddDeviceModal(false);
+    setAvailableDevices([]);
+    setDeviceName('');
+    Alert.alert('Success', `${device.name} has been added to your devices.`);
+  };
+
+  const handleManualAdd = () => {
+    if (!deviceName.trim()) {
+      Alert.alert('Error', 'Please enter a device name');
+      return;
+    }
+    addCustomDevice(deviceName.trim());
+    setShowAddDeviceModal(false);
+    setDeviceName('');
+    setAvailableDevices([]);
+    Alert.alert('Success', `${deviceName} has been added to your devices.`);
   };
 
   return (
@@ -111,7 +159,10 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
             <View style={styles.addDeviceIcon}>
               <Plus size={24} color="#4F7FFF" />
             </View>
-            <Text style={styles.addDeviceText}>Add New Device</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.addDeviceText}>Add New Device</Text>
+              <Text style={styles.addDeviceSubtext}>Connect via Bluetooth or manually</Text>
+            </View>
           </TouchableOpacity>
 
           {connectedDevices.map((device) => (
@@ -156,6 +207,87 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
           </View>
         </View>
       </ScrollView>
+
+      <Modal
+        visible={showAddDeviceModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddDeviceModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Device</Text>
+              <TouchableOpacity onPress={() => {
+                setShowAddDeviceModal(false);
+                setAvailableDevices([]);
+                setDeviceName('');
+              }}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalBody}>
+              <TouchableOpacity 
+                style={styles.scanButton} 
+                onPress={handleScanBluetooth}
+                disabled={isScanning}
+              >
+                <Bluetooth size={20} color="#FFFFFF" />
+                <Text style={styles.scanButtonText}>
+                  {isScanning ? 'Scanning...' : 'Scan for Bluetooth Devices'}
+                </Text>
+              </TouchableOpacity>
+
+              {isScanning && (
+                <View style={styles.scanningContainer}>
+                  <ActivityIndicator size="small" color="#4F7FFF" />
+                  <Text style={styles.scanningText}>Searching for nearby devices...</Text>
+                </View>
+              )}
+
+              {availableDevices.length > 0 && (
+                <View style={styles.devicesListContainer}>
+                  <Text style={styles.devicesListTitle}>Available Devices</Text>
+                  {availableDevices.map((device) => (
+                    <TouchableOpacity
+                      key={device.id}
+                      style={styles.availableDeviceItem}
+                      onPress={() => handleConnectBluetoothDevice(device)}
+                    >
+                      <Bluetooth size={20} color="#4F7FFF" />
+                      <Text style={styles.availableDeviceName}>{device.name}</Text>
+                      <Text style={styles.connectText}>Connect</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+
+              <View style={styles.divider}>
+                <View style={styles.dividerLine} />
+                <Text style={styles.dividerText}>OR</Text>
+                <View style={styles.dividerLine} />
+              </View>
+
+              <Text style={styles.inputLabel}>Add Device Manually</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter device name"
+                value={deviceName}
+                onChangeText={setDeviceName}
+                placeholderTextColor="#9CA3AF"
+              />
+
+              <TouchableOpacity 
+                style={styles.addButton} 
+                onPress={handleManualAdd}
+              >
+                <Text style={styles.addButtonText}>Add Device</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -251,6 +383,137 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#4F7FFF',
+  },
+  addDeviceSubtext: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  scanButton: {
+    backgroundColor: '#4F7FFF',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+    gap: 8,
+    marginBottom: 16,
+  },
+  scanButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  scanningContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    gap: 12,
+  },
+  scanningText: {
+    fontSize: 14,
+    color: '#6B7280',
+  },
+  devicesListContainer: {
+    marginBottom: 16,
+  },
+  devicesListTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 12,
+  },
+  availableDeviceItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    marginBottom: 8,
+    gap: 12,
+  },
+  availableDeviceName: {
+    flex: 1,
+    fontSize: 15,
+    color: '#1F2937',
+    fontWeight: '500',
+  },
+  connectText: {
+    fontSize: 14,
+    color: '#4F7FFF',
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 20,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 13,
+    color: '#9CA3AF',
+    fontWeight: '600',
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#1F2937',
+    marginBottom: 16,
+  },
+  addButton: {
+    backgroundColor: '#4F7FFF',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  addButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   deviceCard: {
     backgroundColor: '#FFFFFF',

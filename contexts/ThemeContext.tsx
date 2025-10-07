@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ThemeColors {
   background: string;
@@ -54,18 +55,50 @@ const darkColors: ThemeColors = {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const THEME_KEY = '@app_theme';
+
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const systemColorScheme = useRNColorScheme();
   const [isDark, setIsDark] = useState(systemColorScheme === 'dark');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const toggleTheme = () => {
-    setIsDark(prev => !prev);
+  useEffect(() => {
+    loadTheme();
+  }, []);
+
+  const loadTheme = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(THEME_KEY);
+      if (stored !== null) {
+        setIsDark(stored === 'dark');
+      }
+    } catch (error) {
+      console.error('Error loading theme:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const colors = isDark ? darkColors : lightColors;
+  const toggleTheme = useCallback(async () => {
+    const newTheme = !isDark;
+    setIsDark(newTheme);
+    try {
+      await AsyncStorage.setItem(THEME_KEY, newTheme ? 'dark' : 'light');
+    } catch (error) {
+      console.error('Error saving theme:', error);
+    }
+  }, [isDark]);
+
+  const colors = useMemo(() => isDark ? darkColors : lightColors, [isDark]);
+
+  const value = useMemo(() => ({ colors, isDark, toggleTheme }), [colors, isDark, toggleTheme]);
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
-    <ThemeContext.Provider value={{ colors, isDark, toggleTheme }}>
+    <ThemeContext.Provider value={value}>
       {children}
     </ThemeContext.Provider>
   );

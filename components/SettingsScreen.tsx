@@ -26,19 +26,18 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
   onSignOut,
   onDeleteAccount
 }) => {
-  const { colors } = useTheme();
+  const { isDark, toggleTheme, colors } = useTheme();
   const [biometricAuth, setBiometricAuth] = useState<boolean>(false);
   const [pushNotifications, setPushNotifications] = useState<boolean>(true);
   const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
   const [medicationReminders, setMedicationReminders] = useState<boolean>(true);
   const [appointmentReminders, setAppointmentReminders] = useState<boolean>(true);
-  const [darkMode, setDarkMode] = useState<boolean>(false);
   const [dataSharing, setDataSharing] = useState<boolean>(false);
 
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -47,8 +46,10 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
-      position: 'relative' as const
+      backgroundColor: colors.background,
+      position: 'relative' as const,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border
     },
     backButton: {
       position: 'absolute' as const,
@@ -58,7 +59,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     section: {
       marginTop: 24,
@@ -67,20 +68,22 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     sectionTitle: {
       fontSize: 13,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
     },
     card: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       overflow: 'hidden' as const,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     menuItem: {
       flexDirection: 'row' as const,
@@ -88,7 +91,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
       paddingHorizontal: 16,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     menuItemLast: {
       borderBottomWidth: 0
@@ -112,21 +115,21 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     menuItemText: {
       fontSize: 16,
       fontWeight: '500' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     menuItemSubtext: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     menuItemRight: {
       marginLeft: 12
     },
     signOutText: {
-      color: '#EF4444'
+      color: colors.error
     },
     deleteText: {
-      color: '#EF4444'
+      color: colors.error
     }
   });
 
@@ -134,7 +137,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Settings</Text>
       </View>
@@ -153,7 +156,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Manage your personal information</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={onPrivacy}>
@@ -166,7 +169,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Control your data and security settings</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <View style={[styles.menuItem, styles.menuItemLast]}>
@@ -280,8 +283,8 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                 </View>
               </View>
               <Switch
-                value={darkMode}
-                onValueChange={setDarkMode}
+                value={isDark}
+                onValueChange={toggleTheme}
                 trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
                 thumbColor="#FFFFFF"
               />
@@ -315,7 +318,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Manage your connected health devices</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -333,7 +336,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>View and manage your YouDoc Pro subscription</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -351,7 +354,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Get help and contact support</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onAbout}>
@@ -364,7 +367,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Version 1.0.0</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -382,7 +385,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Sign out of your account</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onDeleteAccount}>
@@ -395,7 +398,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Permanently delete your account</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
