@@ -400,7 +400,7 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({
           </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 60 }} />
       </ScrollView>
     </SafeAreaView>
   );

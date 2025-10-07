@@ -317,7 +317,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       <BottomNav

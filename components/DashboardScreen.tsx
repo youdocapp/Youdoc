@@ -432,7 +432,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </ScrollView>
         </View>
 
-        <View style={{ height: 80 }} />
+        <View style={{ height: 140 }} />
       </ScrollView>
 
       <BottomNav

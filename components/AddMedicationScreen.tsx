@@ -579,7 +579,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderRadius: 12,
       padding: 16,
       alignItems: 'center' as const,
-      marginBottom: 80
+      marginBottom: 140
     },
     saveButtonText: {
       color: '#FFFFFF',
