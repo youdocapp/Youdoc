@@ -4,7 +4,7 @@ import TermsOfServiceScreen from '../components/TermsOfServiceScreen';
 
 export default function TermsOfServiceRoute() {
   const handleBack = () => {
-    router.replace('/settings');
+    router.back();
   };
 
   return (

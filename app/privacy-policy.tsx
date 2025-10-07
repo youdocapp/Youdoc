@@ -4,7 +4,7 @@ import PrivacyPolicyScreen from '../components/PrivacyPolicyScreen';
 
 export default function PrivacyPolicyRoute() {
   const handleBack = () => {
-    router.replace('/settings');
+    router.back();
   };
 
   return (
