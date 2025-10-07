@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
@@ -91,7 +91,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
   const [showCustomSymptomModal, setShowCustomSymptomModal] = useState<boolean>(false);
   const [customSymptom, setCustomSymptom] = useState<string>('');
 
-  const styles = StyleSheet.create({
+  const styles = useMemo(() => StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: colors.card,
@@ -461,7 +461,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
       fontWeight: '600',
       color: '#FFFFFF',
     },
-  });
+  }), [colors]);
 
   const handleSymptomToggle = (symptom: string) => {
     setSymptomData(prev => ({
