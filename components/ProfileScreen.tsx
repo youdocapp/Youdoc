@@ -43,6 +43,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [address, setAddress] = useState<string>('123 Main Street, New York, NY 10001');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showBloodTypeModal, setShowBloodTypeModal] = useState<boolean>(false);
+  const [showHeightModal, setShowHeightModal] = useState<boolean>(false);
+  const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
 
   const handleSave = () => {
     setIsEditing(false);
@@ -296,6 +298,402 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   >
                     {years.map((year) => renderWheelItem(year, selectedYear === year))}
                   </ScrollView>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const HeightPickerModal = ({ visible, onClose, onSelect, currentHeight }: { visible: boolean; onClose: () => void; onSelect: (height: string) => void; currentHeight: string }) => {
+    const feet = Array.from({ length: 5 }, (_, i) => i + 3);
+    const inches = Array.from({ length: 12 }, (_, i) => i);
+    
+    const parsedHeight = currentHeight.match(/(\d+)'(\d+)"/);
+    const initialFeet = parsedHeight ? parseInt(parsedHeight[1]) : 5;
+    const initialInches = parsedHeight ? parseInt(parsedHeight[2]) : 7;
+    
+    const [selectedFeet, setSelectedFeet] = useState<number>(initialFeet);
+    const [selectedInches, setSelectedInches] = useState<number>(initialInches);
+
+    const feetScrollRef = React.useRef<ScrollView>(null);
+    const inchesScrollRef = React.useRef<ScrollView>(null);
+
+    const ITEM_HEIGHT = 44;
+
+    React.useEffect(() => {
+      if (visible) {
+        setSelectedFeet(initialFeet);
+        setSelectedInches(initialInches);
+        
+        setTimeout(() => {
+          const feetIdx = feet.indexOf(initialFeet);
+          const inchesIdx = inches.indexOf(initialInches);
+          
+          feetScrollRef.current?.scrollTo({ y: feetIdx * ITEM_HEIGHT, animated: false });
+          inchesScrollRef.current?.scrollTo({ y: inchesIdx * ITEM_HEIGHT, animated: false });
+        }, 100);
+      }
+    }, [visible]);
+
+    const handleFeetScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const foot = feet[index];
+      if (foot && foot !== selectedFeet) {
+        setSelectedFeet(foot);
+      }
+    };
+
+    const handleInchesScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const inch = inches[index];
+      if (inch !== undefined && inch !== selectedInches) {
+        setSelectedInches(inch);
+      }
+    };
+
+    const handleConfirm = () => {
+      onSelect(`${selectedFeet}'${selectedInches}"`);
+      onClose();
+    };
+
+    const renderWheelItem = (item: number | string, isSelected: boolean) => {
+      return (
+        <View style={[heightPickerStyles.wheelItem, { height: ITEM_HEIGHT }]}>
+          <Text style={[
+            heightPickerStyles.wheelItemText,
+            isSelected && heightPickerStyles.wheelItemTextSelected
+          ]}>
+            {item}
+          </Text>
+        </View>
+      );
+    };
+
+    const heightPickerStyles = StyleSheet.create({
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        justifyContent: 'flex-end',
+      },
+      modalContent: {
+        backgroundColor: colors.card,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      },
+      modalTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: colors.text,
+      },
+      cancelText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '400',
+      },
+      doneText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '600',
+      },
+      pickerContainer: {
+        position: 'relative',
+        backgroundColor: colors.background,
+        marginTop: 1,
+      },
+      selectionIndicator: {
+        position: 'absolute',
+        top: '50%',
+        left: 0,
+        right: 0,
+        height: 44,
+        marginTop: -22,
+        backgroundColor: 'rgba(0, 0, 0, 0.03)',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: colors.border,
+        zIndex: 1,
+        pointerEvents: 'none',
+      },
+      wheelContainer: {
+        flexDirection: 'row',
+        height: 220,
+        paddingHorizontal: 20,
+      },
+      wheelColumn: {
+        flex: 1,
+        overflow: 'hidden',
+      },
+      wheelItem: {
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      wheelItemText: {
+        fontSize: 20,
+        color: colors.textSecondary,
+      },
+      wheelItemTextSelected: {
+        fontSize: 23,
+        fontWeight: '500',
+        color: colors.text,
+      },
+      unitLabel: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: colors.text,
+        textAlign: 'center',
+        marginTop: 8,
+      },
+    });
+
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <View style={heightPickerStyles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={onClose}
+          />
+          <View style={heightPickerStyles.modalContent}>
+            <View style={heightPickerStyles.header}>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={heightPickerStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={heightPickerStyles.modalTitle}>Height</Text>
+              <TouchableOpacity onPress={handleConfirm}>
+                <Text style={heightPickerStyles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={heightPickerStyles.pickerContainer}>
+              <View style={heightPickerStyles.selectionIndicator} />
+              
+              <View style={heightPickerStyles.wheelContainer}>
+                <View style={heightPickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={feetScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleFeetScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {feet.map((foot) => renderWheelItem(foot, selectedFeet === foot))}
+                  </ScrollView>
+                  <Text style={heightPickerStyles.unitLabel}>ft</Text>
+                </View>
+
+                <View style={heightPickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={inchesScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleInchesScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {inches.map((inch) => renderWheelItem(inch, selectedInches === inch))}
+                  </ScrollView>
+                  <Text style={heightPickerStyles.unitLabel}>in</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const WeightPickerModal = ({ visible, onClose, onSelect, currentWeight }: { visible: boolean; onClose: () => void; onSelect: (weight: string) => void; currentWeight: string }) => {
+    const weights = Array.from({ length: 351 }, (_, i) => i + 50);
+    
+    const parsedWeight = currentWeight.match(/(\d+)/);
+    const initialWeight = parsedWeight ? parseInt(parsedWeight[1]) : 165;
+    
+    const [selectedWeight, setSelectedWeight] = useState<number>(initialWeight);
+
+    const weightScrollRef = React.useRef<ScrollView>(null);
+
+    const ITEM_HEIGHT = 44;
+
+    React.useEffect(() => {
+      if (visible) {
+        setSelectedWeight(initialWeight);
+        
+        setTimeout(() => {
+          const weightIdx = weights.indexOf(initialWeight);
+          weightScrollRef.current?.scrollTo({ y: weightIdx * ITEM_HEIGHT, animated: false });
+        }, 100);
+      }
+    }, [visible]);
+
+    const handleWeightScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const weight = weights[index];
+      if (weight && weight !== selectedWeight) {
+        setSelectedWeight(weight);
+      }
+    };
+
+    const handleConfirm = () => {
+      onSelect(`${selectedWeight} lbs`);
+      onClose();
+    };
+
+    const renderWheelItem = (item: number | string, isSelected: boolean) => {
+      return (
+        <View style={[weightPickerStyles.wheelItem, { height: ITEM_HEIGHT }]}>
+          <Text style={[
+            weightPickerStyles.wheelItemText,
+            isSelected && weightPickerStyles.wheelItemTextSelected
+          ]}>
+            {item}
+          </Text>
+        </View>
+      );
+    };
+
+    const weightPickerStyles = StyleSheet.create({
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        justifyContent: 'flex-end',
+      },
+      modalContent: {
+        backgroundColor: colors.card,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      },
+      modalTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: colors.text,
+      },
+      cancelText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '400',
+      },
+      doneText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '600',
+      },
+      pickerContainer: {
+        position: 'relative',
+        backgroundColor: colors.background,
+        marginTop: 1,
+      },
+      selectionIndicator: {
+        position: 'absolute',
+        top: '50%',
+        left: 0,
+        right: 0,
+        height: 44,
+        marginTop: -22,
+        backgroundColor: 'rgba(0, 0, 0, 0.03)',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: colors.border,
+        zIndex: 1,
+        pointerEvents: 'none',
+      },
+      wheelContainer: {
+        flexDirection: 'row',
+        height: 220,
+        paddingHorizontal: 20,
+        justifyContent: 'center',
+      },
+      wheelColumn: {
+        width: 120,
+        overflow: 'hidden',
+      },
+      wheelItem: {
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      wheelItemText: {
+        fontSize: 20,
+        color: colors.textSecondary,
+      },
+      wheelItemTextSelected: {
+        fontSize: 23,
+        fontWeight: '500',
+        color: colors.text,
+      },
+      unitLabel: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: colors.text,
+        textAlign: 'center',
+        marginTop: 8,
+      },
+    });
+
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <View style={weightPickerStyles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={onClose}
+          />
+          <View style={weightPickerStyles.modalContent}>
+            <View style={weightPickerStyles.header}>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={weightPickerStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={weightPickerStyles.modalTitle}>Weight</Text>
+              <TouchableOpacity onPress={handleConfirm}>
+                <Text style={weightPickerStyles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={weightPickerStyles.pickerContainer}>
+              <View style={weightPickerStyles.selectionIndicator} />
+              
+              <View style={weightPickerStyles.wheelContainer}>
+                <View style={weightPickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={weightScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleWeightScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {weights.map((weight) => renderWheelItem(weight, selectedWeight === weight))}
+                  </ScrollView>
+                  <Text style={weightPickerStyles.unitLabel}>lbs</Text>
                 </View>
               </View>
             </View>
@@ -671,6 +1069,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             <TouchableOpacity 
               style={styles.infoRow}
+              onPress={() => isEditing && setShowHeightModal(true)}
               disabled={!isEditing}
             >
               <View style={[styles.infoIcon, { backgroundColor: '#DBEAFE' }]}>
@@ -678,13 +1077,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </View>
               <Text style={styles.infoLabel}>Height</Text>
               <Text style={styles.infoValue}>{height}</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+              {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
 
             <View style={styles.divider} />
 
             <TouchableOpacity 
               style={styles.infoRow}
+              onPress={() => isEditing && setShowWeightModal(true)}
               disabled={!isEditing}
             >
               <View style={[styles.infoIcon, { backgroundColor: '#D1FAE5' }]}>
@@ -692,7 +1092,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               </View>
               <Text style={styles.infoLabel}>Weight</Text>
               <Text style={styles.infoValue}>{weight}</Text>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+              {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
 
             <View style={styles.divider} />
@@ -826,6 +1226,30 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             setShowDatePicker(false);
           }}
           currentDate={dateOfBirth}
+        />
+      )}
+
+      {showHeightModal && (
+        <HeightPickerModal
+          visible={true}
+          onClose={() => setShowHeightModal(false)}
+          onSelect={(newHeight) => {
+            setHeight(newHeight);
+            setShowHeightModal(false);
+          }}
+          currentHeight={height}
+        />
+      )}
+
+      {showWeightModal && (
+        <WeightPickerModal
+          visible={true}
+          onClose={() => setShowWeightModal(false)}
+          onSelect={(newWeight) => {
+            setWeight(newWeight);
+            setShowWeightModal(false);
+          }}
+          currentWeight={weight}
         />
       )}
 
