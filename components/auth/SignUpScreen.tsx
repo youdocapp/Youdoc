@@ -360,22 +360,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
-            <TouchableOpacity
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                backgroundColor: '#FFFFFF',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Text style={{ fontSize: 24 }}>🍎</Text>
-            </TouchableOpacity>
-
+          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 32 }}>
             <TouchableOpacity
               style={{
                 width: 56,
@@ -389,21 +374,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               }}
             >
               <Text style={{ fontSize: 24 }}>G</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: 12,
-                borderWidth: 1,
-                borderColor: '#E5E7EB',
-                backgroundColor: '#FFFFFF',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-            >
-              <Text style={{ fontSize: 24 }}>f</Text>
             </TouchableOpacity>
           </View>
 
