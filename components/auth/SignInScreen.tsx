@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useMockAuth } from '../../contexts/MockAuthContext';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff } from 'lucide-react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 
 interface SignInScreenProps {
   onForgotPassword: () => void;
@@ -12,7 +12,7 @@ interface SignInScreenProps {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
-
+  const { colors } = useAuthTheme();
   const { signIn } = useMockAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -48,303 +48,202 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   };
 
   return (
-    <LinearGradient
-      colors={['#2563EB', '#06B6D4']}
-      style={styles.gradient}
-    >
-      <SafeAreaView style={styles.container}>
-        <ScrollView 
-          style={styles.scrollView} 
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.card}>
-            <Text style={styles.title}>Login</Text>
-            
-            <View style={styles.signUpPrompt}>
-              <Text style={styles.promptText}>Don&apos;t have an account? </Text>
-              <TouchableOpacity onPress={onSignUp}>
-                <Text style={styles.signUpLink}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ flexGrow: 1 }}>
+        <View style={{ paddingHorizontal: 24, paddingTop: 16 }}>
+          <TouchableOpacity onPress={onBack} style={{ marginBottom: 24 }}>
+            <Text style={{ fontSize: 24, color: '#000000' }}>←</Text>
+          </TouchableOpacity>
+          
+          <Text style={{ fontSize: 24, fontWeight: '700', color: '#000000', marginBottom: 8, textAlign: 'center' }}>
+            Welcome back
+          </Text>
+          <Text style={{ fontSize: 16, color: '#6B7280', marginBottom: 40, textAlign: 'center' }}>
+            Continue your health journey
+          </Text>
+        </View>
 
-            <View style={styles.form}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                placeholder="Loisbecket@gmail.com"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-                style={styles.input}
-                placeholderTextColor="#9CA3AF"
-              />
+        <View style={{ flex: 1, paddingHorizontal: 24 }}>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', marginBottom: 8 }}>
+            Email
+          </Text>
+          <TextInput
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={{
+              width: '100%',
+              paddingHorizontal: 20,
+              paddingVertical: 16,
+              borderWidth: 0,
+              borderRadius: 12,
+              backgroundColor: '#F3F4F6',
+              color: '#000000',
+              marginBottom: 20,
+              fontSize: 16
+            }}
+            placeholderTextColor="#9CA3AF"
+          />
 
-              <Text style={styles.label}>Password</Text>
-              <View style={styles.passwordContainer}>
-                <TextInput
-                  placeholder="••••••••"
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry={!passwordVisible}
-                  style={styles.passwordInput}
-                  placeholderTextColor="#9CA3AF"
-                />
-                <TouchableOpacity
-                  onPress={() => setPasswordVisible(!passwordVisible)}
-                  style={styles.eyeIcon}
-                >
-                  {passwordVisible ? (
-                    <Eye size={20} color="#9CA3AF" />
-                  ) : (
-                    <EyeOff size={20} color="#9CA3AF" />
-                  )}
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.rememberRow}>
-                <TouchableOpacity 
-                  onPress={() => setRememberMe(!rememberMe)}
-                  style={styles.rememberButton}
-                >
-                  <View style={[
-                    styles.checkbox,
-                    rememberMe && styles.checkboxChecked
-                  ]}>
-                    {rememberMe && (
-                      <Text style={styles.checkmark}>✓</Text>
-                    )}
-                  </View>
-                  <Text style={styles.rememberText}>Remember me</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity onPress={onForgotPassword}>
-                  <Text style={styles.forgotLink}>Forgot Password ?</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity 
-                onPress={handleSignIn}
-                style={[
-                  styles.loginButton,
-                  (!isFormValid() || loading) && styles.loginButtonDisabled
-                ]}
-                disabled={!isFormValid() || loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color="white" />
-                ) : (
-                  <Text style={styles.loginButtonText}>Log in</Text>
-                )}
-              </TouchableOpacity>
-
-              <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>Or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>G</Text>
-                <Text style={styles.socialButtonText}>Continue with Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity style={styles.socialButton}>
-                <Text style={styles.socialIcon}>f</Text>
-                <Text style={styles.socialButtonText}>Continue with Facebook</Text>
-              </TouchableOpacity>
-            </View>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#000000', marginBottom: 8 }}>
+            Password
+          </Text>
+          <View style={{ position: 'relative', marginBottom: 16 }}>
+            <TextInput
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!passwordVisible}
+              style={{
+                width: '100%',
+                paddingHorizontal: 20,
+                paddingVertical: 16,
+                paddingRight: 48,
+                borderWidth: 0,
+                borderRadius: 12,
+                backgroundColor: '#F3F4F6',
+                color: '#000000',
+                fontSize: 16
+              }}
+              placeholderTextColor="#9CA3AF"
+            />
+            <TouchableOpacity
+              onPress={() => setPasswordVisible(!passwordVisible)}
+              style={{
+                position: 'absolute',
+                right: 16,
+                top: '50%',
+                transform: [{ translateY: -12 }]
+              }}
+            >
+              {passwordVisible ? (
+                <Eye size={20} color="#6B7280" />
+              ) : (
+                <EyeOff size={20} color="#6B7280" />
+              )}
+            </TouchableOpacity>
           </View>
-        </ScrollView>
-      </SafeAreaView>
-    </LinearGradient>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 32 }}>
+            <TouchableOpacity 
+              onPress={() => setRememberMe(!rememberMe)}
+              style={{ flexDirection: 'row', alignItems: 'center' }}
+            >
+              <View style={{
+                width: 20,
+                height: 20,
+                borderRadius: 4,
+                borderWidth: 2,
+                borderColor: rememberMe ? '#3B82F6' : '#D1D5DB',
+                backgroundColor: rememberMe ? '#3B82F6' : 'transparent',
+                marginRight: 8,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                {rememberMe && (
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>✓</Text>
+                )}
+              </View>
+              <Text style={{ color: '#6B7280', fontSize: 14 }}>
+                Remember me
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity onPress={onForgotPassword}>
+              <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '500' }}>
+                Forgot password?
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity 
+            onPress={handleSignIn}
+            style={{
+              width: '100%',
+              backgroundColor: (isFormValid() && !loading) ? '#B8C5D6' : '#D1D5DB',
+              paddingVertical: 16,
+              borderRadius: 12,
+              alignItems: 'center',
+              marginBottom: 24,
+              opacity: loading ? 0.7 : 1
+            }}
+            disabled={!isFormValid() || loading}
+          >
+            {loading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={{
+                color: 'white',
+                fontSize: 16,
+                fontWeight: '600'
+              }}>
+                Sign In
+              </Text>
+            )}
+          </TouchableOpacity>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+            <Text style={{ marginHorizontal: 16, color: '#6B7280', fontSize: 14 }}>
+              Or continue with
+            </Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
+          </View>
+
+          <TouchableOpacity
+            style={{
+              width: '100%',
+              paddingVertical: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#3B82F6',
+              alignItems: 'center',
+              marginBottom: 12,
+              flexDirection: 'row',
+              justifyContent: 'center'
+            }}
+          >
+            <Text style={{ fontSize: 20, marginRight: 8 }}>G</Text>
+            <Text style={{ color: '#3B82F6', fontSize: 16, fontWeight: '500' }}>
+              Continue with Google
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{
+              width: '100%',
+              paddingVertical: 14,
+              borderRadius: 12,
+              borderWidth: 1,
+              borderColor: '#3B82F6',
+              alignItems: 'center',
+              marginBottom: 32,
+              flexDirection: 'row',
+              justifyContent: 'center'
+            }}
+          >
+            <Text style={{ fontSize: 20, marginRight: 8 }}></Text>
+            <Text style={{ color: '#3B82F6', fontSize: 16, fontWeight: '500' }}>
+              Continue with Apple
+            </Text>
+          </TouchableOpacity>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
+            <Text style={{ color: '#6B7280', fontSize: 14 }}>
+              Don't have an account?{' '}
+            </Text>
+            <TouchableOpacity onPress={onSignUp}>
+              <Text style={{ color: '#3B82F6', fontSize: 14, fontWeight: '600' }}>
+                Sign up
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  gradient: {
-    flex: 1,
-  },
-  container: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 40,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 32,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 5,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#000000',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  signUpPrompt: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  promptText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  signUpLink: {
-    fontSize: 14,
-    color: '#2563EB',
-    fontWeight: '600',
-  },
-  form: {
-    width: '100%',
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#374151',
-    marginBottom: 8,
-  },
-  input: {
-    width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
-    marginBottom: 20,
-    fontSize: 15,
-  },
-  passwordContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  passwordInput: {
-    width: '100%',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    paddingRight: 48,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-    color: '#000000',
-    fontSize: 15,
-  },
-  eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: '50%',
-    transform: [{ translateY: -10 }],
-  },
-  rememberRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 24,
-  },
-  rememberButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#D1D5DB',
-    backgroundColor: 'transparent',
-    marginRight: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    borderColor: '#2563EB',
-    backgroundColor: 'transparent',
-  },
-  checkmark: {
-    color: '#2563EB',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  rememberText: {
-    color: '#374151',
-    fontSize: 14,
-  },
-  forgotLink: {
-    color: '#2563EB',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  loginButton: {
-    width: '100%',
-    backgroundColor: '#2563EB',
-    paddingVertical: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  loginButtonDisabled: {
-    backgroundColor: '#93C5FD',
-    opacity: 0.6,
-  },
-  loginButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    color: '#6B7280',
-    fontSize: 14,
-  },
-  socialButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    marginBottom: 12,
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  socialIcon: {
-    fontSize: 18,
-    marginRight: 8,
-    fontWeight: '600',
-  },
-  socialButtonText: {
-    color: '#374151',
-    fontSize: 15,
-    fontWeight: '500',
-  },
-});
 
 export default SignInScreen;
