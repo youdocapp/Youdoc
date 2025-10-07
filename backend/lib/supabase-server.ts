@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '../database/types';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
@@ -8,7 +8,7 @@ if (!supabaseUrl || !supabaseServiceKey) {
   console.warn('Supabase URL or Service Key is missing. Please add them to your environment variables.');
 }
 
-export const supabaseServer = createClient<Database>(supabaseUrl, supabaseServiceKey, {
+export const supabaseServer: SupabaseClient<Database> = createClient<Database>(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false,

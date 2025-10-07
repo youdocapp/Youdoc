@@ -22,9 +22,12 @@ const updateProfileSchema = z.object({
 export const updateProfileProcedure = protectedProcedure
   .input(updateProfileSchema)
   .mutation(async ({ ctx, input }) => {
-    const { data, error } = await supabaseServer
-      .from("profiles")
-      .update(input)
+    const { data, error } = await (supabaseServer
+      .from("profiles") as any)
+      .update({
+        ...input,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", ctx.user.id)
       .select()
       .single();

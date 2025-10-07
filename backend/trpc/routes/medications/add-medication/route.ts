@@ -16,11 +16,18 @@ const addMedicationSchema = z.object({
 export const addMedicationProcedure = protectedProcedure
   .input(addMedicationSchema)
   .mutation(async ({ ctx, input }) => {
-    const { data, error } = await supabaseServer
-      .from("medications")
+    const { data, error } = await (supabaseServer
+      .from("medications") as any)
       .insert({
-        ...input,
         user_id: ctx.user.id,
+        name: input.name,
+        dosage: input.dosage,
+        frequency: input.frequency,
+        time: input.time,
+        start_date: input.start_date,
+        end_date: input.end_date || null,
+        notes: input.notes || null,
+        reminder_enabled: input.reminder_enabled ?? true,
       })
       .select()
       .single();
