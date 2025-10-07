@@ -214,6 +214,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#6B7280',
       marginBottom: 6
     },
+    medicationDoseTaken: {
+      textDecorationLine: 'line-through' as const
+    },
     medicationTime: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
@@ -222,6 +225,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     timeText: {
       fontSize: 13,
       color: '#9CA3AF'
+    },
+    timeTextTaken: {
+      textDecorationLine: 'line-through' as const
     },
     checkbox: {
       width: 28,
@@ -260,7 +266,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     fab: {
       position: 'absolute' as const,
       right: 20,
-      bottom: 80,
+      bottom: 100,
       width: 56,
       height: 56,
       borderRadius: 28,
@@ -359,25 +365,27 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
         <Text style={styles.sectionTitle}>Medicine</Text>
         
         {medications.map((med) => (
-          <View key={med.id} style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}>
+          <TouchableOpacity 
+            key={med.id} 
+            style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}
+            onPress={() => toggleMedicationTaken(med.id)}
+            activeOpacity={0.7}
+          >
             <View style={styles.medicationIcon}>
               <Text style={styles.pillEmoji}>💊</Text>
             </View>
             <View style={styles.medicationInfo}>
               <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
-              <Text style={styles.medicationDose}>{med.dosage}</Text>
+              <Text style={[styles.medicationDose, med.taken && styles.medicationDoseTaken]}>{med.dosage}</Text>
               <View style={styles.medicationTime}>
                 <Clock size={14} color="#9CA3AF" />
-                <Text style={styles.timeText}>{med.time[0] || '08:00'}</Text>
+                <Text style={[styles.timeText, med.taken && styles.timeTextTaken]}>{med.time[0] || '08:00'}</Text>
               </View>
             </View>
-            <TouchableOpacity 
-              style={[styles.checkbox, med.taken && styles.checkboxChecked]}
-              onPress={() => toggleMedicationTaken(med.id)}
-            >
+            <View style={[styles.checkbox, med.taken && styles.checkboxChecked]}>
               {med.taken && <View style={styles.checkmark} />}
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
         ))}
 
         <View style={styles.medicationCard}>
