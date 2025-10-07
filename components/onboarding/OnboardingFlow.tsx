@@ -5,8 +5,12 @@ import WellnessScreen from './WellnessScreen';
 import CarepointScreen from './CarepointScreen';
 import AuthScreen from './AuthScreen';
 
-const OnboardingFlow: React.FC = () => {
-  const [currentStep, setCurrentStep] = useState(0);
+interface OnboardingFlowProps {
+  startAtAuth?: boolean;
+}
+
+const OnboardingFlow: React.FC<OnboardingFlowProps> = ({ startAtAuth = false }) => {
+  const [currentStep, setCurrentStep] = useState(startAtAuth ? 3 : 0);
 
   const handleNext = () => {
     setCurrentStep(prev => prev + 1);
