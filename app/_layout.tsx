@@ -21,6 +21,9 @@ import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
 import { MockAuthProvider } from '../contexts/MockAuthContext';
 import { HealthTrackerProvider } from '../contexts/HealthTrackerContext';
+import { EmergencyContactsProvider } from '../contexts/EmergencyContactsContext';
+import { HealthRecordsProvider } from '../contexts/HealthRecordsContext';
+import { MedicalHistoryProvider } from '../contexts/MedicalHistoryContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -113,7 +116,13 @@ export default function RootLayout() {
           <UserProvider>
             <MedicationProvider>
               <HealthTrackerProvider>
-                <AppContent />
+                <EmergencyContactsProvider>
+                  <HealthRecordsProvider>
+                    <MedicalHistoryProvider>
+                      <AppContent />
+                    </MedicalHistoryProvider>
+                  </HealthRecordsProvider>
+                </EmergencyContactsProvider>
               </HealthTrackerProvider>
             </MedicationProvider>
           </UserProvider>

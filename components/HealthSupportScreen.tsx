@@ -1,14 +1,23 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Linking, Modal } from 'react-native';
-import { ChevronLeft, ChevronRight, MessageCircle, Mail, Phone, FileQuestion, CreditCard } from 'lucide-react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Linking, Modal, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import { ChevronLeft, ChevronRight, MessageCircle, Mail, Phone, FileQuestion, CreditCard, Send } from 'lucide-react-native';
 import { router } from 'expo-router';
+import { useTheme } from '../contexts/ThemeContext';
 
 interface HealthSupportScreenProps {
   onBack: () => void;
 }
 
 const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => {
+  const { colors } = useTheme();
   const [showLiveChat, setShowLiveChat] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [messages, setMessages] = useState<Array<{ id: string; text: string; sender: 'user' | 'support'; time: string }>>([{
+    id: '1',
+    text: 'Hello! Welcome to YouDoc support. How can I help you today?',
+    sender: 'support',
+    time: 'Just now'
+  }]);
   
   const handleEmail = () => {
     Linking.openURL('mailto:support@youdoc.com');
@@ -30,10 +39,33 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     console.log('Navigate to FAQ');
   };
 
+  const handleSendMessage = () => {
+    if (chatMessage.trim()) {
+      const newMessage = {
+        id: Date.now().toString(),
+        text: chatMessage,
+        sender: 'user' as const,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+      setMessages([...messages, newMessage]);
+      setChatMessage('');
+      
+      setTimeout(() => {
+        const supportReply = {
+          id: (Date.now() + 1).toString(),
+          text: 'Thank you for your message. Our support team will respond shortly.',
+          sender: 'support' as const,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+        setMessages(prev => [...prev, supportReply]);
+      }, 1000);
+    }
+  };
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -42,8 +74,10 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
-      position: 'relative' as const
+      backgroundColor: colors.background,
+      position: 'relative' as const,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border
     },
     backButton: {
       position: 'absolute' as const,
@@ -53,7 +87,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     section: {
       marginTop: 24,
@@ -62,20 +96,22 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     sectionTitle: {
       fontSize: 13,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
     },
     card: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       overflow: 'hidden' as const,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     menuItem: {
       flexDirection: 'row' as const,
@@ -83,7 +119,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
       paddingHorizontal: 16,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     menuItemLast: {
       borderBottomWidth: 0
@@ -107,18 +143,18 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     menuItemText: {
       fontSize: 16,
       fontWeight: '500' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     menuItemSubtext: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     menuItemRight: {
       marginLeft: 12
     },
     infoCard: {
-      backgroundColor: '#EEF2FF',
+      backgroundColor: colors.primaryLight,
       borderRadius: 16,
       padding: 20,
       marginBottom: 16
@@ -126,12 +162,12 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     infoTitle: {
       fontSize: 16,
       fontWeight: '600' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8
     },
     infoText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 20
     },
     contactInfo: {
@@ -142,7 +178,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     },
     chatContainer: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     chatHeader: {
       flexDirection: 'row' as const,
@@ -150,9 +186,9 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
       justifyContent: 'space-between' as const,
       paddingHorizontal: 20,
       paddingVertical: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB'
+      borderBottomColor: colors.border
     },
     chatBackButton: {
       width: 40,
@@ -163,7 +199,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     chatTitle: {
       fontSize: 18,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     chatMessages: {
       flex: 1,
@@ -173,7 +209,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
       marginBottom: 16
     },
     supportBubble: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       borderTopLeftRadius: 4,
       padding: 12,
@@ -183,62 +219,86 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
+    },
+    userBubble: {
+      backgroundColor: colors.primary,
+      borderRadius: 16,
+      borderTopRightRadius: 4,
+      padding: 12,
+      maxWidth: '80%',
+      alignSelf: 'flex-end' as const
     },
     supportBubbleText: {
       fontSize: 15,
-      color: '#1F2937',
+      color: colors.text,
+      lineHeight: 20
+    },
+    userBubbleText: {
+      fontSize: 15,
+      color: '#FFFFFF',
       lineHeight: 20
     },
     bubbleTime: {
       fontSize: 11,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
+      marginTop: 4
+    },
+    userBubbleTime: {
+      fontSize: 11,
+      color: 'rgba(255, 255, 255, 0.8)',
       marginTop: 4
     },
     infoMessage: {
-      backgroundColor: '#EEF2FF',
+      backgroundColor: colors.primaryLight,
       borderRadius: 12,
       padding: 12,
       marginBottom: 16
     },
     infoMessageText: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       textAlign: 'center' as const,
       lineHeight: 18
     },
     chatInputContainer: {
       flexDirection: 'row' as const,
       padding: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderTopWidth: 1,
-      borderTopColor: '#E5E7EB',
-      gap: 12
+      borderTopColor: colors.border,
+      gap: 12,
+      alignItems: 'center' as const
     },
     chatInput: {
       flex: 1,
-      backgroundColor: '#F9FAFB',
+      backgroundColor: colors.card,
       borderRadius: 24,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      justifyContent: 'center' as const
-    },
-    chatInputPlaceholder: {
       fontSize: 15,
-      color: '#9CA3AF'
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.border,
+      maxHeight: 100
     },
     sendButton: {
-      backgroundColor: '#4F7FFF',
+      backgroundColor: colors.primary,
       borderRadius: 24,
-      paddingHorizontal: 24,
-      paddingVertical: 12,
+      width: 48,
+      height: 48,
       justifyContent: 'center' as const,
       alignItems: 'center' as const
     },
-    sendButtonText: {
-      color: '#FFFFFF',
-      fontSize: 15,
-      fontWeight: '600' as const
+    sendButtonDisabled: {
+      backgroundColor: colors.border,
+      borderRadius: 24,
+      width: 48,
+      height: 48,
+      justifyContent: 'center' as const,
+      alignItems: 'center' as const
     }
   });
 
@@ -246,7 +306,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Help & Support</Text>
       </View>
@@ -274,7 +334,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.contactInfo}>support@youdoc.com</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={handlePhone}>
@@ -287,7 +347,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.contactInfo}>+1 (234) 567-890</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={handleLiveChat}>
@@ -300,7 +360,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.menuItemSubtext}>Chat with our support team</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -318,7 +378,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.menuItemSubtext}>Find answers to common questions</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -336,7 +396,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.menuItemSubtext}>View and manage your subscription</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -354,7 +414,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.menuItemSubtext}>Help us improve YouDoc</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
@@ -367,7 +427,7 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
                   <Text style={styles.menuItemSubtext}>Let us know about any issues</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -382,36 +442,59 @@ const HealthSupportScreen: React.FC<HealthSupportScreenProps> = ({ onBack }) => 
         onRequestClose={() => setShowLiveChat(false)}
       >
         <SafeAreaView style={styles.chatContainer}>
-          <View style={styles.chatHeader}>
-            <TouchableOpacity onPress={() => setShowLiveChat(false)} style={styles.chatBackButton}>
-              <ChevronLeft size={24} color="#1F2937" />
-            </TouchableOpacity>
-            <Text style={styles.chatTitle}>Live Chat</Text>
-            <View style={{ width: 40 }} />
-          </View>
-          <ScrollView style={styles.chatMessages}>
-            <View style={styles.chatBubbleContainer}>
-              <View style={styles.supportBubble}>
-                <Text style={styles.supportBubbleText}>
-                  Hello! Welcome to YouDoc support. How can I help you today?
+          <KeyboardAvoidingView 
+            style={{ flex: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={0}
+          >
+            <View style={styles.chatHeader}>
+              <TouchableOpacity onPress={() => setShowLiveChat(false)} style={styles.chatBackButton}>
+                <ChevronLeft size={24} color={colors.text} />
+              </TouchableOpacity>
+              <Text style={styles.chatTitle}>Live Chat</Text>
+              <View style={{ width: 40 }} />
+            </View>
+            <ScrollView 
+              style={styles.chatMessages}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
+              {messages.map((message) => (
+                <View key={message.id} style={styles.chatBubbleContainer}>
+                  <View style={message.sender === 'support' ? styles.supportBubble : styles.userBubble}>
+                    <Text style={message.sender === 'support' ? styles.supportBubbleText : styles.userBubbleText}>
+                      {message.text}
+                    </Text>
+                    <Text style={message.sender === 'support' ? styles.bubbleTime : styles.userBubbleTime}>
+                      {message.time}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              <View style={styles.infoMessage}>
+                <Text style={styles.infoMessageText}>
+                  Our support team typically responds within 2-5 minutes during business hours (9 AM - 6 PM EST).
                 </Text>
-                <Text style={styles.bubbleTime}>Just now</Text>
               </View>
+            </ScrollView>
+            <View style={styles.chatInputContainer}>
+              <TextInput
+                style={styles.chatInput}
+                placeholder="Type your message..."
+                placeholderTextColor={colors.textSecondary}
+                value={chatMessage}
+                onChangeText={setChatMessage}
+                multiline
+                maxLength={500}
+              />
+              <TouchableOpacity 
+                style={chatMessage.trim() ? styles.sendButton : styles.sendButtonDisabled}
+                onPress={handleSendMessage}
+                disabled={!chatMessage.trim()}
+              >
+                <Send size={20} color="#FFFFFF" />
+              </TouchableOpacity>
             </View>
-            <View style={styles.infoMessage}>
-              <Text style={styles.infoMessageText}>
-                Our support team typically responds within 2-5 minutes during business hours (9 AM - 6 PM EST).
-              </Text>
-            </View>
-          </ScrollView>
-          <View style={styles.chatInputContainer}>
-            <TouchableOpacity style={styles.chatInput}>
-              <Text style={styles.chatInputPlaceholder}>Type your message...</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.sendButton}>
-              <Text style={styles.sendButtonText}>Send</Text>
-            </TouchableOpacity>
-          </View>
+          </KeyboardAvoidingView>
         </SafeAreaView>
       </Modal>
     </SafeAreaView>

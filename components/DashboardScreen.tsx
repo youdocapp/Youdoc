@@ -6,6 +6,7 @@ import { useMedication } from '@/contexts/MedicationContext';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
 import { articles } from '@/constants/articles';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -32,6 +33,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onMedicalGrocery,
   activeTab = 'home'
 }) => {
+  const { colors } = useTheme();
   const { medications, toggleMedicationTaken } = useMedication();
   const { healthData } = useHealthTracker();
   const router = useRouter();
@@ -45,13 +47,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 20,
-      backgroundColor: '#FFFFFF'
+      backgroundColor: colors.background
     },
     headerTop: {
       flexDirection: 'row',
@@ -79,12 +81,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     welcomeText: {
       fontSize: 14,
-      color: '#6B7280'
+      color: colors.textSecondary
     },
     userName: {
       fontSize: 18,
       fontWeight: '700',
-      color: '#1F2937'
+      color: colors.text
     },
     settingsButton: {
       padding: 8
@@ -92,16 +94,18 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
-      gap: 8
+      gap: 8,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     searchInput: {
       flex: 1,
       fontSize: 15,
-      color: '#1F2937'
+      color: colors.text
     },
     quickActions: {
       flexDirection: 'row',
@@ -111,7 +115,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     actionCard: {
       flex: 1,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       padding: 16,
       alignItems: 'center',
@@ -121,7 +125,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     actionIcon: {
       width: 48,
@@ -135,13 +141,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     actionLabel: {
       fontSize: 13,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       textAlign: 'center'
     },
     sectionTitle: {
       fontSize: 22,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       paddingHorizontal: 20,
       marginBottom: 16
     },
@@ -154,14 +160,16 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     trackerCard: {
       width: '48%',
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       padding: 20,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     trackerIcon: {
       marginBottom: 12
@@ -169,19 +177,19 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     trackerValue: {
       fontSize: 28,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 4
     },
     trackerLabel: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     medicationSection: {
       paddingHorizontal: 20,
       marginBottom: 24
     },
     medicationCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       padding: 16,
       marginBottom: 12,
@@ -192,7 +200,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     medicationLeft: {
       flexDirection: 'row',
@@ -209,46 +219,46 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     medicationName: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     medicationNameTaken: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 2,
       textDecorationLine: 'line-through'
     },
     medicationDose: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       marginBottom: 4
     },
     medicationDoseTaken: {
       fontSize: 13,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 4,
       textDecorationLine: 'line-through'
     },
     medicationTime: {
       fontSize: 13,
-      color: '#4F7FFF',
+      color: colors.primary,
       fontWeight: '500'
     },
     medicationTimeTaken: {
       fontSize: 13,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       fontWeight: '500',
       textDecorationLine: 'line-through'
     },
     takeButton: {
-      backgroundColor: '#4F7FFF',
+      backgroundColor: colors.primary,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20
     },
     takenButton: {
-      backgroundColor: '#10B981',
+      backgroundColor: colors.success,
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20
@@ -260,7 +270,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     emptyMedicationText: {
       fontSize: 14,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       textAlign: 'center',
       paddingVertical: 20
     },
@@ -280,7 +290,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       fontWeight: '600'
     },
     articleCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       overflow: 'hidden',
       marginRight: 16,
@@ -289,7 +299,9 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     articleImage: {
       width: '100%',
@@ -319,13 +331,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     articleTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8,
       lineHeight: 22
     },
     articleDescription: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 18,
       marginBottom: 12
     },
@@ -341,7 +353,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     articleReadTime: {
       fontSize: 12,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     }
   });
 
@@ -360,16 +372,16 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               </View>
             </View>
             <TouchableOpacity style={styles.settingsButton} onPress={onSettings}>
-              <Settings size={24} color="#6B7280" />
+              <Settings size={24} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
 
           <View style={styles.searchContainer}>
-            <Search size={20} color="#9CA3AF" />
+            <Search size={20} color={colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
               placeholder="Search glossary"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
             />
           </View>
         </View>
