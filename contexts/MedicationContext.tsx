@@ -12,6 +12,8 @@ export interface Medication {
   reminderEnabled: boolean;
   taken: boolean;
   dateAdded: string;
+  startDateObj: Date;
+  endDateObj?: Date;
 }
 
 interface MedicationContextType {
@@ -29,11 +31,24 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [medications, setMedications] = useState<Medication[]>([]);
 
   const addMedication = (medication: Omit<Medication, 'id'>) => {
-    const newMedication: Medication = {
-      ...medication,
-      id: Date.now().toString(),
-    };
-    setMedications(prev => [...prev, newMedication]);
+    const startDate = medication.startDateObj;
+    const endDate = medication.endDateObj || medication.startDateObj;
+    
+    const newMedications: Medication[] = [];
+    const currentDate = new Date(startDate);
+    
+    while (currentDate <= endDate) {
+      const dateString = currentDate.toISOString().split('T')[0];
+      const newMedication: Medication = {
+        ...medication,
+        id: `${Date.now()}-${dateString}`,
+        dateAdded: dateString,
+      };
+      newMedications.push(newMedication);
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    setMedications(prev => [...prev, ...newMedications]);
   };
 
   const updateMedication = (id: string, updatedData: Partial<Medication>) => {

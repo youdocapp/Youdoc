@@ -39,7 +39,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       const date = new Date(year, month, day);
       const dateString = date.toISOString().split('T')[0];
       const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-      const medicationCount = medications.filter(med => med.dateAdded === dateString).length;
+      const medicationsOnDate = medications.filter(med => med.dateAdded === dateString);
+      const uniqueMedications = new Set(medicationsOnDate.map(m => m.name));
+      const medicationCount = uniqueMedications.size;
       
       days.push({
         day,

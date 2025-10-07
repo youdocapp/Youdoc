@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import BottomNav from './ui/BottomNav';
@@ -54,9 +54,13 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       frequency,
       time: reminderTimes,
       startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      endDate: endDate ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+      notes,
       reminderEnabled: true,
       taken: false,
-      dateAdded: new Date().toISOString().split('T')[0]
+      dateAdded: startDate.toISOString().split('T')[0],
+      startDateObj: startDate,
+      endDateObj: endDate || undefined
     });
 
     Alert.alert('Success', 'Medication added successfully', [
@@ -776,7 +780,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         <Text style={styles.title}>Add Medication</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <KeyboardAvoidingView 
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Medication Name</Text>
         <TextInput
           style={styles.input}
@@ -912,6 +921,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
           <Text style={styles.saveButtonText}>Save Medication</Text>
         </TouchableOpacity>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <BottomNav
         activeTab={activeTab}
