@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform } from 'react-native';
 import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
-import WheelDatePicker from './ui/WheelDatePicker';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -33,6 +32,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [phone, setPhone] = useState<string>('+1 (555) 123-4567');
   const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(1990, 4, 15));
   const [showGenderModal, setShowGenderModal] = useState<boolean>(false);
+  const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
   const [gender, setGender] = useState<string>('Male');
   const [bloodType, setBloodType] = useState<string>('O+');
   const [height, setHeight] = useState<string>('5\'7"');
@@ -41,6 +41,160 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   const handleSave = () => {
     setIsEditing(false);
+  };
+
+  const DatePickerModal = ({ visible, onClose, onSelect, currentDate }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date }) => {
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    const currentYear = new Date().getFullYear();
+    
+    const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
+    const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+    const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+
+    const dayScrollRef = React.useRef<ScrollView>(null);
+    const monthScrollRef = React.useRef<ScrollView>(null);
+    const yearScrollRef = React.useRef<ScrollView>(null);
+
+    const ITEM_HEIGHT = 44;
+
+    React.useEffect(() => {
+      if (visible) {
+        setSelectedDay(currentDate.getDate());
+        setSelectedMonth(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+        setSelectedYear(currentDate.getFullYear());
+        
+        setTimeout(() => {
+          const monthIdx = months.indexOf(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+          const yearIdx = years.indexOf(currentDate.getFullYear());
+          
+          dayScrollRef.current?.scrollTo({ y: (currentDate.getDate() - 1) * ITEM_HEIGHT, animated: false });
+          monthScrollRef.current?.scrollTo({ y: monthIdx * ITEM_HEIGHT, animated: false });
+          yearScrollRef.current?.scrollTo({ y: yearIdx * ITEM_HEIGHT, animated: false });
+        }, 100);
+      }
+    }, [visible, currentDate]);
+
+    const monthIndex = months.indexOf(selectedMonth);
+    const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const years = Array.from({ length: 200 }, (_, i) => currentYear + 50 - i);
+
+    const handleDayScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const day = days[index];
+      if (day && day !== selectedDay) {
+        setSelectedDay(day);
+      }
+    };
+
+    const handleMonthScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const month = months[index];
+      if (month && month !== selectedMonth) {
+        setSelectedMonth(month);
+      }
+    };
+
+    const handleYearScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const year = years[index];
+      if (year && year !== selectedYear) {
+        setSelectedYear(year);
+      }
+    };
+
+    const handleConfirm = () => {
+      const monthIdx = months.indexOf(selectedMonth);
+      const daysInSelectedMonth = new Date(selectedYear, monthIdx + 1, 0).getDate();
+      const validDay = Math.min(selectedDay, daysInSelectedMonth);
+      const newDate = new Date(selectedYear, monthIdx, validDay);
+      onSelect(newDate);
+      onClose();
+    };
+
+    const renderWheelItem = (item: number | string, isSelected: boolean) => {
+      return (
+        <View style={[datePickerStyles.wheelItem, { height: ITEM_HEIGHT }]}>
+          <Text style={[
+            datePickerStyles.wheelItemText,
+            isSelected && datePickerStyles.wheelItemTextSelected
+          ]}>
+            {item}
+          </Text>
+        </View>
+      );
+    };
+
+    return (
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+        <View style={datePickerStyles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={onClose}
+          />
+          <View style={datePickerStyles.modalContent}>
+            <View style={datePickerStyles.header}>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={datePickerStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={datePickerStyles.modalTitle}>Date of Birth</Text>
+              <TouchableOpacity onPress={handleConfirm}>
+                <Text style={datePickerStyles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={datePickerStyles.pickerContainer}>
+              <View style={datePickerStyles.selectionIndicator} />
+              
+              <View style={datePickerStyles.wheelContainer}>
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={monthScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleMonthScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {months.map((month) => renderWheelItem(month, selectedMonth === month))}
+                  </ScrollView>
+                </View>
+
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={dayScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleDayScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {days.map((day) => renderWheelItem(day, selectedDay === day))}
+                  </ScrollView>
+                </View>
+
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={yearScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleYearScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {years.map((year) => renderWheelItem(year, selectedYear === year))}
+                  </ScrollView>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -133,26 +287,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             <View style={styles.divider} />
 
-            <View style={styles.infoRow}>
+            <TouchableOpacity 
+              style={styles.infoRow}
+              onPress={() => isEditing && setShowDatePicker(true)}
+              disabled={!isEditing}
+            >
               <View style={[styles.infoIcon, { backgroundColor: '#E0E7FF' }]}>
                 <Calendar size={20} color="#6366F1" />
               </View>
               <Text style={styles.infoLabel}>Date of Birth</Text>
-              {isEditing ? (
-                <View style={{ flex: 1 }}>
-                  <WheelDatePicker
-                    value={dateOfBirth}
-                    onChange={setDateOfBirth}
-                    label=""
-                  />
-                </View>
-              ) : (
-                <>
-                  <Text style={styles.infoValue}>{dateOfBirth.toLocaleDateString('en-US')}</Text>
-                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                </>
-              )}
-            </View>
+              <Text style={styles.infoValue}>{dateOfBirth.toLocaleDateString('en-US')}</Text>
+              {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
@@ -358,6 +504,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         </View>
       </Modal>
+
+      {showDatePicker && (
+        <DatePickerModal
+          visible={true}
+          onClose={() => setShowDatePicker(false)}
+          onSelect={(date) => {
+            setDateOfBirth(date);
+            setShowDatePicker(false);
+          }}
+          currentDate={dateOfBirth}
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -568,6 +726,87 @@ const styles = StyleSheet.create({
   },
   genderOptionTextSelected: {
     color: '#FFFFFF',
+  },
+});
+
+const datePickerStyles = StyleSheet.create({
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#F9FAFB',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '600',
+    color: '#1F2937',
+  },
+  cancelText: {
+    fontSize: 17,
+    color: '#4F7FFF',
+    fontWeight: '400',
+  },
+  doneText: {
+    fontSize: 17,
+    color: '#4F7FFF',
+    fontWeight: '600',
+  },
+  pickerContainer: {
+    position: 'relative',
+    backgroundColor: '#FFFFFF',
+    marginTop: 1,
+  },
+  selectionIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    height: 44,
+    marginTop: -22,
+    backgroundColor: 'rgba(0, 0, 0, 0.03)',
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#E5E7EB',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+  wheelContainer: {
+    flexDirection: 'row',
+    height: 220,
+    paddingHorizontal: 20,
+  },
+  wheelColumn: {
+    flex: 1,
+    overflow: 'hidden',
+  },
+  wheelItem: {
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  wheelItemText: {
+    fontSize: 20,
+    color: '#9CA3AF',
+  },
+  wheelItemTextSelected: {
+    fontSize: 23,
+    fontWeight: '500',
+    color: '#1F2937',
   },
 });
 
