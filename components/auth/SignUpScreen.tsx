@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useMockAuth } from '../../contexts/MockAuthContext';
-import { ChevronLeft, User, Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
+import { ChevronLeft, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react-native';
 
 interface SignUpScreenProps {
   onNext: (formData: any) => void;
@@ -32,6 +32,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   });
 
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const [repeatPasswordVisible, setRepeatPasswordVisible] = useState(false);
   const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -47,14 +48,22 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
   const isFormValid = () => {
     return formData.firstName && 
+           formData.lastName &&
            formData.email && 
+           formData.mobile &&
            formData.password && 
            formData.password.length >= 8 &&
+           formData.repeatPassword &&
+           formData.password === formData.repeatPassword &&
            agreeToTerms;
   };
 
   const handleCreateAccount = async () => {
     if (!isFormValid()) {
+      if (formData.password !== formData.repeatPassword) {
+        Alert.alert('Password Mismatch', 'Passwords do not match.');
+        return;
+      }
       Alert.alert('Invalid Form', 'Please fill in all fields correctly.');
       return;
     }
@@ -69,6 +78,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
         {
           first_name: formData.firstName,
           last_name: formData.lastName,
+          mobile: formData.mobile,
         }
       );
 
@@ -107,14 +117,39 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
         <View style={{ flex: 1, paddingHorizontal: 24 }}>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-            Name
+            First Name
           </Text>
           <View style={{ position: 'relative', marginBottom: 20 }}>
             <User size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
-              placeholder="Enter your name"
+              placeholder="Enter your first name"
               value={formData.firstName}
               onChangeText={(value) => handleInputChange('firstName', value)}
+              style={{
+                width: '100%',
+                paddingLeft: 48,
+                paddingRight: 20,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderRadius: 12,
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                fontSize: 15
+              }}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+            Last Name
+          </Text>
+          <View style={{ position: 'relative', marginBottom: 20 }}>
+            <User size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
+            <TextInput
+              placeholder="Enter your last name"
+              value={formData.lastName}
+              onChangeText={(value) => handleInputChange('lastName', value)}
               style={{
                 width: '100%',
                 paddingLeft: 48,
@@ -159,9 +194,35 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           </View>
 
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+            Mobile Number
+          </Text>
+          <View style={{ position: 'relative', marginBottom: 20 }}>
+            <Phone size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
+            <TextInput
+              placeholder="Enter your mobile number"
+              value={formData.mobile}
+              onChangeText={(value) => handleInputChange('mobile', value)}
+              keyboardType="phone-pad"
+              style={{
+                width: '100%',
+                paddingLeft: 48,
+                paddingRight: 20,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderRadius: 12,
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                fontSize: 15
+              }}
+              placeholderTextColor="#9CA3AF"
+            />
+          </View>
+
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
             Password
           </Text>
-          <View style={{ position: 'relative', marginBottom: 16 }}>
+          <View style={{ position: 'relative', marginBottom: 20 }}>
             <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
               placeholder="••••••••"
@@ -192,6 +253,47 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               }}
             >
               {passwordVisible ? (
+                <Eye size={20} color="#9CA3AF" />
+              ) : (
+                <EyeOff size={20} color="#9CA3AF" />
+              )}
+            </TouchableOpacity>
+          </View>
+
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
+            Repeat Password
+          </Text>
+          <View style={{ position: 'relative', marginBottom: 16 }}>
+            <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
+            <TextInput
+              placeholder="••••••••"
+              value={formData.repeatPassword}
+              onChangeText={(value) => handleInputChange('repeatPassword', value)}
+              secureTextEntry={!repeatPasswordVisible}
+              style={{
+                width: '100%',
+                paddingLeft: 48,
+                paddingRight: 48,
+                paddingVertical: 16,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                borderRadius: 12,
+                backgroundColor: '#FFFFFF',
+                color: '#000000',
+                fontSize: 15
+              }}
+              placeholderTextColor="#9CA3AF"
+            />
+            <TouchableOpacity
+              onPress={() => setRepeatPasswordVisible(!repeatPasswordVisible)}
+              style={{
+                position: 'absolute',
+                right: 16,
+                top: 16,
+                zIndex: 1
+              }}
+            >
+              {repeatPasswordVisible ? (
                 <Eye size={20} color="#9CA3AF" />
               ) : (
                 <EyeOff size={20} color="#9CA3AF" />
