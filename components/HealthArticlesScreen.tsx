@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
 import { ChevronLeft, Search, Bookmark } from 'lucide-react-native';
 import { articles as allArticlesData, categories as categoriesData } from '@/constants/articles';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HealthArticlesScreenProps {
   onBack: () => void;
@@ -9,6 +10,7 @@ interface HealthArticlesScreenProps {
 }
 
 const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onArticlePress }) => {
+  const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All Articles');
 
@@ -38,10 +40,10 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.background
     },
     header: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       paddingTop: 60,
       paddingBottom: 20,
       paddingHorizontal: 20
@@ -56,14 +58,14 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center'
     },
     title: {
       fontSize: 24,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       position: 'absolute',
       left: 0,
       right: 0,
@@ -73,14 +75,14 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center'
     },
     searchContainer: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       borderRadius: 12,
       paddingHorizontal: 16,
       paddingVertical: 12,
@@ -89,7 +91,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     searchInput: {
       flex: 1,
       fontSize: 15,
-      color: '#1F2937'
+      color: colors.text
     },
     content: {
       flex: 1
@@ -102,11 +104,11 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     sectionTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 16
     },
     featuredCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderRadius: 16,
       overflow: 'hidden',
       shadowColor: '#000',
@@ -140,13 +142,13 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     featuredTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8,
       lineHeight: 28
     },
     featuredDescription: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 20,
       marginBottom: 12
     },
@@ -166,10 +168,10 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     },
     categoriesSection: {
       paddingVertical: 16,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderTopWidth: 1,
       borderBottomWidth: 1,
-      borderColor: '#F3F4F6'
+      borderColor: colors.border
     },
     categoriesScroll: {
       paddingHorizontal: 20
@@ -178,7 +180,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: isDark ? '#374151' : '#F3F4F6',
       marginRight: 12
     },
     categoryChipActive: {
@@ -190,7 +192,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     },
     categoryChipText: {
       fontSize: 14,
-      color: '#6B7280',
+      color: colors.textSecondary,
       fontWeight: '600'
     },
     categoryChipTextActive: {
@@ -204,7 +206,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       paddingBottom: 100
     },
     articleCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.card,
       borderRadius: 16,
       marginBottom: 16,
       overflow: 'hidden',
@@ -252,13 +254,13 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     articleTitle: {
       fontSize: 16,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 4,
       lineHeight: 22
     },
     articleDescription: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 18,
       marginBottom: 8
     },
@@ -286,7 +288,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     },
     emptyStateText: {
       fontSize: 16,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginTop: 16
     }
   });
@@ -296,18 +298,18 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
       <View style={styles.header}>
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <ChevronLeft size={24} color="#1F2937" />
+            <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <Text style={styles.title}>Health Articles</Text>
           <View style={styles.searchButton} />
         </View>
 
         <View style={styles.searchContainer}>
-          <Search size={20} color="#9CA3AF" />
+          <Search size={20} color={colors.textSecondary} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search articles, topics, or authors..."
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.textSecondary}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -371,7 +373,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
 
           {filteredArticles.length === 0 ? (
             <View style={styles.emptyState}>
-              <Search size={48} color="#D1D5DB" />
+              <Search size={48} color={colors.border} />
               <Text style={styles.emptyStateText}>No articles found</Text>
             </View>
           ) : (
@@ -406,7 +408,7 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
                     </View>
                   </View>
                   <TouchableOpacity style={styles.bookmarkButton}>
-                    <Bookmark size={20} color="#9CA3AF" />
+                    <Bookmark size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
