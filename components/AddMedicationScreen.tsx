@@ -222,13 +222,18 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
     const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
 
-    const days = Array.from({ length: 31 }, (_, i) => i + 1);
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-    const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() + 10 - i);
+    const currentYear = new Date().getFullYear();
+    const monthIndex = months.indexOf(selectedMonth);
+    const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const years = Array.from({ length: 200 }, (_, i) => currentYear + 50 - i);
 
     const handleConfirm = () => {
-      const monthIndex = months.indexOf(selectedMonth);
-      const newDate = new Date(selectedYear, monthIndex, selectedDay);
+      const monthIdx = months.indexOf(selectedMonth);
+      const daysInSelectedMonth = new Date(selectedYear, monthIdx + 1, 0).getDate();
+      const validDay = Math.min(selectedDay, daysInSelectedMonth);
+      const newDate = new Date(selectedYear, monthIdx, validDay);
       onSelect(newDate);
       onClose();
     };
