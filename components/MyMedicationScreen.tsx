@@ -62,19 +62,18 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       color: '#1F2937'
     },
     monthsContainer: {
-      paddingVertical: 24,
-      backgroundColor: '#FFFFFF',
-      borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      paddingTop: 20,
+      paddingBottom: 12,
+      backgroundColor: '#FFFFFF'
     },
     monthsContentContainer: {
       paddingHorizontal: 20,
       gap: 16
     },
     monthButton: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 22,
       paddingVertical: 10,
-      borderRadius: 24,
+      borderRadius: 20,
       backgroundColor: '#F3F4F6',
       marginRight: 12,
       borderWidth: 0
@@ -84,15 +83,17 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       borderColor: '#4F7FFF'
     },
     monthText: {
-      fontSize: 15,
+      fontSize: 14,
       fontWeight: '600' as const,
-      color: '#6B7280'
+      color: '#6B7280',
+      letterSpacing: 0.3
     },
     monthTextActive: {
       color: '#FFFFFF'
     },
     datesContainer: {
-      paddingVertical: 24,
+      paddingTop: 12,
+      paddingBottom: 20,
       backgroundColor: '#FFFFFF',
       borderBottomWidth: 1,
       borderBottomColor: '#F3F4F6'
@@ -102,10 +103,10 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       gap: 16
     },
     dateCard: {
-      width: 70,
-      paddingVertical: 16,
+      width: 72,
+      paddingVertical: 14,
       paddingHorizontal: 12,
-      borderRadius: 20,
+      borderRadius: 18,
       backgroundColor: '#F3F4F6',
       alignItems: 'center' as const,
       marginRight: 12,
@@ -116,19 +117,20 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       borderColor: '#4F7FFF'
     },
     dateWeekday: {
-      fontSize: 11,
+      fontSize: 12,
       fontWeight: '500' as const,
       color: '#9CA3AF',
-      marginBottom: 6
+      marginBottom: 4,
+      textTransform: 'capitalize' as const
     },
     dateWeekdayActive: {
       color: '#FFFFFF'
     },
     dateDay: {
-      fontSize: 24,
+      fontSize: 26,
       fontWeight: '700' as const,
       color: '#1F2937',
-      marginBottom: 8
+      marginBottom: 6
     },
     dateDayActive: {
       color: '#FFFFFF'
@@ -139,9 +141,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       minHeight: 6
     },
     dot: {
-      width: 5,
-      height: 5,
-      borderRadius: 2.5,
+      width: 4,
+      height: 4,
+      borderRadius: 2,
       backgroundColor: '#4F7FFF'
     },
     dotActive: {
