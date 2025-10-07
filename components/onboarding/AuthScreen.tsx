@@ -37,7 +37,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
 
         <View style={{ gap: 16 }}>
           <TouchableOpacity 
-            onPress={() => router.push('/signup')}
+            onPress={() => router.push('/signin')}
             style={{
               width: '100%',
               backgroundColor: '#4F7FFF',
@@ -51,69 +51,28 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
               fontSize: 17,
               fontWeight: '600'
             }}>
-              Sign up with Email
+              Login
             </Text>
           </TouchableOpacity>
 
-          <Text style={{
-            textAlign: 'center',
-            color: '#6B7280',
-            fontSize: 15,
-            fontWeight: '500'
-          }}>
-            Or
-          </Text>
-
           <TouchableOpacity 
+            onPress={() => router.push('/signup')}
             style={{
               width: '100%',
               backgroundColor: '#1F2937',
               paddingVertical: 18,
               borderRadius: 28,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 12
+              alignItems: 'center'
             }}
           >
-            <Text style={{ fontSize: 20 }}>🔍</Text>
             <Text style={{
               color: 'white',
               fontSize: 17,
               fontWeight: '600'
             }}>
-              Sign up with Google
+              Sign Up
             </Text>
           </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={{
-              width: '100%',
-              backgroundColor: '#1F2937',
-              paddingVertical: 18,
-              borderRadius: 28,
-              alignItems: 'center',
-              flexDirection: 'row',
-              justifyContent: 'center',
-              gap: 12
-            }}
-          >
-            <Text style={{ fontSize: 20 }}>🍎</Text>
-            <Text style={{
-              color: 'white',
-              fontSize: 17,
-              fontWeight: '600'
-            }}>
-              Sign up with Apple
-            </Text>
-          </TouchableOpacity>
-
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginTop: 16 }}>
-            <Text style={{ color: '#6B7280', fontSize: 15 }}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/signin')}>
-              <Text style={{ color: '#1F2937', fontSize: 15, fontWeight: '600' }}>Sign In</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </View>
     </SafeAreaView>
