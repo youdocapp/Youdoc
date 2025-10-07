@@ -87,7 +87,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         {NOTIFICATIONS.map((notification) => (
           <TouchableOpacity key={notification.id} style={styles.notificationCard}>
             {renderIcon(notification.icon, notification.iconBg)}
@@ -136,7 +136,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 20,
-    paddingBottom: 140,
   },
   notificationCard: {
     backgroundColor: '#FFFFFF',

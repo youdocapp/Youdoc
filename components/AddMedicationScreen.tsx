@@ -579,7 +579,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       borderRadius: 12,
       padding: 16,
       alignItems: 'center' as const,
-      marginBottom: 140
+      marginBottom: 24
     },
     saveButtonText: {
       color: '#FFFFFF',
@@ -791,7 +791,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Medication Name</Text>
         <TextInput
           style={styles.input}

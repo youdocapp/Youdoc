@@ -425,7 +425,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
         />
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Medicine</Text>
         
         {filteredMedications.length > 0 ? (
@@ -453,8 +453,6 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
             </TouchableOpacity>
           ))
         ) : null}
-
-        <View style={{ height: 140 }} />
       </ScrollView>
 
       <TouchableOpacity style={styles.fab} onPress={onAddMedication}>

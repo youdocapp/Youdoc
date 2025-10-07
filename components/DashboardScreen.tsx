@@ -284,7 +284,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 120 }}>
         <View style={styles.header}>
           <View style={styles.headerTop}>
             <View style={styles.userSection}>
@@ -432,7 +432,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </ScrollView>
         </View>
 
-        <View style={{ height: 140 }} />
       </ScrollView>
 
       <BottomNav

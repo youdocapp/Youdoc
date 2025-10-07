@@ -139,7 +139,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
   };
 
   const renderIntroScreen = () => (
-    <View style={styles.screenContainer}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
       <View style={styles.iconContainer}>
         <View style={styles.iconCircle}>
           <View style={styles.iconInner} />
@@ -164,7 +164,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
   );
 
   const renderSelectScreen = () => (
-    <View style={styles.screenContainer}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
       <Text style={styles.sectionTitle}>Select all symptoms you're currently experiencing:</Text>
 
       <View style={styles.symptomsGrid}>
@@ -205,7 +205,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
   );
 
   const renderDetailsScreen = () => (
-    <ScrollView style={styles.screenContainer} showsVerticalScrollIndicator={false}>
+    <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
       <Text style={styles.sectionTitle}>How severe are your symptoms?</Text>
 
       <View style={styles.optionsContainer}>
@@ -252,18 +252,18 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
       </View>
 
       {symptomData.severity && symptomData.duration && (
-        <TouchableOpacity style={[styles.primaryButton, { marginTop: 24, marginBottom: 24 }]} onPress={handleViewResults}>
+        <TouchableOpacity style={[styles.primaryButton, { marginTop: 24 }]} onPress={handleViewResults}>
           <Text style={styles.primaryButtonText}>View Results</Text>
         </TouchableOpacity>
       )}
-    </ScrollView>
+    </View>
   );
 
   const renderResultsScreen = () => {
     const severityColor = SEVERITY_OPTIONS.find(s => s.level === symptomData.severity)?.color || '#F59E0B';
     
     return (
-      <ScrollView style={styles.screenContainer} showsVerticalScrollIndicator={false}>
+      <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
         <View style={[styles.alertBox, { borderColor: severityColor }]}>
           <View style={[styles.alertIcon, { backgroundColor: severityColor }]}>
             <Text style={styles.alertIconText}>⚠</Text>
@@ -321,7 +321,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
         <TouchableOpacity style={styles.secondaryButton} onPress={handleNewAssessment}>
           <Text style={styles.secondaryButtonText}>Start New Assessment</Text>
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     );
   };
 
@@ -388,10 +388,16 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
         <View style={{ width: 24 }} />
       </View>
 
-      {currentScreen === 'intro' && renderIntroScreen()}
-      {currentScreen === 'select' && renderSelectScreen()}
-      {currentScreen === 'details' && renderDetailsScreen()}
-      {currentScreen === 'results' && renderResultsScreen()}
+      <ScrollView 
+        style={{ flex: 1 }} 
+        contentContainerStyle={{ paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {currentScreen === 'intro' && renderIntroScreen()}
+        {currentScreen === 'select' && renderSelectScreen()}
+        {currentScreen === 'details' && renderDetailsScreen()}
+        {currentScreen === 'results' && renderResultsScreen()}
+      </ScrollView>
 
       <BottomNav
         activeTab="home"
@@ -427,6 +433,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 24,
+    paddingBottom: 120,
   },
   iconContainer: {
     alignItems: 'center',

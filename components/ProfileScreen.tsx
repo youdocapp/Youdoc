@@ -57,7 +57,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
             <View style={styles.avatar}>
@@ -317,7 +317,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           </View>
         </View>
 
-        <View style={{ height: 140 }} />
       </ScrollView>
 
       <BottomNav
