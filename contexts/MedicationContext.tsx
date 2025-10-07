@@ -11,6 +11,7 @@ export interface Medication {
   notes?: string;
   reminderEnabled: boolean;
   taken: boolean;
+  dateAdded: string;
 }
 
 interface MedicationContextType {

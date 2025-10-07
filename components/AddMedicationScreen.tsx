@@ -55,7 +55,8 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       time: reminderTimes,
       startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
       reminderEnabled: true,
-      taken: false
+      taken: false,
+      dateAdded: new Date().toISOString().split('T')[0]
     });
 
     Alert.alert('Success', 'Medication added successfully', [

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
 import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
@@ -22,21 +22,54 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   activeTab = 'home'
 }) => {
   const { medications, toggleMedicationTaken } = useMedication();
-  const [selectedMonth, setSelectedMonth] = useState<string>('May');
-  const [selectedDate, setSelectedDate] = useState<number>(13);
-  const [aspirinTaken, setAspirinTaken] = useState<boolean>(false);
-  const [vitaminDTaken, setVitaminDTaken] = useState<boolean>(false);
+  const today = new Date();
+  const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
+  const [selectedDate, setSelectedDate] = useState<string>(today.toISOString().split('T')[0]);
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const dates = [
-    { day: 11, weekday: 'Sun', dots: 1 },
-    { day: 12, weekday: 'Mon', dots: 2 },
-    { day: 13, weekday: 'Tue', dots: 0 },
-    { day: 14, weekday: 'Wed', dots: 1 },
-    { day: 15, weekday: 'Thu', dots: 2 },
-  ];
+  
+  const getDaysInMonth = (month: number, year: number) => {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = [];
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      const dateString = date.toISOString().split('T')[0];
+      const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+      const medicationCount = medications.filter(med => med.dateAdded === dateString).length;
+      
+      days.push({
+        day,
+        weekday,
+        dateString,
+        dots: medicationCount
+      });
+    }
+    
+    return days;
+  };
+  
+  const dates = useMemo(() => getDaysInMonth(selectedMonth, selectedYear), [selectedMonth, selectedYear, medications]);
+  
+  const filteredMedications = useMemo(() => {
+    return medications.filter(med => med.dateAdded === selectedDate);
+  }, [medications, selectedDate]);
+  
+  useEffect(() => {
+    const todayIndex = dates.findIndex(d => d.dateString === today.toISOString().split('T')[0]);
+    if (todayIndex !== -1 && datesScrollRef.current) {
+      setTimeout(() => {
+        datesScrollRef.current?.scrollToIndex({
+          index: todayIndex,
+          animated: true,
+          viewPosition: 0.5
+        });
+      }, 100);
+    }
+  }, [selectedMonth, selectedYear]);
 
   const styles = StyleSheet.create({
     container: {
@@ -157,6 +190,15 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     },
     dotActive: {
       backgroundColor: '#FFFFFF'
+    },
+    todayIndicator: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
+      backgroundColor: '#4F7FFF',
+      position: 'absolute' as const,
+      top: 8,
+      right: 8
     },
     content: {
       flex: 1,
@@ -298,19 +340,23 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
           horizontal
           showsHorizontalScrollIndicator={false}
           data={months}
-          keyExtractor={(item) => item}
+          keyExtractor={(item, index) => `${item}-${index}`}
           contentContainerStyle={styles.monthsContentContainer}
-          renderItem={({ item: month }) => (
+          renderItem={({ item: month, index }) => (
             <TouchableOpacity
               style={[
                 styles.monthButton,
-                selectedMonth === month && styles.monthButtonActive
+                selectedMonth === index && styles.monthButtonActive
               ]}
-              onPress={() => setSelectedMonth(month)}
+              onPress={() => {
+                setSelectedMonth(index);
+                const firstDayOfMonth = new Date(selectedYear, index, 1).toISOString().split('T')[0];
+                setSelectedDate(firstDayOfMonth);
+              }}
             >
               <Text style={[
                 styles.monthText,
-                selectedMonth === month && styles.monthTextActive
+                selectedMonth === index && styles.monthTextActive
               ]}>
                 {month}
               </Text>
@@ -325,112 +371,86 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
           horizontal
           showsHorizontalScrollIndicator={false}
           data={dates}
-          keyExtractor={(item) => item.day.toString()}
+          keyExtractor={(item) => item.dateString}
           contentContainerStyle={styles.datesContentContainer}
-          renderItem={({ item: date }) => (
-            <TouchableOpacity
-              style={[
-                styles.dateCard,
-                selectedDate === date.day && styles.dateCardActive
-              ]}
-              onPress={() => setSelectedDate(date.day)}
-            >
-              <Text style={[
-                styles.dateWeekday,
-                selectedDate === date.day && styles.dateWeekdayActive
-              ]}>
-                {date.weekday}
-              </Text>
-              <Text style={[
-                styles.dateDay,
-                selectedDate === date.day && styles.dateDayActive
-              ]}>
-                {date.day}
-              </Text>
-              <View style={styles.dotsContainer}>
-                {Array.from({ length: date.dots }).map((_, i) => (
-                  <View 
-                    key={i} 
-                    style={[
-                      styles.dot,
-                      selectedDate === date.day && styles.dotActive
-                    ]} 
-                  />
-                ))}
-              </View>
-            </TouchableOpacity>
-          )}
+          onScrollToIndexFailed={(info) => {
+            const wait = new Promise(resolve => setTimeout(resolve, 500));
+            wait.then(() => {
+              datesScrollRef.current?.scrollToIndex({ index: info.index, animated: true, viewPosition: 0.5 });
+            });
+          }}
+          renderItem={({ item: date }) => {
+            const isToday = date.dateString === today.toISOString().split('T')[0];
+            const isSelected = selectedDate === date.dateString;
+            
+            return (
+              <TouchableOpacity
+                style={[
+                  styles.dateCard,
+                  isSelected && styles.dateCardActive
+                ]}
+                onPress={() => setSelectedDate(date.dateString)}
+              >
+                <Text style={[
+                  styles.dateWeekday,
+                  isSelected && styles.dateWeekdayActive
+                ]}>
+                  {date.weekday}
+                </Text>
+                <Text style={[
+                  styles.dateDay,
+                  isSelected && styles.dateDayActive
+                ]}>
+                  {date.day}
+                </Text>
+                {isToday && !isSelected && (
+                  <View style={styles.todayIndicator} />
+                )}
+                <View style={styles.dotsContainer}>
+                  {Array.from({ length: date.dots }).map((_, i) => (
+                    <View 
+                      key={i} 
+                      style={[
+                        styles.dot,
+                        isSelected && styles.dotActive
+                      ]} 
+                    />
+                  ))}
+                </View>
+              </TouchableOpacity>
+            );
+          }}
         />
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <Text style={styles.sectionTitle}>Medicine</Text>
         
-        {medications.map((med) => (
-          <TouchableOpacity 
-            key={med.id} 
-            style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}
-            onPress={() => toggleMedicationTaken(med.id)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.medicationIcon}>
-              <Text style={styles.pillEmoji}>💊</Text>
-            </View>
-            <View style={styles.medicationInfo}>
-              <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
-              <Text style={[styles.medicationDose, med.taken && styles.medicationDoseTaken]}>{med.dosage}</Text>
-              <View style={styles.medicationTime}>
-                <Clock size={14} color="#9CA3AF" />
-                <Text style={[styles.timeText, med.taken && styles.timeTextTaken]}>{med.time[0] || '08:00'}</Text>
+        {filteredMedications.length > 0 ? (
+          filteredMedications.map((med) => (
+            <TouchableOpacity 
+              key={med.id} 
+              style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}
+              onPress={() => toggleMedicationTaken(med.id)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.medicationIcon}>
+                <Text style={styles.pillEmoji}>💊</Text>
               </View>
-            </View>
-            <View style={[styles.checkbox, med.taken && styles.checkboxChecked]}>
-              {med.taken && <View style={styles.checkmark} />}
-            </View>
-          </TouchableOpacity>
-        ))}
-
-        <TouchableOpacity 
-          style={[styles.medicationCard, aspirinTaken && styles.medicationCardTaken]}
-          onPress={() => setAspirinTaken(!aspirinTaken)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.medicationIcon}>
-            <Text style={styles.pillEmoji}>💊</Text>
-          </View>
-          <View style={styles.medicationInfo}>
-            <Text style={[styles.medicationName, aspirinTaken && styles.medicationNameTaken]}>Aspirin</Text>
-            <Text style={[styles.medicationDose, aspirinTaken && styles.medicationDoseTaken]}>100mg pill, (100mg mg)</Text>
-            <View style={styles.medicationTime}>
-              <Clock size={14} color="#9CA3AF" />
-              <Text style={[styles.timeText, aspirinTaken && styles.timeTextTaken]}>08:00</Text>
-            </View>
-          </View>
-          <View style={[styles.checkbox, aspirinTaken && styles.checkboxChecked]}>
-            {aspirinTaken && <View style={styles.checkmark} />}
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.medicationCard, vitaminDTaken && styles.medicationCardTaken]}
-          onPress={() => setVitaminDTaken(!vitaminDTaken)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.medicationIcon}>
-            <Text style={styles.pillEmoji}>💊</Text>
-          </View>
-          <View style={styles.medicationInfo}>
-            <Text style={[styles.medicationName, vitaminDTaken && styles.medicationNameTaken]}>Vitamin D</Text>
-            <Text style={[styles.medicationDose, vitaminDTaken && styles.medicationDoseTaken]}>1000 IU, (1000 IU IU)</Text>
-            <View style={styles.medicationTime}>
-              <Clock size={14} color="#9CA3AF" />
-              <Text style={[styles.timeText, vitaminDTaken && styles.timeTextTaken]}>09:00</Text>
-            </View>
-          </View>
-          <View style={[styles.checkbox, vitaminDTaken && styles.checkboxChecked]}>
-            {vitaminDTaken && <View style={styles.checkmark} />}
-          </View>
-        </TouchableOpacity>
+              <View style={styles.medicationInfo}>
+                <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
+                <Text style={[styles.medicationDose, med.taken && styles.medicationDoseTaken]}>{med.dosage}</Text>
+                <View style={styles.medicationTime}>
+                  <Clock size={14} color="#9CA3AF" />
+                  <Text style={[styles.timeText, med.taken && styles.timeTextTaken]}>{med.time[0] || '08:00'}</Text>
+                </View>
+              </View>
+              <View style={[styles.checkbox, med.taken && styles.checkboxChecked]}>
+                {med.taken && <View style={styles.checkmark} />}
+              </View>
+            </TouchableOpacity>
+          ))
+        ) : null}
 
         <View style={{ height: 100 }} />
       </ScrollView>
