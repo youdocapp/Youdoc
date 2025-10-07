@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform } from 'react-native';
 import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -26,6 +27,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onNotifications,
   onProfile
 }) => {
+  const { colors } = useTheme();
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [name, setName] = useState<string>('John Doe');
   const [email, setEmail] = useState<string>('demo@youdoc.com');
@@ -57,6 +59,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
     const ITEM_HEIGHT = 44;
 
+    const monthIndex = months.indexOf(selectedMonth);
+    const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
+    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+    const years = Array.from({ length: 200 }, (_, i) => currentYear + 50 - i);
+
     React.useEffect(() => {
       if (visible) {
         setSelectedDay(currentDate.getDate());
@@ -72,12 +79,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           yearScrollRef.current?.scrollTo({ y: yearIdx * ITEM_HEIGHT, animated: false });
         }, 100);
       }
-    }, [visible, currentDate]);
-
-    const monthIndex = months.indexOf(selectedMonth);
-    const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
-    const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    const years = Array.from({ length: 200 }, (_, i) => currentYear + 50 - i);
+    }, [visible, currentDate, months, years]);
 
     const handleDayScroll = (event: any) => {
       const offsetY = event.nativeEvent.contentOffset.y;
@@ -127,6 +129,87 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </View>
       );
     };
+
+    const datePickerStyles = StyleSheet.create({
+      modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        justifyContent: 'flex-end',
+      },
+      modalContent: {
+        backgroundColor: colors.card,
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+      },
+      header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+        backgroundColor: colors.background,
+      },
+      modalTitle: {
+        fontSize: 17,
+        fontWeight: '600',
+        color: colors.text,
+      },
+      cancelText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '400',
+      },
+      doneText: {
+        fontSize: 17,
+        color: '#4F7FFF',
+        fontWeight: '600',
+      },
+      pickerContainer: {
+        position: 'relative',
+        backgroundColor: colors.background,
+        marginTop: 1,
+      },
+      selectionIndicator: {
+        position: 'absolute',
+        top: '50%',
+        left: 0,
+        right: 0,
+        height: 44,
+        marginTop: -22,
+        backgroundColor: 'rgba(0, 0, 0, 0.03)',
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        borderColor: colors.border,
+        zIndex: 1,
+        pointerEvents: 'none',
+      },
+      wheelContainer: {
+        flexDirection: 'row',
+        height: 220,
+        paddingHorizontal: 20,
+      },
+      wheelColumn: {
+        flex: 1,
+        overflow: 'hidden',
+      },
+      wheelItem: {
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
+      wheelItemText: {
+        fontSize: 20,
+        color: colors.textSecondary,
+      },
+      wheelItemTextSelected: {
+        fontSize: 23,
+        fontWeight: '500',
+        color: colors.text,
+      },
+    });
 
     return (
       <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -196,11 +279,223 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </Modal>
     );
   };
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.card,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerTitle: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    editButton: {
+      backgroundColor: '#4F7FFF',
+      paddingHorizontal: 20,
+      paddingVertical: 8,
+      borderRadius: 20,
+    },
+    editButtonText: {
+      color: '#FFFFFF',
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    content: {
+      flex: 1,
+    },
+    profileSection: {
+      alignItems: 'center',
+      paddingVertical: 32,
+      backgroundColor: colors.background,
+    },
+    avatarContainer: {
+      position: 'relative',
+      marginBottom: 16,
+    },
+    avatar: {
+      width: 100,
+      height: 100,
+      borderRadius: 50,
+      backgroundColor: '#4F7FFF',
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    avatarText: {
+      fontSize: 36,
+      fontWeight: '700',
+      color: '#FFFFFF',
+    },
+    cameraButton: {
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: '#10B981',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 3,
+      borderColor: '#FFFFFF',
+    },
+    name: {
+      fontSize: 24,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    email: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    section: {
+      paddingHorizontal: 20,
+      paddingTop: 24,
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    infoCard: {
+      backgroundColor: colors.background,
+      borderRadius: 16,
+      padding: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    infoRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+    },
+    infoIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    infoLabel: {
+      fontSize: 15,
+      color: colors.textSecondary,
+      flex: 1,
+    },
+    infoValue: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      marginRight: 8,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginHorizontal: 12,
+    },
+    actionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 16,
+      paddingHorizontal: 12,
+    },
+    actionIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 12,
+    },
+    actionContent: {
+      flex: 1,
+    },
+    actionTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 2,
+    },
+    actionSubtitle: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    infoInput: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      backgroundColor: colors.card,
+      minWidth: 120,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    genderModal: {
+      backgroundColor: colors.background,
+      borderRadius: 16,
+      padding: 24,
+      width: '80%',
+      maxWidth: 300,
+    },
+    genderModalTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 16,
+      textAlign: 'center',
+    },
+    genderOption: {
+      paddingVertical: 16,
+      paddingHorizontal: 20,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+      marginBottom: 12,
+    },
+    genderOptionSelected: {
+      backgroundColor: '#4F7FFF',
+    },
+    genderOptionText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      textAlign: 'center',
+    },
+    genderOptionTextSelected: {
+      color: '#FFFFFF',
+    },
+  });
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Profile</Text>
         <TouchableOpacity 
@@ -239,6 +534,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={name}
                   onChangeText={setName}
                   placeholder="Enter name"
+                  placeholderTextColor={colors.textSecondary}
                 />
               ) : (
                 <Text style={styles.infoValue}>{name}</Text>
@@ -258,6 +554,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={email}
                   onChangeText={setEmail}
                   placeholder="Enter email"
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="email-address"
                 />
               ) : (
@@ -278,6 +575,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={phone}
                   onChangeText={setPhone}
                   placeholder="Enter phone"
+                  placeholderTextColor={colors.textSecondary}
                   keyboardType="phone-pad"
                 />
               ) : (
@@ -331,6 +629,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={bloodType}
                   onChangeText={setBloodType}
                   placeholder="Enter blood type"
+                  placeholderTextColor={colors.textSecondary}
                 />
               ) : (
                 <>
@@ -353,6 +652,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={height}
                   onChangeText={setHeight}
                   placeholder="Enter height"
+                  placeholderTextColor={colors.textSecondary}
                 />
               ) : (
                 <>
@@ -375,6 +675,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={weight}
                   onChangeText={setWeight}
                   placeholder="Enter weight"
+                  placeholderTextColor={colors.textSecondary}
                 />
               ) : (
                 <>
@@ -397,6 +698,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                   value={address}
                   onChangeText={setAddress}
                   placeholder="Enter address"
+                  placeholderTextColor={colors.textSecondary}
                   multiline
                 />
               ) : (
@@ -519,295 +821,5 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  editButton: {
-    backgroundColor: '#4F7FFF',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  editButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  content: {
-    flex: 1,
-  },
-  profileSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    backgroundColor: '#FFFFFF',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginBottom: 16,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#4F7FFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  cameraButton: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#10B981',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#FFFFFF',
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 4,
-  },
-  email: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  section: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  infoCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-  },
-  infoIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  infoLabel: {
-    fontSize: 15,
-    color: '#6B7280',
-    flex: 1,
-  },
-  infoValue: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginRight: 8,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-    marginHorizontal: 12,
-  },
-  actionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 12,
-  },
-  actionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  actionContent: {
-    flex: 1,
-  },
-  actionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 2,
-  },
-  actionSubtitle: {
-    fontSize: 13,
-    color: '#6B7280',
-  },
-  infoInput: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#1F2937',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: '#F9FAFB',
-    minWidth: 120,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  genderModal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 24,
-    width: '80%',
-    maxWidth: 300,
-  },
-  genderModalTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  genderOption: {
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    backgroundColor: '#F9FAFB',
-    marginBottom: 12,
-  },
-  genderOptionSelected: {
-    backgroundColor: '#4F7FFF',
-  },
-  genderOptionText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    textAlign: 'center',
-  },
-  genderOptionTextSelected: {
-    color: '#FFFFFF',
-  },
-});
-
-const datePickerStyles = StyleSheet.create({
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#F9FAFB',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    backgroundColor: '#FFFFFF',
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  cancelText: {
-    fontSize: 17,
-    color: '#4F7FFF',
-    fontWeight: '400',
-  },
-  doneText: {
-    fontSize: 17,
-    color: '#4F7FFF',
-    fontWeight: '600',
-  },
-  pickerContainer: {
-    position: 'relative',
-    backgroundColor: '#FFFFFF',
-    marginTop: 1,
-  },
-  selectionIndicator: {
-    position: 'absolute',
-    top: '50%',
-    left: 0,
-    right: 0,
-    height: 44,
-    marginTop: -22,
-    backgroundColor: 'rgba(0, 0, 0, 0.03)',
-    borderTopWidth: 1,
-    borderBottomWidth: 1,
-    borderColor: '#E5E7EB',
-    zIndex: 1,
-    pointerEvents: 'none',
-  },
-  wheelContainer: {
-    flexDirection: 'row',
-    height: 220,
-    paddingHorizontal: 20,
-  },
-  wheelColumn: {
-    flex: 1,
-    overflow: 'hidden',
-  },
-  wheelItem: {
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  wheelItemText: {
-    fontSize: 20,
-    color: '#9CA3AF',
-  },
-  wheelItemTextSelected: {
-    fontSize: 23,
-    fontWeight: '500',
-    color: '#1F2937',
-  },
-});
 
 export default ProfileScreen;

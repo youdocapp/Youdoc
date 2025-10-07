@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
-import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame, ShoppingBag } from 'lucide-react-native';
+import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
@@ -16,7 +16,7 @@ interface DashboardScreenProps {
   onSettings?: () => void;
   onNotifications?: () => void;
   onProfile?: () => void;
-  onMedicalGrocery?: () => void;
+
   activeTab?: string;
 }
 
@@ -30,7 +30,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onSettings,
   onNotifications,
   onProfile,
-  onMedicalGrocery,
+
   activeTab = 'home'
 }) => {
   const { colors } = useTheme();
@@ -53,7 +53,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 20,
-      backgroundColor: colors.background
+      backgroundColor: colors.card
     },
     headerTop: {
       flexDirection: 'row',
@@ -409,17 +409,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           </TouchableOpacity>
         </View>
 
-        <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.actionCard} onPress={onMedicalGrocery}>
-            <View style={styles.actionIcon}>
-              <ShoppingBag size={24} color="#4F7FFF" />
-            </View>
-            <Text style={styles.actionLabel}>Medical{'\n'}Grocery</Text>
-          </TouchableOpacity>
 
-          <View style={styles.actionCard} />
-          <View style={styles.actionCard} />
-        </View>
 
         <Text style={styles.sectionTitle}>Health Tracker</Text>
         <View style={styles.healthTrackerGrid}>

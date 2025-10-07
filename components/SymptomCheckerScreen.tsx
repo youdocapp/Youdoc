@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
 import { ChevronLeft } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface SymptomCheckerScreenProps {
   onBack: () => void;
@@ -80,6 +81,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
   onNotifications, 
   onProfile 
 }) => {
+  const { colors } = useTheme();
   const [currentScreen, setCurrentScreen] = useState<ScreenType>('intro');
   const [symptomData, setSymptomData] = useState<SymptomData>({
     symptoms: [],
@@ -377,7 +379,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
           else if (currentScreen === 'details') setCurrentScreen('select');
           else if (currentScreen === 'results') setCurrentScreen('details');
         }}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>
           {currentScreen === 'intro' && 'AI Symptom Checker'}
@@ -412,7 +414,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.card,
   },
   header: {
     flexDirection: 'row',
@@ -420,14 +422,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.border,
   },
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text,
   },
   screenContainer: {
     flex: 1,
@@ -457,26 +459,28 @@ const styles = StyleSheet.create({
   mainTitle: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.text,
     textAlign: 'center',
     marginBottom: 16,
   },
   description: {
     fontSize: 15,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
   },
   disclaimerBox: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     marginBottom: 32,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   disclaimerText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -509,7 +513,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text,
     marginBottom: 16,
   },
   symptomsGrid: {
@@ -519,12 +523,12 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   symptomButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     minWidth: '47%',
   },
   symptomButtonSelected: {
@@ -533,7 +537,7 @@ const styles = StyleSheet.create({
   },
   symptomButtonText: {
     fontSize: 15,
-    color: '#1F2937',
+    color: colors.text,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -541,18 +545,18 @@ const styles = StyleSheet.create({
     color: '#4F7FFF',
   },
   symptomButtonDashed: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     paddingVertical: 14,
     paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     borderStyle: 'dashed',
     minWidth: '47%',
   },
   symptomButtonDashedText: {
     fontSize: 15,
-    color: '#9CA3AF',
+    color: colors.textSecondary,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -560,13 +564,13 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   optionCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderRadius: 12,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#F3F4F6',
+    borderColor: colors.border,
   },
   optionCardSelected: {
     borderColor: '#4F7FFF',
@@ -584,19 +588,19 @@ const styles = StyleSheet.create({
   optionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text,
     marginBottom: 4,
   },
   optionDescription: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   durationButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     paddingVertical: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
   },
   durationButtonSelected: {
     backgroundColor: '#EEF2FF',
@@ -604,7 +608,7 @@ const styles = StyleSheet.create({
   },
   durationButtonText: {
     fontSize: 15,
-    color: '#1F2937',
+    color: colors.text,
     fontWeight: '500',
     textAlign: 'center',
   },
@@ -642,12 +646,12 @@ const styles = StyleSheet.create({
   },
   alertDescription: {
     fontSize: 14,
-    color: '#1F2937',
+    color: colors.text,
   },
   resultsTitle: {
     fontSize: 18,
     fontWeight: '700',
-    color: '#1F2937',
+    color: colors.text,
     marginBottom: 12,
     marginTop: 8,
   },
@@ -658,25 +662,27 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   symptomTag: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background,
     paddingVertical: 8,
     paddingHorizontal: 12,
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   symptomTagIcon: {
     fontSize: 16,
   },
   symptomTagText: {
     fontSize: 14,
-    color: '#1F2937',
+    color: colors.text,
     fontWeight: '500',
   },
   metaText: {
     fontSize: 13,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 24,
   },
   recommendationItem: {
@@ -701,13 +707,13 @@ const styles = StyleSheet.create({
   recommendationText: {
     flex: 1,
     fontSize: 15,
-    color: '#1F2937',
+    color: colors.text,
     lineHeight: 22,
     paddingTop: 4,
   },
   conditionsPlaceholder: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 24,
   },
   modalOverlay: {
@@ -718,7 +724,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   modalContent: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background,
     borderRadius: 16,
     padding: 24,
     width: '100%',
@@ -727,19 +733,19 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
+    color: colors.text,
     marginBottom: 16,
     textAlign: 'center',
   },
   modalInput: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.card,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1F2937',
+    color: colors.text,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border,
     marginBottom: 20,
   },
   modalButtons: {
@@ -748,15 +754,17 @@ const styles = StyleSheet.create({
   },
   modalCancelButton: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.card,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalCancelText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.textSecondary,
   },
   modalAddButton: {
     flex: 1,
