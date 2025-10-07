@@ -75,6 +75,9 @@ function AppContent() {
         <Stack.Screen name="hipaa-compliance" options={{ headerShown: false }} />
         <Stack.Screen name="medical-grocery" options={{ headerShown: false }} />
         <Stack.Screen name="connected-devices" options={{ headerShown: false }} />
+        <Stack.Screen name="change-password" options={{ headerShown: false }} />
+        <Stack.Screen name="download-data" options={{ headerShown: false }} />
+        <Stack.Screen name="reset-password" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
