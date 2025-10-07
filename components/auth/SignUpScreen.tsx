@@ -92,11 +92,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
       }
 
       console.log('✅ Signup completed, proceeding to verification');
-      Alert.alert(
-        'Verify Your Email',
-        'We\'ve sent a verification code to your email. Please check your inbox.',
-        [{ text: 'OK', onPress: () => onNext(formData) }]
-      );
+      onNext(formData);
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Sign up error:', error);

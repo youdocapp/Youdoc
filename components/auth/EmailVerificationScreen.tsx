@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'expo-router';
 import { ChevronLeft } from 'lucide-react-native';
 
 interface EmailVerificationScreenProps {
@@ -13,6 +14,7 @@ interface EmailVerificationScreenProps {
 const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email, onVerified, onBack }) => {
   const { colors } = useAuthTheme();
   const { verifyOTP, resendOTP } = useAuth();
+  const router = useRouter();
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
@@ -61,11 +63,8 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
       if (error) {
         Alert.alert('Verification Failed', error.message || 'Invalid verification code.');
       } else {
-        Alert.alert(
-          'Verified!',
-          'Your email has been verified successfully.',
-          [{ text: 'OK', onPress: onVerified }]
-        );
+        console.log('✅ Email verified successfully, redirecting to dashboard');
+        router.replace('/dashboard');
       }
     } catch (error) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
