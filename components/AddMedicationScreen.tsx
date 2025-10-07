@@ -993,7 +993,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             setEndDate(date);
             setShowEndDatePicker(false);
           }}
-          currentDate={endDate || new Date()}
+          currentDate={new Date()}
           title="Select End Date"
         />
       )}
