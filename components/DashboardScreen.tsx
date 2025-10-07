@@ -503,7 +503,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
               <TouchableOpacity
                 key={article.id}
                 style={styles.articleCard}
-                onPress={() => router.push(`/article-detail?id=${article.id}`)}
+                onPress={() => router.push(`/article-detail?articleId=${article.id}`)}
               >
                 <Image
                   source={{ uri: article.image }}
