@@ -127,15 +127,13 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
       backgroundColor: colors.card,
     },
     topHeader: {
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
       paddingTop: 60,
       paddingBottom: 16,
       paddingHorizontal: 20,
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
     },
     backButton: {
       width: 40,
@@ -158,9 +156,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     header: {
       padding: 20,
       paddingTop: 16,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
+      backgroundColor: colors.card,
     },
     headerSubtitle: {
       fontSize: 14,

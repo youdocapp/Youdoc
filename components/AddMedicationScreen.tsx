@@ -793,7 +793,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 100 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.label}>Medication Name</Text>
         <TextInput
           style={styles.input}
@@ -931,12 +931,14 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       </ScrollView>
       </KeyboardAvoidingView>
 
-      <BottomNav
-        activeTab={activeTab}
-        onHome={onHome}
-        onNotifications={onNotifications}
-        onProfile={onProfile}
-      />
+      <View style={{ position: 'absolute' as const, bottom: 0, left: 0, right: 0 }}>
+        <BottomNav
+          activeTab={activeTab}
+          onHome={onHome}
+          onNotifications={onNotifications}
+          onProfile={onProfile}
+        />
+      </View>
 
       <Modal
         visible={showTimesDropdown}
