@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
+import { useMedication } from '@/contexts/MedicationContext';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -24,6 +25,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onProfile,
   activeTab = 'home'
 }) => {
+  const { medications, toggleMedicationTaken } = useMedication();
+
+  const todayMedications = useMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return medications.filter(med => med.dateAdded === today);
+  }, [medications]);
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -194,18 +201,43 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       color: '#1F2937',
       marginBottom: 2
     },
+    medicationNameTaken: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#9CA3AF',
+      marginBottom: 2,
+      textDecorationLine: 'line-through'
+    },
     medicationDose: {
       fontSize: 13,
       color: '#6B7280',
       marginBottom: 4
+    },
+    medicationDoseTaken: {
+      fontSize: 13,
+      color: '#9CA3AF',
+      marginBottom: 4,
+      textDecorationLine: 'line-through'
     },
     medicationTime: {
       fontSize: 13,
       color: '#4F7FFF',
       fontWeight: '500'
     },
+    medicationTimeTaken: {
+      fontSize: 13,
+      color: '#9CA3AF',
+      fontWeight: '500',
+      textDecorationLine: 'line-through'
+    },
     takeButton: {
       backgroundColor: '#4F7FFF',
+      paddingHorizontal: 20,
+      paddingVertical: 10,
+      borderRadius: 20
+    },
+    takenButton: {
+      backgroundColor: '#10B981',
       paddingHorizontal: 20,
       paddingVertical: 10,
       borderRadius: 20
@@ -214,6 +246,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       color: '#FFFFFF',
       fontSize: 13,
       fontWeight: '600'
+    },
+    emptyMedicationText: {
+      fontSize: 14,
+      color: '#9CA3AF',
+      textAlign: 'center',
+      paddingVertical: 20
     },
     articlesSection: {
       paddingHorizontal: 20,
@@ -364,33 +402,36 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={styles.medicationSection}>
           <Text style={styles.sectionTitle}>Daily Medication</Text>
           
-          <View style={styles.medicationCard}>
-            <View style={styles.medicationLeft}>
-              <Text style={styles.pillIcon}>💊</Text>
-              <View style={styles.medicationInfo}>
-                <Text style={styles.medicationName}>Aspirin</Text>
-                <Text style={styles.medicationDose}>100mg pill, 100mg mg</Text>
-                <Text style={styles.medicationTime}>Scheduled: 08:00</Text>
+          {todayMedications.length === 0 ? (
+            <Text style={styles.emptyMedicationText}>No medications scheduled for today</Text>
+          ) : (
+            todayMedications.map((med) => (
+              <View key={med.id} style={styles.medicationCard}>
+                <View style={styles.medicationLeft}>
+                  <Text style={styles.pillIcon}>💊</Text>
+                  <View style={styles.medicationInfo}>
+                    <Text style={med.taken ? styles.medicationNameTaken : styles.medicationName}>
+                      {med.name}
+                    </Text>
+                    <Text style={med.taken ? styles.medicationDoseTaken : styles.medicationDose}>
+                      {med.dosage}
+                    </Text>
+                    <Text style={med.taken ? styles.medicationTimeTaken : styles.medicationTime}>
+                      Scheduled: {med.time.join(', ')}
+                    </Text>
+                  </View>
+                </View>
+                <TouchableOpacity 
+                  style={med.taken ? styles.takenButton : styles.takeButton}
+                  onPress={() => toggleMedicationTaken(med.id)}
+                >
+                  <Text style={styles.takeButtonText}>
+                    {med.taken ? 'Taken' : 'Take Medication'}
+                  </Text>
+                </TouchableOpacity>
               </View>
-            </View>
-            <TouchableOpacity style={styles.takeButton}>
-              <Text style={styles.takeButtonText}>Take Medication</Text>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.medicationCard}>
-            <View style={styles.medicationLeft}>
-              <Text style={styles.pillIcon}>💊</Text>
-              <View style={styles.medicationInfo}>
-                <Text style={styles.medicationName}>Vitamin D</Text>
-                <Text style={styles.medicationDose}>1000 IU, 1000 IU IU</Text>
-                <Text style={styles.medicationTime}>Scheduled: 09:00</Text>
-              </View>
-            </View>
-            <TouchableOpacity style={styles.takeButton}>
-              <Text style={styles.takeButtonText}>Take Medication</Text>
-            </TouchableOpacity>
-          </View>
+            ))
+          )}
         </View>
 
         <View style={styles.articlesSection}>
