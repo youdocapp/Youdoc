@@ -342,7 +342,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     profileSection: {
       alignItems: 'center',
       paddingVertical: 32,
-      backgroundColor: colors.background,
+      backgroundColor: colors.card,
     },
     avatarContainer: {
       position: 'relative',
@@ -671,49 +671,31 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
             <View style={styles.divider} />
 
-            <View style={styles.infoRow}>
+            <TouchableOpacity 
+              style={styles.infoRow}
+              disabled={!isEditing}
+            >
               <View style={[styles.infoIcon, { backgroundColor: '#DBEAFE' }]}>
                 <Hand size={20} color="#3B82F6" />
               </View>
               <Text style={styles.infoLabel}>Height</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.infoInput}
-                  value={height}
-                  onChangeText={setHeight}
-                  placeholder="Enter height"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              ) : (
-                <>
-                  <Text style={styles.infoValue}>{height}</Text>
-                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                </>
-              )}
-            </View>
+              <Text style={styles.infoValue}>{height}</Text>
+              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 
-            <View style={styles.infoRow}>
+            <TouchableOpacity 
+              style={styles.infoRow}
+              disabled={!isEditing}
+            >
               <View style={[styles.infoIcon, { backgroundColor: '#D1FAE5' }]}>
                 <Target size={20} color="#10B981" />
               </View>
               <Text style={styles.infoLabel}>Weight</Text>
-              {isEditing ? (
-                <TextInput
-                  style={styles.infoInput}
-                  value={weight}
-                  onChangeText={setWeight}
-                  placeholder="Enter weight"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              ) : (
-                <>
-                  <Text style={styles.infoValue}>{weight}</Text>
-                  <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
-                </>
-              )}
-            </View>
+              <Text style={styles.infoValue}>{weight}</Text>
+              <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />
+            </TouchableOpacity>
 
             <View style={styles.divider} />
 

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
 import { ChevronLeft, Heart, Bookmark, MessageCircle, Send } from 'lucide-react-native';
 import { articles as allArticlesData } from '@/constants/articles';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ArticleDetailScreenProps {
   onBack: () => void;
@@ -18,6 +19,7 @@ interface Comment {
 }
 
 const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, articleId }) => {
+  const { colors } = useTheme();
   const [commentText, setCommentText] = useState<string>('');
   const [comments, setComments] = useState<Comment[]>([
     {
@@ -70,10 +72,10 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       paddingTop: 60,
       paddingBottom: 16,
       paddingHorizontal: 20,
@@ -81,13 +83,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       alignItems: 'center',
       justifyContent: 'space-between',
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     backButton: {
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center'
     },
@@ -99,7 +101,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       width: 40,
       height: 40,
       borderRadius: 20,
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       alignItems: 'center',
       justifyContent: 'center'
     },
@@ -120,7 +122,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       backgroundColor: '#E5E7EB'
     },
     articleContent: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       paddingHorizontal: 20,
       paddingTop: 24,
       paddingBottom: 32
@@ -145,7 +147,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     title: {
       fontSize: 28,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 16,
       lineHeight: 36
     },
@@ -155,7 +157,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       marginBottom: 24,
       paddingBottom: 24,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     authorInfo: {
       flex: 1
@@ -163,26 +165,26 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     authorName: {
       fontSize: 15,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 4
     },
     metaDetails: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     readTime: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       fontWeight: '500'
     },
     body: {
       fontSize: 16,
-      color: '#374151',
+      color: colors.textSecondary,
       lineHeight: 26,
       marginBottom: 32
     },
     commentsSection: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       marginTop: 8,
       paddingHorizontal: 20,
       paddingTop: 24,
@@ -196,14 +198,14 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     commentsTitle: {
       fontSize: 20,
       fontWeight: '700',
-      color: '#1F2937',
+      color: colors.text,
       marginLeft: 8
     },
     commentCard: {
       marginBottom: 20,
       paddingBottom: 20,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     commentHeader: {
       flexDirection: 'row',
@@ -222,16 +224,16 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     commentAuthor: {
       fontSize: 15,
       fontWeight: '600',
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     commentTimestamp: {
       fontSize: 12,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     commentText: {
       fontSize: 15,
-      color: '#374151',
+      color: colors.textSecondary,
       lineHeight: 22,
       marginBottom: 8
     },
@@ -248,13 +250,13 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     },
     likeCount: {
       fontSize: 13,
-      color: '#6B7280',
+      color: colors.textSecondary,
       marginLeft: 4
     },
     inputContainer: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderTopWidth: 1,
-      borderTopColor: '#E5E7EB',
+      borderTopColor: colors.border,
       paddingHorizontal: 20,
       paddingVertical: 12,
       paddingBottom: Platform.OS === 'ios' ? 32 : 12
@@ -262,7 +264,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     inputWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
-      backgroundColor: '#F3F4F6',
+      backgroundColor: colors.card,
       borderRadius: 24,
       paddingHorizontal: 16,
       paddingVertical: 8
@@ -270,7 +272,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
     input: {
       flex: 1,
       fontSize: 15,
-      color: '#1F2937',
+      color: colors.text,
       paddingVertical: 8,
       maxHeight: 100
     },
@@ -287,7 +289,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       width: 36,
       height: 36,
       borderRadius: 18,
-      backgroundColor: '#E5E7EB',
+      backgroundColor: colors.border,
       alignItems: 'center',
       justifyContent: 'center',
       marginLeft: 8
@@ -303,7 +305,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
       >
         <View style={styles.header}>
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <ChevronLeft size={24} color="#1F2937" />
+            <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
           <View style={styles.headerActions}>
             <TouchableOpacity 
@@ -322,8 +324,8 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
             >
               <Bookmark 
                 size={20} 
-                color="#6B7280" 
-                fill={isBookmarked ? '#6B7280' : 'none'}
+                color={colors.textSecondary} 
+                fill={isBookmarked ? colors.textSecondary : 'none'}
               />
             </TouchableOpacity>
           </View>
@@ -393,7 +395,7 @@ const ArticleDetailScreen: React.FC<ArticleDetailScreenProps> = ({ onBack, artic
             <TextInput
               style={styles.input}
               placeholder="Add a comment..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.textSecondary}
               value={commentText}
               onChangeText={setCommentText}
               multiline

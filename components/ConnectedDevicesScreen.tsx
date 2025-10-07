@@ -26,12 +26,14 @@ import {
   X,
 } from 'lucide-react-native';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface ConnectedDevicesScreenProps {
   onBack?: () => void;
 }
 
 const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack }) => {
+  const { colors } = useTheme();
   const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
     useHealthTracker();
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
@@ -76,16 +78,6 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     }
   };
 
-  if (isLoading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#4F7FFF" />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
   const handleAddDevice = () => {
     setShowAddDeviceModal(true);
   };
@@ -129,12 +121,313 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     Alert.alert('Success', `${deviceName} has been added to your devices.`);
   };
 
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.card,
+    },
+    topHeader: {
+      backgroundColor: colors.background,
+      paddingTop: 60,
+      paddingBottom: 16,
+      paddingHorizontal: 20,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    backButton: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    topHeaderTitle: {
+      fontSize: 18,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    loadingContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    header: {
+      padding: 20,
+      paddingTop: 16,
+      backgroundColor: colors.background,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    headerSubtitle: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+    },
+    syncSection: {
+      padding: 20,
+    },
+    syncButton: {
+      backgroundColor: '#4F7FFF',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
+      borderRadius: 12,
+      gap: 8,
+    },
+    syncButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    devicesSection: {
+      paddingHorizontal: 20,
+      gap: 12,
+    },
+    addDeviceButton: {
+      backgroundColor: '#EEF2FF',
+      borderRadius: 16,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      borderWidth: 2,
+      borderColor: '#4F7FFF',
+      borderStyle: 'dashed',
+      marginBottom: 12,
+    },
+    addDeviceIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#FFFFFF',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    addDeviceText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: '#4F7FFF',
+    },
+    addDeviceSubtext: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginTop: 2,
+    },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      justifyContent: 'flex-end',
+    },
+    modalContent: {
+      backgroundColor: colors.background,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      maxHeight: '80%',
+    },
+    modalHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: 20,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border,
+    },
+    modalTitle: {
+      fontSize: 20,
+      fontWeight: '700',
+      color: colors.text,
+    },
+    modalBody: {
+      padding: 20,
+    },
+    scanButton: {
+      backgroundColor: '#4F7FFF',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 14,
+      borderRadius: 12,
+      gap: 8,
+      marginBottom: 16,
+    },
+    scanButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    scanningContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: 16,
+      gap: 12,
+    },
+    scanningText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    devicesListContainer: {
+      marginBottom: 16,
+    },
+    devicesListTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    availableDeviceItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 12,
+      backgroundColor: colors.card,
+      borderRadius: 12,
+      marginBottom: 8,
+      gap: 12,
+    },
+    availableDeviceName: {
+      flex: 1,
+      fontSize: 15,
+      color: colors.text,
+      fontWeight: '500',
+    },
+    connectText: {
+      fontSize: 14,
+      color: '#4F7FFF',
+      fontWeight: '600',
+    },
+    divider: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: 20,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: colors.border,
+    },
+    dividerText: {
+      marginHorizontal: 16,
+      fontSize: 13,
+      color: colors.textSecondary,
+      fontWeight: '600',
+    },
+    inputLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 8,
+    },
+    input: {
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 15,
+      color: colors.text,
+      marginBottom: 16,
+    },
+    addButton: {
+      backgroundColor: '#4F7FFF',
+      paddingVertical: 14,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    addButtonText: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    deviceCard: {
+      backgroundColor: colors.background,
+      borderRadius: 16,
+      padding: 16,
+      flexDirection: 'row',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    deviceIcon: {
+      width: 56,
+      height: 56,
+      borderRadius: 28,
+      backgroundColor: '#EEF2FF',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: 16,
+    },
+    deviceInfo: {
+      flex: 1,
+    },
+    deviceHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+      marginBottom: 4,
+    },
+    deviceName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+    },
+    deviceStatus: {
+      fontSize: 13,
+      color: colors.textSecondary,
+      marginBottom: 2,
+    },
+    lastSync: {
+      fontSize: 12,
+      color: colors.textSecondary,
+    },
+    infoSection: {
+      padding: 20,
+    },
+    infoCard: {
+      backgroundColor: '#EEF2FF',
+      borderRadius: 16,
+      padding: 20,
+    },
+    infoTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text,
+      marginBottom: 12,
+    },
+    infoText: {
+      fontSize: 14,
+      color: colors.textSecondary,
+      lineHeight: 20,
+      marginBottom: 8,
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#4F7FFF" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.topHeader}>
         {onBack && (
           <TouchableOpacity style={styles.backButton} onPress={onBack}>
-            <ChevronLeft size={24} color="#1F2937" />
+            <ChevronLeft size={24} color={colors.text} />
           </TouchableOpacity>
         )}
         <Text style={styles.topHeaderTitle}>Connected Devices</Text>
@@ -223,7 +516,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
                 setAvailableDevices([]);
                 setDeviceName('');
               }}>
-                <X size={24} color="#6B7280" />
+                <X size={24} color={colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -275,7 +568,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
                 placeholder="Enter device name"
                 value={deviceName}
                 onChangeText={setDeviceName}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.textSecondary}
               />
 
               <TouchableOpacity 
@@ -291,294 +584,5 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-  },
-  topHeader: {
-    backgroundColor: '#FFFFFF',
-    paddingTop: 60,
-    paddingBottom: 16,
-    paddingHorizontal: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  topHeaderTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  header: {
-    padding: 20,
-    paddingTop: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
-  },
-  syncSection: {
-    padding: 20,
-  },
-  syncButton: {
-    backgroundColor: '#4F7FFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  syncButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  devicesSection: {
-    paddingHorizontal: 20,
-    gap: 12,
-  },
-  addDeviceButton: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#4F7FFF',
-    borderStyle: 'dashed',
-    marginBottom: 12,
-  },
-  addDeviceIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  addDeviceText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#4F7FFF',
-  },
-  addDeviceSubtext: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginTop: 2,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1F2937',
-  },
-  modalBody: {
-    padding: 20,
-  },
-  scanButton: {
-    backgroundColor: '#4F7FFF',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-    marginBottom: 16,
-  },
-  scanButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  scanningContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    gap: 12,
-  },
-  scanningText: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  devicesListContainer: {
-    marginBottom: 16,
-  },
-  devicesListTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  availableDeviceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 12,
-    marginBottom: 8,
-    gap: 12,
-  },
-  availableDeviceName: {
-    flex: 1,
-    fontSize: 15,
-    color: '#1F2937',
-    fontWeight: '500',
-  },
-  connectText: {
-    fontSize: 14,
-    color: '#4F7FFF',
-    fontWeight: '600',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E5E7EB',
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 13,
-    color: '#9CA3AF',
-    fontWeight: '600',
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#F9FAFB',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    color: '#1F2937',
-    marginBottom: 16,
-  },
-  addButton: {
-    backgroundColor: '#4F7FFF',
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  addButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deviceCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  deviceIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#EEF2FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 16,
-  },
-  deviceInfo: {
-    flex: 1,
-  },
-  deviceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 4,
-  },
-  deviceName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  deviceStatus: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginBottom: 2,
-  },
-  lastSync: {
-    fontSize: 12,
-    color: '#9CA3AF',
-  },
-  infoSection: {
-    padding: 20,
-  },
-  infoCard: {
-    backgroundColor: '#EEF2FF',
-    borderRadius: 16,
-    padding: 20,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: 12,
-  },
-  infoText: {
-    fontSize: 14,
-    color: '#6B7280',
-    lineHeight: 20,
-    marginBottom: 8,
-  },
-});
 
 export default ConnectedDevicesScreen;

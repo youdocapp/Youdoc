@@ -1,12 +1,15 @@
 import React from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { ChevronLeft, ChevronRight, Heart, Users, Target, Award, Globe, Github, Twitter, Linkedin } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface AboutScreenProps {
   onBack: () => void;
 }
 
 const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
+  const { colors } = useTheme();
+  
   const handleWebsite = () => {
     Linking.openURL('https://youdoc.com');
   };
@@ -22,7 +25,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -31,8 +34,10 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
-      position: 'relative' as const
+      backgroundColor: colors.background,
+      position: 'relative' as const,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border
     },
     backButton: {
       position: 'absolute' as const,
@@ -42,14 +47,14 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     logoSection: {
       alignItems: 'center' as const,
       paddingVertical: 40,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     logoContainer: {
       width: 80,
@@ -68,17 +73,17 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     appName: {
       fontSize: 28,
       fontWeight: '700' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 8
     },
     version: {
       fontSize: 14,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 4
     },
     tagline: {
       fontSize: 15,
-      color: '#6B7280',
+      color: colors.textSecondary,
       textAlign: 'center' as const,
       paddingHorizontal: 40
     },
@@ -89,23 +94,25 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     sectionTitle: {
       fontSize: 13,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
     },
     card: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       overflow: 'hidden' as const,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     infoCard: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       padding: 20,
       marginBottom: 16,
@@ -113,7 +120,9 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     infoCardHeader: {
       flexDirection: 'row' as const,
@@ -131,11 +140,11 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     infoTitle: {
       fontSize: 18,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     infoText: {
       fontSize: 15,
-      color: '#6B7280',
+      color: colors.textSecondary,
       lineHeight: 22
     },
     menuItem: {
@@ -144,7 +153,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
       paddingHorizontal: 16,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     menuItemLast: {
       borderBottomWidth: 0
@@ -168,12 +177,12 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     menuItemText: {
       fontSize: 16,
       fontWeight: '500' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     menuItemSubtext: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     menuItemRight: {
       marginLeft: 12
@@ -188,7 +197,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
       width: 48,
       height: 48,
       borderRadius: 24,
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       alignItems: 'center' as const,
       justifyContent: 'center' as const,
       shadowColor: '#000',
@@ -204,7 +213,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     },
     footerText: {
       fontSize: 13,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       textAlign: 'center' as const,
       lineHeight: 20
     }
@@ -214,7 +223,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>About YouDoc</Text>
       </View>
@@ -280,7 +289,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
                   <Text style={styles.menuItemSubtext}>Visit youdoc.com</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem}>
@@ -293,7 +302,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
                   <Text style={styles.menuItemSubtext}>Meet the people behind YouDoc</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]}>
@@ -306,7 +315,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
                   <Text style={styles.menuItemSubtext}>Join our team</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -321,7 +330,7 @@ const AboutScreen: React.FC<AboutScreenProps> = ({ onBack }) => {
               <Linkedin size={20} color="#0A66C2" />
             </TouchableOpacity>
             <TouchableOpacity style={styles.socialButton}>
-              <Github size={20} color="#1F2937" />
+              <Github size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>

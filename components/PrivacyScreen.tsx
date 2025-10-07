@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
 import { ChevronLeft, ChevronRight, Lock, Eye, EyeOff, Shield, FileText, Scale, Key, Download, Trash2 } from 'lucide-react-native';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface PrivacyScreenProps {
   onBack: () => void;
@@ -21,6 +22,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
   onDownloadData,
   onDeleteData
 }) => {
+  const { colors } = useTheme();
   const [shareHealthData, setShareHealthData] = useState<boolean>(false);
   const [shareAnalytics, setShareAnalytics] = useState<boolean>(true);
   const [twoFactorAuth, setTwoFactorAuth] = useState<boolean>(false);
@@ -28,7 +30,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      backgroundColor: '#F9FAFB'
+      backgroundColor: colors.card
     },
     header: {
       flexDirection: 'row' as const,
@@ -37,8 +39,10 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 16,
       paddingBottom: 16,
-      backgroundColor: '#FFFFFF',
-      position: 'relative' as const
+      backgroundColor: colors.background,
+      position: 'relative' as const,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.border
     },
     backButton: {
       position: 'absolute' as const,
@@ -48,7 +52,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
     title: {
       fontSize: 20,
       fontWeight: '600' as const,
-      color: '#1F2937'
+      color: colors.text
     },
     section: {
       marginTop: 24,
@@ -57,20 +61,22 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
     sectionTitle: {
       fontSize: 13,
       fontWeight: '600' as const,
-      color: '#9CA3AF',
+      color: colors.textSecondary,
       marginBottom: 12,
       textTransform: 'uppercase' as const,
       letterSpacing: 0.5
     },
     card: {
-      backgroundColor: '#FFFFFF',
+      backgroundColor: colors.background,
       borderRadius: 16,
       overflow: 'hidden' as const,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.05,
       shadowRadius: 2,
-      elevation: 2
+      elevation: 2,
+      borderWidth: 1,
+      borderColor: colors.border
     },
     menuItem: {
       flexDirection: 'row' as const,
@@ -78,7 +84,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
       paddingHorizontal: 16,
       paddingVertical: 16,
       borderBottomWidth: 1,
-      borderBottomColor: '#F3F4F6'
+      borderBottomColor: colors.border
     },
     menuItemLast: {
       borderBottomWidth: 0
@@ -102,12 +108,12 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
     menuItemText: {
       fontSize: 16,
       fontWeight: '500' as const,
-      color: '#1F2937',
+      color: colors.text,
       marginBottom: 2
     },
     menuItemSubtext: {
       fontSize: 13,
-      color: '#9CA3AF'
+      color: colors.textSecondary
     },
     menuItemRight: {
       marginLeft: 12
@@ -121,7 +127,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity style={styles.backButton} onPress={onBack}>
-          <ChevronLeft size={24} color="#1F2937" />
+          <ChevronLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <Text style={styles.title}>Privacy & Security</Text>
       </View>
@@ -143,7 +149,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
               <Switch
                 value={shareHealthData}
                 onValueChange={setShareHealthData}
-                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                trackColor={{ false: colors.border, true: '#4F7FFF' }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -161,7 +167,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
               <Switch
                 value={shareAnalytics}
                 onValueChange={setShareAnalytics}
-                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                trackColor={{ false: colors.border, true: '#4F7FFF' }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -184,7 +190,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
               <Switch
                 value={twoFactorAuth}
                 onValueChange={setTwoFactorAuth}
-                trackColor={{ false: '#E5E7EB', true: '#4F7FFF' }}
+                trackColor={{ false: colors.border, true: '#4F7FFF' }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -199,7 +205,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Update your account password</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -217,7 +223,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>How we handle your data</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={onTermsOfService}>
@@ -230,7 +236,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Our terms and conditions</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onHIPAACompliance}>
@@ -243,7 +249,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Healthcare data protection</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
@@ -261,7 +267,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Export all your health data</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
 
             <TouchableOpacity style={[styles.menuItem, styles.menuItemLast]} onPress={onDeleteData}>
@@ -274,7 +280,7 @@ const PrivacyScreen: React.FC<PrivacyScreenProps> = ({
                   <Text style={styles.menuItemSubtext}>Permanently remove all your data</Text>
                 </View>
               </View>
-              <ChevronRight size={20} color="#9CA3AF" style={styles.menuItemRight} />
+              <ChevronRight size={20} color={colors.textSecondary} style={styles.menuItemRight} />
             </TouchableOpacity>
           </View>
         </View>
