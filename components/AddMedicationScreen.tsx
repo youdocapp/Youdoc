@@ -230,11 +230,27 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
     const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
 
+    const dayScrollRef = React.useRef<ScrollView>(null);
+    const monthScrollRef = React.useRef<ScrollView>(null);
+    const yearScrollRef = React.useRef<ScrollView>(null);
+
+    const ITEM_HEIGHT = 44;
+    const VISIBLE_ITEMS = 5;
+
     React.useEffect(() => {
       if (visible) {
         setSelectedDay(currentDate.getDate());
         setSelectedMonth(currentDate.toLocaleDateString('en-US', { month: 'long' }));
         setSelectedYear(currentDate.getFullYear());
+        
+        setTimeout(() => {
+          const monthIdx = months.indexOf(currentDate.toLocaleDateString('en-US', { month: 'long' }));
+          const yearIdx = years.indexOf(currentDate.getFullYear());
+          
+          dayScrollRef.current?.scrollTo({ y: (currentDate.getDate() - 1) * ITEM_HEIGHT, animated: false });
+          monthScrollRef.current?.scrollTo({ y: monthIdx * ITEM_HEIGHT, animated: false });
+          yearScrollRef.current?.scrollTo({ y: yearIdx * ITEM_HEIGHT, animated: false });
+        }, 100);
       }
     }, [visible, currentDate]);
 
@@ -242,6 +258,33 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     const daysInMonth = new Date(selectedYear, monthIndex + 1, 0).getDate();
     const days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
     const years = Array.from({ length: 200 }, (_, i) => currentYear + 50 - i);
+
+    const handleDayScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const day = days[index];
+      if (day && day !== selectedDay) {
+        setSelectedDay(day);
+      }
+    };
+
+    const handleMonthScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const month = months[index];
+      if (month && month !== selectedMonth) {
+        setSelectedMonth(month);
+      }
+    };
+
+    const handleYearScroll = (event: any) => {
+      const offsetY = event.nativeEvent.contentOffset.y;
+      const index = Math.round(offsetY / ITEM_HEIGHT);
+      const year = years[index];
+      if (year && year !== selectedYear) {
+        setSelectedYear(year);
+      }
+    };
 
     const handleConfirm = () => {
       const monthIdx = months.indexOf(selectedMonth);
@@ -252,111 +295,81 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       onClose();
     };
 
+    const renderWheelItem = (item: number | string, isSelected: boolean) => {
+      return (
+        <View style={[datePickerStyles.wheelItem, { height: ITEM_HEIGHT }]}>
+          <Text style={[
+            datePickerStyles.wheelItemText,
+            isSelected && datePickerStyles.wheelItemTextSelected
+          ]}>
+            {item}
+          </Text>
+        </View>
+      );
+    };
+
     return (
-      <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
         <View style={datePickerStyles.modalOverlay}>
+          <TouchableOpacity 
+            style={{ flex: 1 }} 
+            activeOpacity={1} 
+            onPress={onClose}
+          />
           <View style={datePickerStyles.modalContent}>
-            <Text style={datePickerStyles.modalTitle}>{title}</Text>
+            <View style={datePickerStyles.header}>
+              <TouchableOpacity onPress={onClose}>
+                <Text style={datePickerStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <Text style={datePickerStyles.modalTitle}>{title}</Text>
+              <TouchableOpacity onPress={handleConfirm}>
+                <Text style={datePickerStyles.doneText}>Done</Text>
+              </TouchableOpacity>
+            </View>
             
-            <View style={datePickerStyles.wheelContainer}>
-              <View style={datePickerStyles.wheelColumn}>
-                <ScrollView 
-                  showsVerticalScrollIndicator={false}
-                  snapToInterval={50}
-                  decelerationRate="fast"
-                >
-                  {days.map((day) => (
-                    <TouchableOpacity
-                      key={day}
-                      style={[
-                        datePickerStyles.wheelItem,
-                        selectedDay === day && datePickerStyles.wheelItemSelected
-                      ]}
-                      onPress={() => setSelectedDay(day)}
-                    >
-                      <Text style={[
-                        datePickerStyles.wheelItemText,
-                        selectedDay === day && datePickerStyles.wheelItemTextSelected
-                      ]}>
-                        {day}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+            <View style={datePickerStyles.pickerContainer}>
+              <View style={datePickerStyles.selectionIndicator} />
+              
+              <View style={datePickerStyles.wheelContainer}>
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={monthScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleMonthScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {months.map((month) => renderWheelItem(month, selectedMonth === month))}
+                  </ScrollView>
+                </View>
+
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={dayScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleDayScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {days.map((day) => renderWheelItem(day, selectedDay === day))}
+                  </ScrollView>
+                </View>
+
+                <View style={datePickerStyles.wheelColumn}>
+                  <ScrollView 
+                    ref={yearScrollRef}
+                    showsVerticalScrollIndicator={false}
+                    snapToInterval={ITEM_HEIGHT}
+                    decelerationRate="fast"
+                    onMomentumScrollEnd={handleYearScroll}
+                    contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
+                  >
+                    {years.map((year) => renderWheelItem(year, selectedYear === year))}
+                  </ScrollView>
+                </View>
               </View>
-
-              <View style={datePickerStyles.wheelColumn}>
-                <ScrollView 
-                  showsVerticalScrollIndicator={false}
-                  snapToInterval={50}
-                  decelerationRate="fast"
-                >
-                  {months.map((month) => (
-                    <TouchableOpacity
-                      key={month}
-                      style={[
-                        datePickerStyles.wheelItem,
-                        selectedMonth === month && datePickerStyles.wheelItemSelected
-                      ]}
-                      onPress={() => setSelectedMonth(month)}
-                    >
-                      <Text style={[
-                        datePickerStyles.wheelItemText,
-                        selectedMonth === month && datePickerStyles.wheelItemTextSelected
-                      ]}>
-                        {month}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={datePickerStyles.wheelColumn}>
-                <ScrollView 
-                  showsVerticalScrollIndicator={false}
-                  snapToInterval={50}
-                  decelerationRate="fast"
-                >
-                  {years.map((year) => (
-                    <TouchableOpacity
-                      key={year}
-                      style={[
-                        datePickerStyles.wheelItem,
-                        selectedYear === year && datePickerStyles.wheelItemSelected
-                      ]}
-                      onPress={() => setSelectedYear(year)}
-                    >
-                      <Text style={[
-                        datePickerStyles.wheelItemText,
-                        selectedYear === year && datePickerStyles.wheelItemTextSelected
-                      ]}>
-                        {year}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            </View>
-
-            <View style={datePickerStyles.datePreview}>
-              <Text style={datePickerStyles.datePreviewText}>
-                {selectedDay} {selectedMonth} {selectedYear}
-              </Text>
-            </View>
-
-            <View style={datePickerStyles.modalButtons}>
-              <TouchableOpacity
-                style={[datePickerStyles.modalButton, datePickerStyles.cancelButton]}
-                onPress={onClose}
-              >
-                <Text style={datePickerStyles.buttonTextDark}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[datePickerStyles.modalButton, datePickerStyles.confirmButton]}
-                onPress={handleConfirm}
-              >
-                <Text style={datePickerStyles.buttonTextWhite}>Confirm</Text>
-              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -679,95 +692,81 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const datePickerStyles = StyleSheet.create({
     modalOverlay: {
       flex: 1,
-      backgroundColor: 'rgba(0, 0, 0, 0.5)',
-      justifyContent: 'center' as const,
-      alignItems: 'center' as const
+      backgroundColor: 'rgba(0, 0, 0, 0.4)',
+      justifyContent: 'flex-end' as const
     },
     modalContent: {
-      backgroundColor: '#FFFFFF',
-      borderRadius: 20,
-      width: '85%',
-      maxWidth: 400
+      backgroundColor: '#F9FAFB',
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      paddingBottom: Platform.OS === 'ios' ? 34 : 20
+    },
+    header: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
+      paddingHorizontal: 20,
+      paddingVertical: 16,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+      backgroundColor: '#FFFFFF'
     },
     modalTitle: {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: '600' as const,
-      color: '#1F2937',
-      textAlign: 'center' as const,
-      paddingTop: 20,
-      paddingBottom: 16
+      color: '#1F2937'
+    },
+    cancelText: {
+      fontSize: 17,
+      color: '#4F7FFF',
+      fontWeight: '400' as const
+    },
+    doneText: {
+      fontSize: 17,
+      color: '#4F7FFF',
+      fontWeight: '600' as const
+    },
+    pickerContainer: {
+      position: 'relative' as const,
+      backgroundColor: '#FFFFFF',
+      marginTop: 1
+    },
+    selectionIndicator: {
+      position: 'absolute' as const,
+      top: '50%',
+      left: 0,
+      right: 0,
+      height: 44,
+      marginTop: -22,
+      backgroundColor: 'rgba(0, 0, 0, 0.03)',
+      borderTopWidth: 1,
+      borderBottomWidth: 1,
+      borderColor: '#E5E7EB',
+      zIndex: 1,
+      pointerEvents: 'none' as const
     },
     wheelContainer: {
       flexDirection: 'row' as const,
-      justifyContent: 'space-around' as const,
-      paddingVertical: 20,
-      paddingHorizontal: 16,
-      gap: 8
+      height: 220,
+      paddingHorizontal: 20
     },
     wheelColumn: {
       flex: 1,
-      height: 200,
-      backgroundColor: '#F9FAFB',
-      borderRadius: 12,
       overflow: 'hidden' as const
     },
     wheelItem: {
-      height: 50,
+      height: 44,
       justifyContent: 'center' as const,
-      alignItems: 'center' as const,
-      paddingHorizontal: 8
-    },
-    wheelItemText: {
-      fontSize: 16,
-      color: '#6B7280'
-    },
-    wheelItemSelected: {
-      backgroundColor: 'rgba(79, 127, 255, 0.1)'
-    },
-    wheelItemTextSelected: {
-      fontSize: 18,
-      fontWeight: '600' as const,
-      color: '#1F2937'
-    },
-    datePreview: {
-      paddingVertical: 20,
-      paddingHorizontal: 24,
-      borderTopWidth: 1,
-      borderTopColor: '#F3F4F6',
       alignItems: 'center' as const
     },
-    datePreviewText: {
-      fontSize: 18,
-      fontWeight: '600' as const,
+    wheelItemText: {
+      fontSize: 20,
+      color: '#9CA3AF'
+    },
+    wheelItemTextSelected: {
+      fontSize: 23,
+      fontWeight: '500' as const,
       color: '#1F2937'
-    },
-    modalButtons: {
-      flexDirection: 'row' as const,
-      justifyContent: 'space-between' as const
-    },
-    modalButton: {
-      flex: 1,
-      paddingVertical: 16
-    },
-    cancelButton: {
-      backgroundColor: '#F3F4F6',
-      borderBottomLeftRadius: 20
-    },
-    confirmButton: {
-      backgroundColor: '#4F7FFF',
-      borderBottomRightRadius: 20
-    },
-    buttonTextWhite: {
-      color: 'white',
-      textAlign: 'center' as const,
-      fontWeight: '600' as const,
-      fontSize: 16
-    },
-    buttonTextDark: {
-      color: '#1F2937',
-      textAlign: 'center' as const,
-      fontWeight: '600' as const,
-      fontSize: 16
     }
   });
 
