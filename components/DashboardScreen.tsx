@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
-import { Settings, Search, Stethoscope, Syringe, MapPin, Activity, Moon, Flame } from 'lucide-react-native';
+import { Settings, Search, Stethoscope, Syringe, MapPin, Moon, Flame, Heart, Footprints, TrendingUp } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
@@ -151,38 +151,128 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       paddingHorizontal: 20,
       marginBottom: 16
     },
-    healthTrackerGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
+    healthTrackerContainer: {
       paddingHorizontal: 20,
-      gap: 12,
       marginBottom: 24
     },
-    trackerCard: {
-      width: '48%',
+    healthTrackerHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 16
+    },
+    viewAllButton: {
+      fontSize: 14,
+      color: colors.primary,
+      fontWeight: '600'
+    },
+    healthTrackerGrid: {
+      gap: 12
+    },
+    trackerRow: {
+      flexDirection: 'row',
+      gap: 12,
+      marginBottom: 12
+    },
+    trackerCardLarge: {
+      flex: 1,
       backgroundColor: colors.background,
-      borderRadius: 16,
-      padding: 20,
+      borderRadius: 20,
+      padding: 24,
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 5,
       borderWidth: 1,
       borderColor: colors.border
     },
-    trackerIcon: {
-      marginBottom: 12
+    trackerCardSmall: {
+      flex: 1,
+      backgroundColor: colors.background,
+      borderRadius: 20,
+      padding: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 5,
+      borderWidth: 1,
+      borderColor: colors.border
+    },
+    trackerCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 16
+    },
+    trackerIconContainer: {
+      width: 48,
+      height: 48,
+      borderRadius: 24,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    trackerBadge: {
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+      borderRadius: 12,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4
+    },
+    trackerBadgeText: {
+      fontSize: 11,
+      fontWeight: '600'
+    },
+    trackerValueContainer: {
+      marginBottom: 8
     },
     trackerValue: {
-      fontSize: 28,
-      fontWeight: '700',
+      fontSize: 36,
+      fontWeight: '800',
       color: colors.text,
-      marginBottom: 4
+      letterSpacing: -1
+    },
+    trackerUnit: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.textSecondary,
+      marginLeft: 4
     },
     trackerLabel: {
-      fontSize: 13,
-      color: colors.textSecondary
+      fontSize: 14,
+      color: colors.textSecondary,
+      fontWeight: '500',
+      marginBottom: 8
+    },
+    trackerProgress: {
+      height: 6,
+      backgroundColor: colors.border,
+      borderRadius: 3,
+      overflow: 'hidden',
+      marginTop: 8
+    },
+    trackerProgressFill: {
+      height: '100%',
+      borderRadius: 3
+    },
+    trackerSubtext: {
+      fontSize: 12,
+      color: colors.textSecondary,
+      marginTop: 8
+    },
+    heartRateGradient: {
+      backgroundColor: '#FEE2E2'
+    },
+    stepsGradient: {
+      backgroundColor: '#DBEAFE'
+    },
+    sleepGradient: {
+      backgroundColor: '#E0E7FF'
+    },
+    caloriesGradient: {
+      backgroundColor: '#FED7AA'
     },
     medicationSection: {
       paddingHorizontal: 20,
@@ -411,30 +501,84 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
 
 
 
-        <Text style={styles.sectionTitle}>Health Tracker</Text>
-        <View style={styles.healthTrackerGrid}>
-          <View style={styles.trackerCard}>
-            <Activity size={24} color="#EF4444" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>{healthData.heartRate} <Text style={{ fontSize: 16, fontWeight: '400' }}>bpm</Text></Text>
-            <Text style={styles.trackerLabel}>Heart Rate</Text>
+        <View style={styles.healthTrackerContainer}>
+          <View style={styles.healthTrackerHeader}>
+            <Text style={styles.sectionTitle}>Health Tracker</Text>
+            <TouchableOpacity onPress={() => router.push('/connected-devices')}>
+              <Text style={styles.viewAllButton}>View All</Text>
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.trackerCard}>
-            <Activity size={24} color="#4F7FFF" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>{healthData.distance.toFixed(1)} <Text style={{ fontSize: 16, fontWeight: '400' }}>km</Text></Text>
-            <Text style={styles.trackerLabel}>Distance</Text>
-          </View>
+          <View style={styles.healthTrackerGrid}>
+            <View style={styles.trackerRow}>
+              <View style={styles.trackerCardLarge}>
+                <View style={styles.trackerCardHeader}>
+                  <View style={[styles.trackerIconContainer, styles.heartRateGradient]}>
+                    <Heart size={24} color="#EF4444" fill="#EF4444" />
+                  </View>
+                  <View style={[styles.trackerBadge, { backgroundColor: '#FEE2E2' }]}>
+                    <TrendingUp size={12} color="#EF4444" />
+                    <Text style={[styles.trackerBadgeText, { color: '#EF4444' }]}>Normal</Text>
+                  </View>
+                </View>
+                <Text style={styles.trackerLabel}>Heart Rate</Text>
+                <View style={styles.trackerValueContainer}>
+                  <Text style={styles.trackerValue}>
+                    {healthData.heartRate}
+                    <Text style={styles.trackerUnit}> bpm</Text>
+                  </Text>
+                </View>
+                <View style={styles.trackerProgress}>
+                  <View style={[styles.trackerProgressFill, { width: `${(healthData.heartRate / 120) * 100}%`, backgroundColor: '#EF4444' }]} />
+                </View>
+                <Text style={styles.trackerSubtext}>Resting: 60-100 bpm</Text>
+              </View>
 
-          <View style={styles.trackerCard}>
-            <Moon size={24} color="#4F7FFF" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>{healthData.sleep.toFixed(1)} <Text style={{ fontSize: 16, fontWeight: '400' }}>hrs</Text></Text>
-            <Text style={styles.trackerLabel}>Sleep</Text>
-          </View>
+              <View style={styles.trackerCardSmall}>
+                <View style={[styles.trackerIconContainer, styles.stepsGradient]}>
+                  <Footprints size={24} color="#3B82F6" />
+                </View>
+                <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Steps</Text>
+                <Text style={[styles.trackerValue, { fontSize: 28 }]}>
+                  {healthData.steps.toLocaleString()}
+                </Text>
+                <View style={[styles.trackerProgress, { marginTop: 12 }]}>
+                  <View style={[styles.trackerProgressFill, { width: `${(healthData.steps / 10000) * 100}%`, backgroundColor: '#3B82F6' }]} />
+                </View>
+                <Text style={styles.trackerSubtext}>Goal: 10,000</Text>
+              </View>
+            </View>
 
-          <View style={styles.trackerCard}>
-            <Flame size={24} color="#F97316" style={styles.trackerIcon} />
-            <Text style={styles.trackerValue}>{healthData.calories} <Text style={{ fontSize: 16, fontWeight: '400' }}>cals</Text></Text>
-            <Text style={styles.trackerLabel}>Calories</Text>
+            <View style={styles.trackerRow}>
+              <View style={styles.trackerCardSmall}>
+                <View style={[styles.trackerIconContainer, styles.sleepGradient]}>
+                  <Moon size={24} color="#6366F1" />
+                </View>
+                <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Sleep</Text>
+                <Text style={[styles.trackerValue, { fontSize: 28 }]}>
+                  {healthData.sleep.toFixed(1)}
+                  <Text style={[styles.trackerUnit, { fontSize: 16 }]}> hrs</Text>
+                </Text>
+                <View style={[styles.trackerProgress, { marginTop: 12 }]}>
+                  <View style={[styles.trackerProgressFill, { width: `${(healthData.sleep / 8) * 100}%`, backgroundColor: '#6366F1' }]} />
+                </View>
+                <Text style={styles.trackerSubtext}>Goal: 8 hrs</Text>
+              </View>
+
+              <View style={styles.trackerCardSmall}>
+                <View style={[styles.trackerIconContainer, styles.caloriesGradient]}>
+                  <Flame size={24} color="#F97316" />
+                </View>
+                <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Calories</Text>
+                <Text style={[styles.trackerValue, { fontSize: 28 }]}>
+                  {healthData.calories}
+                </Text>
+                <View style={[styles.trackerProgress, { marginTop: 12 }]}>
+                  <View style={[styles.trackerProgressFill, { width: `${(healthData.calories / 2000) * 100}%`, backgroundColor: '#F97316' }]} />
+                </View>
+                <Text style={styles.trackerSubtext}>Goal: 2,000</Text>
+              </View>
+            </View>
           </View>
         </View>
 
