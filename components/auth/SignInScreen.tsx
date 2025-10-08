@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
 
 interface SignInScreenProps {
@@ -11,6 +12,7 @@ interface SignInScreenProps {
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
   const { signIn } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -43,7 +45,8 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
         return;
       }
 
-      console.log('✅ Sign in successful, auth state will handle navigation');
+      console.log('✅ Sign in successful, navigating to dashboard');
+      router.replace('/dashboard');
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
