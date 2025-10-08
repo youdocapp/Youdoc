@@ -59,9 +59,18 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   };
 
   const handleCreateAccount = async () => {
+    console.log('🔘 Sign up button pressed');
+    console.log('📋 Form valid:', isFormValid());
+    console.log('📋 Form data:', { ...formData, password: '***', repeatPassword: '***' });
+    
     if (!isFormValid()) {
+      console.log('❌ Form validation failed');
       if (formData.password !== formData.repeatPassword) {
         Alert.alert('Password Mismatch', 'Passwords do not match.');
+        return;
+      }
+      if (!agreeToTerms) {
+        Alert.alert('Terms Required', 'Please agree to the terms to continue.');
         return;
       }
       Alert.alert('Invalid Form', 'Please fill in all fields correctly.');
@@ -333,6 +342,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
           <TouchableOpacity 
             onPress={handleCreateAccount}
+            activeOpacity={0.8}
             style={{
               width: '100%',
               backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#D1D5DB',
@@ -342,7 +352,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               marginBottom: 24,
               opacity: loading ? 0.7 : 1
             }}
-            disabled={!isFormValid() || loading}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="white" />
