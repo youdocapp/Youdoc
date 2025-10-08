@@ -105,14 +105,18 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    console.log('🔧 RootLayout - Fonts loaded:', loaded, 'Error:', error);
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
   if (!loaded && !error) {
+    console.log('⏳ Waiting for fonts to load...');
     return null;
   }
+
+  console.log('✅ RootLayout rendering with providers');
 
   return (
     <QueryClientProvider client={queryClient}>
