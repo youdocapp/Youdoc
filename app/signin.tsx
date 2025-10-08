@@ -6,12 +6,14 @@ import { useRouter } from 'expo-router';
 export default function SignInPage() {
   const router = useRouter();
 
+  console.log('📱 SignIn page rendered');
+
   return (
     <AuthThemeProvider>
       <SignInScreen 
         onForgotPassword={() => router.push('/forgot-password')}
         onSignUp={() => router.push('/signup')}
-        onBack={() => router.back()}
+        onBack={() => router.replace('/onboarding')}
       />
     </AuthThemeProvider>
   );

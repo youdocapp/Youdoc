@@ -10,13 +10,15 @@ export default function SignUpPage() {
   const [step, setStep] = useState<'signup' | 'verify'>('signup');
   const [formData, setFormData] = useState<any>(null);
 
+  console.log('📱 SignUp page rendered, step:', step);
+
   const handleSignUpNext = (data: any) => {
     setFormData(data);
     setStep('verify');
   };
 
   const handleVerified = () => {
-    router.push('/dashboard');
+    router.replace('/dashboard');
   };
 
   return (
@@ -25,7 +27,7 @@ export default function SignUpPage() {
         {step === 'signup' ? (
           <SignUpScreen 
             onNext={handleSignUpNext}
-            onBack={() => router.back()}
+            onBack={() => router.replace('/onboarding')}
           />
         ) : (
           <EmailVerificationScreen
