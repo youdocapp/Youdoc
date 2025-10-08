@@ -1,9 +1,12 @@
 import { protectedProcedure } from "../../../create-context";
 import { supabaseServer } from "../../../../lib/supabase-server";
+import type { Database } from "../../../../database/types";
 
-export const getProfileProcedure = protectedProcedure.query(async ({ ctx }) => {
-  const { data, error } = await supabaseServer
-    .from("profiles")
+type Profile = Database['public']['Tables']['profiles']['Row'];
+
+export const getProfileProcedure = protectedProcedure.query(async ({ ctx }): Promise<Profile> => {
+  const { data, error } = await (supabaseServer
+    .from("profiles") as any)
     .select("*")
     .eq("id", ctx.user.id)
     .single();
@@ -13,5 +16,5 @@ export const getProfileProcedure = protectedProcedure.query(async ({ ctx }) => {
     throw new Error("Failed to fetch profile");
   }
 
-  return data;
+  return data as Profile;
 });

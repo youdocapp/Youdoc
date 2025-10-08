@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Image, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Image, Alert, ActivityIndicator } from 'react-native';
 import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
 import * as ImagePicker from 'expo-image-picker';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
+import { trpc } from '@/lib/trpc';
+import { useUser } from '@/contexts/UserContext';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -29,10 +31,11 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onProfile
 }) => {
   const { colors } = useTheme();
+  const { user, setUser } = useUser();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [name, setName] = useState<string>('John Doe');
-  const [email, setEmail] = useState<string>('demo@youdoc.com');
-  const [phone, setPhone] = useState<string>('+1 (555) 123-4567');
+  const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [phone, setPhone] = useState<string>('');
   const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(1990, 4, 15));
   const [showGenderModal, setShowGenderModal] = useState<boolean>(false);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
@@ -40,14 +43,104 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [bloodType, setBloodType] = useState<string>('O+');
   const [height, setHeight] = useState<string>('5\'7"');
   const [weight, setWeight] = useState<string>('165 lbs');
-  const [address, setAddress] = useState<string>('123 Main Street, New York, NY 10001');
+  const [address, setAddress] = useState<string>('');
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [showBloodTypeModal, setShowBloodTypeModal] = useState<boolean>(false);
   const [showHeightModal, setShowHeightModal] = useState<boolean>(false);
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const handleSave = () => {
-    setIsEditing(false);
+  const profileQuery = trpc.profile.get.useQuery();
+  const updateProfileMutation = trpc.profile.update.useMutation();
+
+  useEffect(() => {
+    if (profileQuery.data) {
+      const profile = profileQuery.data;
+      setName(profile.full_name || '');
+      setEmail(user?.email || '');
+      setPhone(profile.phone_number || '');
+      if (profile.date_of_birth) {
+        setDateOfBirth(new Date(profile.date_of_birth));
+      }
+      if (profile.gender) {
+        const genderMap: Record<string, string> = {
+          'male': 'Male',
+          'female': 'Female',
+          'other': 'Other',
+          'prefer_not_to_say': 'Prefer not to say'
+        };
+        setGender(genderMap[profile.gender] || 'Male');
+      }
+      if (profile.blood_type) {
+        setBloodType(profile.blood_type);
+      }
+      if (profile.height_feet && profile.height_inches !== undefined) {
+        setHeight(`${profile.height_feet}'${profile.height_inches}"`);
+      }
+      if (profile.weight_lbs) {
+        setWeight(`${profile.weight_lbs} lbs`);
+      }
+      setAddress(profile.address || '');
+      if (profile.avatar_url) {
+        setProfileImage(profile.avatar_url);
+      }
+    }
+  }, [profileQuery.data, user]);
+
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      
+      const heightMatch = height.match(/(\d+)'(\d+)"/);
+      const heightFeet = heightMatch ? parseInt(heightMatch[1]) : undefined;
+      const heightInches = heightMatch ? parseInt(heightMatch[2]) : undefined;
+      
+      const weightMatch = weight.match(/(\d+)/);
+      const weightLbs = weightMatch ? parseInt(weightMatch[1]) : undefined;
+      
+      const genderMap: Record<string, 'male' | 'female' | 'other' | 'prefer_not_to_say'> = {
+        'Male': 'male',
+        'Female': 'female',
+        'Other': 'other',
+        'Prefer not to say': 'prefer_not_to_say'
+      };
+      
+      await updateProfileMutation.mutateAsync({
+        full_name: name,
+        date_of_birth: dateOfBirth.toISOString().split('T')[0],
+        gender: genderMap[gender],
+        phone_number: phone,
+        address: address,
+        height_feet: heightFeet,
+        height_inches: heightInches,
+        weight_lbs: weightLbs,
+        blood_type: bloodType as any,
+        avatar_url: profileImage || undefined,
+      });
+      
+      if (user) {
+        setUser({
+          ...user,
+          firstName: name.split(' ')[0] || '',
+          lastName: name.split(' ').slice(1).join(' ') || '',
+          dateOfBirth: dateOfBirth.toISOString().split('T')[0],
+          gender: gender,
+          bloodType: bloodType,
+          height: height,
+          weight: weight,
+        });
+      }
+      
+      await profileQuery.refetch();
+      
+      Alert.alert('Success', 'Profile updated successfully');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const pickImage = async () => {
@@ -917,6 +1010,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     },
   });
 
+  if (profileQuery.isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color="#4F7FFF" />
+          <Text style={{ marginTop: 16, color: colors.text }}>Loading profile...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -927,8 +1031,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         <TouchableOpacity 
           style={styles.editButton}
           onPress={() => isEditing ? handleSave() : setIsEditing(true)}
+          disabled={isSaving}
         >
-          <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
+          {isSaving ? (
+            <ActivityIndicator size="small" color="#FFFFFF" />
+          ) : (
+            <Text style={styles.editButtonText}>{isEditing ? 'Save' : 'Edit'}</Text>
+          )}
         </TouchableOpacity>
       </View>
 

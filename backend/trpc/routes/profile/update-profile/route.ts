@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { protectedProcedure } from "../../../create-context";
 import { supabaseServer } from "../../../../lib/supabase-server";
+import type { Database } from "../../../../database/types";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const updateProfileSchema = z.object({
   full_name: z.string().optional(),
@@ -21,7 +24,7 @@ const updateProfileSchema = z.object({
 
 export const updateProfileProcedure = protectedProcedure
   .input(updateProfileSchema)
-  .mutation(async ({ ctx, input }) => {
+  .mutation(async ({ ctx, input }): Promise<Profile> => {
     const { data, error } = await (supabaseServer
       .from("profiles") as any)
       .update({
@@ -37,5 +40,5 @@ export const updateProfileProcedure = protectedProcedure
       throw new Error("Failed to update profile");
     }
 
-    return data;
+    return data as Profile;
   });
