@@ -28,12 +28,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const initializeAuth = async () => {
       try {
         console.log('🔍 Initializing auth...');
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log('🔍 Current session:', currentSession ? 'exists' : 'null');
-        setSession(currentSession);
-        setUser(currentSession?.user ?? null);
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Error getting session:', error);
+          setSession(null);
+          setUser(null);
+        } else {
+          console.log('🔍 Current session:', currentSession ? 'exists' : 'null');
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+        }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
+        setSession(null);
+        setUser(null);
       } finally {
         setLoading(false);
         console.log('✅ Auth initialization complete');
