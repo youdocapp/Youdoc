@@ -70,6 +70,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ) => {
     try {
       console.log('🚀 Starting Supabase signup for:', email);
+      console.log('🔧 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+      console.log('🔧 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -86,16 +88,49 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (error) {
         console.error('❌ Signup error:', error);
+        console.error('❌ Error details:', JSON.stringify(error, null, 2));
+        
+        if (error.message.includes('fetch') || error.message.includes('network')) {
+          return { 
+            error: { 
+              ...error, 
+              message: 'Cannot connect to server. Please check your internet connection and Supabase configuration.' 
+            } as AuthError 
+          };
+        }
+        
         return { error };
       }
 
       console.log('✅ Signup successful:', data);
+      console.log('✅ User created:', data.user?.id);
+      console.log('✅ Session:', data.session ? 'exists' : 'null');
+      
       await AsyncStorage.setItem('pending_verification_email', email);
       
       return { error: null };
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Unexpected signup error:', error);
-      return { error: error as AuthError };
+      console.error('❌ Error type:', error?.constructor?.name);
+      console.error('❌ Error message:', error?.message);
+      
+      if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+        return { 
+          error: { 
+            message: 'Network error: Cannot connect to Supabase. Please check your internet connection and verify your Supabase URL is correct.',
+            name: 'NetworkError',
+            status: 0
+          } as AuthError 
+        };
+      }
+      
+      return { 
+        error: { 
+          message: error?.message || 'An unexpected error occurred',
+          name: 'UnknownError',
+          status: 0
+        } as AuthError 
+      };
     }
   };
 

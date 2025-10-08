@@ -92,8 +92,15 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
       );
 
       if (error) {
+        console.error('❌ Signup failed with error:', error);
+        
         if (error.message.includes('already registered')) {
           Alert.alert('Account Exists', 'This email is already registered. Please sign in instead.');
+        } else if (error.message.includes('Network') || error.message.includes('fetch') || error.message.includes('network')) {
+          Alert.alert(
+            'Connection Error', 
+            'Cannot connect to the server. Please check:\n\n1. Your internet connection\n2. Supabase URL is correct in .env\n3. Development server was restarted after adding .env'
+          );
         } else {
           Alert.alert('Signup Error', error.message || 'Failed to create account. Please try again.');
         }
