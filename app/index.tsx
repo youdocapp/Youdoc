@@ -1,29 +1,23 @@
-import { useEffect, useState } from 'react';
-import { useRouter, useSegments } from 'expo-router';
+import { useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { View, ActivityIndicator, SafeAreaView } from 'react-native';
 
 export default function Index() {
   const router = useRouter();
-  const segments = useSegments();
   const { user, loading } = useAuth();
-  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    if (!loading && !hasNavigated) {
-      const inAuthGroup = segments[0] === '(auth)';
-      
-      if (user && !inAuthGroup) {
+    if (!loading) {
+      if (user) {
         console.log('✅ User authenticated, navigating to dashboard');
         router.replace('/dashboard');
-        setHasNavigated(true);
-      } else if (!user && !inAuthGroup) {
+      } else {
         console.log('❌ No user, navigating to onboarding');
         router.replace('/onboarding');
-        setHasNavigated(true);
       }
     }
-  }, [user, loading, segments, hasNavigated, router]);
+  }, [user, loading]);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
