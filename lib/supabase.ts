@@ -7,8 +7,13 @@ import { Platform } from 'react-native';
 const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl || process.env.EXPO_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
+console.log('🔧 Supabase Configuration:');
+console.log('  URL:', supabaseUrl ? `${supabaseUrl.substring(0, 30)}...` : 'MISSING');
+console.log('  Anon Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
+
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn('Supabase URL or Anon Key is missing. Please add them to your environment variables.');
+  console.error('❌ Supabase URL or Anon Key is missing. Please add them to your environment variables.');
+  console.error('   Make sure to restart your development server after adding .env variables.');
 }
 
 const supabaseStorage = {
