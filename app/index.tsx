@@ -8,6 +8,7 @@ export default function Index() {
   const { user, loading } = useAuth();
 
   useEffect(() => {
+    console.log('🔍 Index - Loading:', loading, 'User:', user ? 'exists' : 'null');
     if (!loading) {
       if (user) {
         console.log('✅ User authenticated, navigating to dashboard');

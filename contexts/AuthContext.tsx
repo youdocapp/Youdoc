@@ -27,20 +27,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const initializeAuth = async () => {
       try {
+        console.log('🔍 Initializing auth...');
         const { data: { session: currentSession } } = await supabase.auth.getSession();
+        console.log('🔍 Current session:', currentSession ? 'exists' : 'null');
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('❌ Error initializing auth:', error);
       } finally {
         setLoading(false);
+        console.log('✅ Auth initialization complete');
       }
     };
 
     initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      console.log('Auth state changed:', _event);
+      console.log('🔄 Auth state changed:', _event, 'Session:', newSession ? 'exists' : 'null');
       setSession(newSession);
       setUser(newSession?.user ?? null);
       setLoading(false);

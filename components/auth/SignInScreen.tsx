@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
+import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
 
 interface SignInScreenProps {
@@ -10,12 +11,20 @@ interface SignInScreenProps {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      console.log('✅ User authenticated, navigating to dashboard');
+      router.replace('/dashboard');
+    }
+  }, [user]);
 
   const isFormValid = () => {
     return email.length > 0 && password.length > 0;
@@ -29,25 +38,29 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
 
     setLoading(true);
     try {
+      console.log('🔑 Attempting sign in...');
       const { error } = await signIn(email, password);
       
       if (error) {
         setLoading(false);
+        console.error('❌ Sign in failed:', error.message);
         if (error.message.includes('Invalid login credentials')) {
           Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
         } else if (error.message.includes('Email not confirmed')) {
           Alert.alert('Email Not Verified', 'Please verify your email before signing in.');
+        } else if (error.message.includes('fetch')) {
+          Alert.alert('Connection Error', 'Unable to connect to authentication server. Please check your Supabase configuration.');
         } else {
           Alert.alert('Login Error', error.message || 'Failed to sign in. Please try again.');
         }
         return;
       }
 
-      console.log('✅ Sign in successful');
+      console.log('✅ Sign in successful, waiting for auth state update...');
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
-      console.error('Sign in error:', error);
+      console.error('❌ Sign in error:', error);
     }
   };
 
