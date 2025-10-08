@@ -72,7 +72,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🚀 Starting Supabase signup for:', email);
       console.log('🔧 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
       console.log('🔧 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
+      console.log('🔧 Full Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
       
+      if (!process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL.includes('placeholder')) {
+        console.error('❌ Supabase URL is not configured!');
+        return {
+          error: {
+            message: 'Supabase is not configured. Please add EXPO_PUBLIC_SUPABASE_URL to your .env file and restart the server with: npx expo start --clear',
+            name: 'ConfigurationError',
+            status: 0
+          } as AuthError
+        };
+      }
+      
+      if (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')) {
+        console.error('❌ Supabase Anon Key is not configured!');
+        return {
+          error: {
+            message: 'Supabase is not configured. Please add EXPO_PUBLIC_SUPABASE_ANON_KEY to your .env file and restart the server with: npx expo start --clear',
+            name: 'ConfigurationError',
+            status: 0
+          } as AuthError
+        };
+      }
+      
+      console.log('🔄 Making signup request to Supabase...');
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -90,11 +114,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error('❌ Signup error:', error);
         console.error('❌ Error details:', JSON.stringify(error, null, 2));
         
-        if (error.message.includes('fetch') || error.message.includes('network')) {
+        if (error.message.includes('fetch') || error.message.includes('network') || error.message.toLowerCase().includes('failed to fetch')) {
           return { 
             error: { 
               ...error, 
-              message: 'Cannot connect to server. Please check your internet connection and Supabase configuration.' 
+              message: 'Cannot connect to Supabase server. Please check:\n\n1. Your internet connection\n2. Supabase URL is correct\n3. Supabase project is active\n4. You restarted the dev server after adding .env' 
             } as AuthError 
           };
         }
@@ -113,11 +137,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('❌ Unexpected signup error:', error);
       console.error('❌ Error type:', error?.constructor?.name);
       console.error('❌ Error message:', error?.message);
+      console.error('❌ Error stack:', error?.stack);
       
-      if (error?.message?.includes('fetch') || error?.message?.includes('network')) {
+      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.toLowerCase().includes('failed to fetch')) {
         return { 
           error: { 
-            message: 'Network error: Cannot connect to Supabase. Please check your internet connection and verify your Supabase URL is correct.',
+            message: 'Network error: Cannot connect to Supabase.\n\nTroubleshooting:\n1. Check your internet connection\n2. Verify Supabase URL in .env\n3. Ensure Supabase project is active\n4. Restart server: npx expo start --clear',
             name: 'NetworkError',
             status: 0
           } as AuthError 
