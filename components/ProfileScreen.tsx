@@ -90,6 +90,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const handleSave = async () => {
     try {
       setIsSaving(true);
+      console.log('💾 Starting profile save...');
       
       const heightMatch = height.match(/(\d+)'(\d+)"/);
       const heightFeet = heightMatch ? parseInt(heightMatch[1]) : undefined;
@@ -105,7 +106,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         'Prefer not to say': 'prefer_not_to_say'
       };
       
-      await updateProfileMutation.mutateAsync({
+      const updateData = {
         full_name: name,
         date_of_birth: dateOfBirth.toISOString().split('T')[0],
         gender: genderMap[gender],
@@ -116,7 +117,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         weight_lbs: weightLbs,
         blood_type: bloodType as any,
         avatar_url: profileImage || undefined,
-      });
+      };
+      
+      console.log('📤 Sending update data:', JSON.stringify(updateData, null, 2));
+      
+      const result = await updateProfileMutation.mutateAsync(updateData);
+      
+      console.log('✅ Profile update result:', result);
       
       if (user) {
         setUser({
@@ -135,9 +142,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       
       Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } catch (error: any) {
+      console.error('❌ Error saving profile:', error);
+      console.error('❌ Error message:', error?.message);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      
+      const errorMessage = error?.message || 'Failed to update profile. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsSaving(false);
     }

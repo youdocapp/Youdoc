@@ -25,6 +25,9 @@ const updateProfileSchema = z.object({
 export const updateProfileProcedure = protectedProcedure
   .input(updateProfileSchema)
   .mutation(async ({ ctx, input }): Promise<Profile> => {
+    console.log('🔄 Updating profile for user:', ctx.user.id);
+    console.log('📝 Update data:', JSON.stringify(input, null, 2));
+    
     const { data, error } = await (supabaseServer
       .from("profiles") as any)
       .update({
@@ -36,9 +39,11 @@ export const updateProfileProcedure = protectedProcedure
       .single();
 
     if (error) {
-      console.error("Error updating profile:", error);
-      throw new Error("Failed to update profile");
+      console.error("❌ Error updating profile:", error);
+      console.error("❌ Error details:", JSON.stringify(error, null, 2));
+      throw new Error(`Failed to update profile: ${error.message || 'Unknown error'}`);
     }
 
+    console.log('✅ Profile updated successfully:', data);
     return data as Profile;
   });
