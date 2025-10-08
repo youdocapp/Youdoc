@@ -633,11 +633,15 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 style={styles.articleCard}
                 onPress={() => router.push(`/article-detail?articleId=${article.id}`)}
               >
-                <Image
-                  source={{ uri: article.image }}
-                  style={styles.articleImage}
-                  resizeMode="cover"
-                />
+                {article.image ? (
+                  <Image
+                    source={{ uri: article.image }}
+                    style={styles.articleImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.articleImage} />
+                )}
                 <View style={styles.articleContent}>
                   <View style={styles.articleTag}>
                     <View style={styles.categoryIcon} />

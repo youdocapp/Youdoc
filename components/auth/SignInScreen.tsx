@@ -47,6 +47,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
 
       console.log('✅ Sign in successful, navigating to dashboard');
       router.replace('/dashboard');
+      setLoading(false);
     } catch (error) {
       setLoading(false);
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');

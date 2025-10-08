@@ -29,6 +29,7 @@ SplashScreen.preventAutoHideAsync();
 
 LogBox.ignoreLogs([
   'source.uri should not be an empty string',
+  'Non-serializable values were found in the navigation state',
 ]);
 
 function AppContent() {
@@ -49,6 +50,7 @@ function AppContent() {
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <Stack>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="onboarding" options={{ headerShown: false }} />
         <Stack.Screen name="signin" options={{ headerShown: false }} />
         <Stack.Screen name="signup" options={{ headerShown: false }} />
