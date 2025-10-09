@@ -50,7 +50,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const profileQuery = trpc.profile.get.useQuery();
+  const profileQuery = trpc.profile.get.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+    cacheTime: 10 * 60 * 1000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
   const updateProfileMutation = trpc.profile.update.useMutation();
 
   useEffect(() => {
@@ -1021,7 +1026,9 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     },
   });
 
-  if (profileQuery.isLoading) {
+  const isInitialLoading = profileQuery.isLoading && !profileQuery.data;
+
+  if (isInitialLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
