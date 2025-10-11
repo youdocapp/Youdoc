@@ -52,7 +52,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   const profileQuery = trpc.profile.get.useQuery(undefined, {
     staleTime: 5 * 60 * 1000,
-    cacheTime: 10 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
     refetchOnMount: false,
     refetchOnWindowFocus: false,
   });
