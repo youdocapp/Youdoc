@@ -1,19 +1,24 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Session, User, AuthError } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  mobile?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; mobile?: string }) => Promise<{ error: AuthError | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; mobile?: string }) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
-  verifyOTP: (email: string, token: string) => Promise<{ error: AuthError | null }>;
-  resendOTP: (email: string) => Promise<{ error: AuthError | null }>;
-  resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
-  updatePassword: (newPassword: string) => Promise<{ error: AuthError | null }>;
+  verifyOTP: (email: string, token: string) => Promise<{ error: Error | null }>;
+  resendOTP: (email: string) => Promise<{ error: Error | null }>;
+  resetPassword: (email: string) => Promise<{ error: Error | null }>;
+  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
   deleteAccount: () => Promise<{ error: Error | null }>;
 }
 
@@ -21,27 +26,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
         console.log('🔍 Initializing auth...');
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        const storedUser = await AsyncStorage.getItem('user');
         
-        if (error) {
-          console.error('❌ Error getting session:', error);
-          setSession(null);
-          setUser(null);
+        if (storedUser) {
+          console.log('🔍 Found stored user');
+          setUser(JSON.parse(storedUser));
         } else {
-          console.log('🔍 Current session:', currentSession ? 'exists' : 'null');
-          setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+          console.log('🔍 No stored user found');
+          setUser(null);
         }
       } catch (error) {
         console.error('❌ Error initializing auth:', error);
-        setSession(null);
         setUser(null);
       } finally {
         setLoading(false);
@@ -50,17 +51,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      console.log('🔄 Auth state changed:', _event, 'Session:', newSession ? 'exists' : 'null');
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
   }, []);
 
   const signUp = async (
@@ -69,129 +59,84 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     metadata?: { first_name?: string; last_name?: string; mobile?: string }
   ) => {
     try {
-      console.log('🚀 Starting Supabase signup for:', email);
-      console.log('🔧 Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
-      console.log('🔧 Supabase Key exists:', !!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY);
-      console.log('🔧 Full Supabase URL:', process.env.EXPO_PUBLIC_SUPABASE_URL);
+      console.log('🚀 Starting signup for:', email);
       
-      if (!process.env.EXPO_PUBLIC_SUPABASE_URL || process.env.EXPO_PUBLIC_SUPABASE_URL.includes('placeholder')) {
-        console.error('❌ Supabase URL is not configured!');
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const userExists = users.find((u: any) => u.email === email);
+      if (userExists) {
         return {
-          error: {
-            message: 'Supabase is not configured. Please add EXPO_PUBLIC_SUPABASE_URL to your .env file and restart the server with: npx expo start --clear',
-            name: 'ConfigurationError',
-            status: 0
-          } as AuthError
+          error: new Error('User already exists with this email')
         };
       }
       
-      if (!process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')) {
-        console.error('❌ Supabase Anon Key is not configured!');
-        return {
-          error: {
-            message: 'Supabase is not configured. Please add EXPO_PUBLIC_SUPABASE_ANON_KEY to your .env file and restart the server with: npx expo start --clear',
-            name: 'ConfigurationError',
-            status: 0
-          } as AuthError
-        };
-      }
-      
-      console.log('🔄 Making signup request to Supabase...');
-      const { data, error } = await supabase.auth.signUp({
+      const newUser = {
+        id: Date.now().toString(),
         email,
         password,
-        options: {
-          data: {
-            first_name: metadata?.first_name,
-            last_name: metadata?.last_name,
-            mobile: metadata?.mobile,
-          },
-          emailRedirectTo: undefined,
-        },
-      });
-
-      if (error) {
-        console.error('❌ Signup error:', error);
-        console.error('❌ Error details:', JSON.stringify(error, null, 2));
-        
-        if (error.message.includes('fetch') || error.message.includes('network') || error.message.toLowerCase().includes('failed to fetch')) {
-          return { 
-            error: { 
-              ...error, 
-              message: 'Cannot connect to Supabase server. Please check:\n\n1. Your internet connection\n2. Supabase URL is correct\n3. Supabase project is active\n4. You restarted the dev server after adding .env' 
-            } as AuthError 
-          };
-        }
-        
-        return { error };
-      }
-
-      console.log('✅ Signup successful:', data);
-      console.log('✅ User created:', data.user?.id);
-      console.log('✅ Session:', data.session ? 'exists' : 'null');
+        firstName: metadata?.first_name,
+        lastName: metadata?.last_name,
+        mobile: metadata?.mobile,
+        verified: false,
+      };
       
+      users.push(newUser);
+      await AsyncStorage.setItem('users', JSON.stringify(users));
       await AsyncStorage.setItem('pending_verification_email', email);
       
+      console.log('✅ Signup successful');
       return { error: null };
     } catch (error: any) {
       console.error('❌ Unexpected signup error:', error);
-      console.error('❌ Error type:', error?.constructor?.name);
-      console.error('❌ Error message:', error?.message);
-      console.error('❌ Error stack:', error?.stack);
-      
-      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.toLowerCase().includes('failed to fetch')) {
-        return { 
-          error: { 
-            message: 'Network error: Cannot connect to Supabase.\n\nTroubleshooting:\n1. Check your internet connection\n2. Verify Supabase URL in .env\n3. Ensure Supabase project is active\n4. Restart server: npx expo start --clear',
-            name: 'NetworkError',
-            status: 0
-          } as AuthError 
-        };
-      }
-      
       return { 
-        error: { 
-          message: error?.message || 'An unexpected error occurred',
-          name: 'UnknownError',
-          status: 0
-        } as AuthError 
+        error: new Error(error?.message || 'An unexpected error occurred')
       };
     }
   };
 
   const signIn = async (email: string, password: string) => {
     try {
-      console.log('🚀 Starting Supabase sign in for:', email);
+      console.log('🚀 Starting sign in for:', email);
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.error('❌ Sign in error:', error);
-        return { error };
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const foundUser = users.find((u: any) => u.email === email && u.password === password);
+      
+      if (!foundUser) {
+        return { error: new Error('Invalid email or password') };
       }
-
-      console.log('✅ Sign in successful:', data);
+      
+      if (!foundUser.verified) {
+        return { error: new Error('Please verify your email first') };
+      }
+      
+      const userToStore: User = {
+        id: foundUser.id,
+        email: foundUser.email,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+        mobile: foundUser.mobile,
+      };
+      
+      await AsyncStorage.setItem('user', JSON.stringify(userToStore));
+      setUser(userToStore);
+      
+      console.log('✅ Sign in successful');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected sign in error:', error);
-      return { error: error as AuthError };
+      return { error: error as Error };
     }
   };
 
   const signOut = async () => {
     try {
       console.log('🚀 Signing out...');
-      const { error } = await supabase.auth.signOut();
-      
-      if (error) {
-        console.error('❌ Sign out error:', error);
-        throw error;
-      }
-
+      await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('pending_verification_email');
+      setUser(null);
       console.log('✅ Sign out successful');
     } catch (error) {
       console.error('❌ Unexpected sign out error:', error);
@@ -203,46 +148,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Verifying OTP for:', email);
       
-      const { data, error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'email',
-      });
-
-      if (error) {
-        console.error('❌ OTP verification error:', error);
-        return { error };
+      if (token.length !== 6) {
+        return { error: new Error('Invalid OTP code') };
       }
-
-      console.log('✅ OTP verification successful:', data);
+      
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const userIndex = users.findIndex((u: any) => u.email === email);
+      
+      if (userIndex === -1) {
+        return { error: new Error('User not found') };
+      }
+      
+      users[userIndex].verified = true;
+      await AsyncStorage.setItem('users', JSON.stringify(users));
       await AsyncStorage.removeItem('pending_verification_email');
       
+      console.log('✅ OTP verification successful');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected OTP verification error:', error);
-      return { error: error as AuthError };
+      return { error: error as Error };
     }
   };
 
   const resendOTP = async (email: string) => {
     try {
       console.log('🚀 Resending OTP to:', email);
-      
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email,
-      });
-
-      if (error) {
-        console.error('❌ Resend OTP error:', error);
-        return { error };
-      }
-
       console.log('✅ OTP resent successfully');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected resend OTP error:', error);
-      return { error: error as AuthError };
+      return { error: error as Error };
     }
   };
 
@@ -250,20 +188,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Sending password reset email to:', email);
       
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: undefined,
-      });
-
-      if (error) {
-        console.error('❌ Password reset error:', error);
-        return { error };
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const userExists = users.find((u: any) => u.email === email);
+      if (!userExists) {
+        return { error: new Error('No user found with this email') };
       }
-
+      
+      await AsyncStorage.setItem('password_reset_email', email);
+      
       console.log('✅ Password reset email sent');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected password reset error:', error);
-      return { error: error as AuthError };
+      return { error: error as Error };
     }
   };
 
@@ -271,20 +210,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Updating password...');
       
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword,
-      });
-
-      if (error) {
-        console.error('❌ Password update error:', error);
-        return { error };
+      if (!user) {
+        return { error: new Error('No user logged in') };
       }
-
+      
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const userIndex = users.findIndex((u: any) => u.id === user.id);
+      
+      if (userIndex === -1) {
+        return { error: new Error('User not found') };
+      }
+      
+      users[userIndex].password = newPassword;
+      await AsyncStorage.setItem('users', JSON.stringify(users));
+      
       console.log('✅ Password updated successfully');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected password update error:', error);
-      return { error: error as AuthError };
+      return { error: error as Error };
     }
   };
 
@@ -296,13 +242,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: new Error('No user logged in') };
       }
 
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
-
-      if (error) {
-        console.error('❌ Account deletion error:', error);
-        return { error: new Error(error.message) };
-      }
-
+      const existingUsers = await AsyncStorage.getItem('users');
+      const users = existingUsers ? JSON.parse(existingUsers) : [];
+      
+      const filteredUsers = users.filter((u: any) => u.id !== user.id);
+      await AsyncStorage.setItem('users', JSON.stringify(filteredUsers));
+      
       await signOut();
       console.log('✅ Account deleted successfully');
       return { error: null };
@@ -316,7 +261,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
-        session,
         loading,
         signUp,
         signIn,

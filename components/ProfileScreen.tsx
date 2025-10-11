@@ -4,8 +4,8 @@ import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, T
 import * as ImagePicker from 'expo-image-picker';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
-import { trpc } from '@/lib/trpc';
 import { useUser } from '@/contexts/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -49,86 +49,61 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showHeightModal, setShowHeightModal] = useState<boolean>(false);
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-
-  const profileQuery = trpc.profile.get.useQuery(undefined, {
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
-  const updateProfileMutation = trpc.profile.update.useMutation();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    if (profileQuery.data) {
-      const profile = profileQuery.data;
-      setName(profile.full_name || '');
-      setEmail(user?.email || '');
-      setPhone(profile.phone_number || '');
-      if (profile.date_of_birth) {
-        setDateOfBirth(new Date(profile.date_of_birth));
+    const loadProfile = async () => {
+      try {
+        setIsLoading(true);
+        const storedProfile = await AsyncStorage.getItem('userProfile');
+        
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          setName(profile.full_name || '');
+          setEmail(user?.email || '');
+          setPhone(profile.phone_number || '');
+          if (profile.date_of_birth) {
+            setDateOfBirth(new Date(profile.date_of_birth));
+          }
+          setGender(profile.gender || 'Male');
+          setBloodType(profile.blood_type || 'O+');
+          setHeight(profile.height || '5\'7"');
+          setWeight(profile.weight || '165 lbs');
+          setAddress(profile.address || '');
+          if (profile.avatar_url) {
+            setProfileImage(profile.avatar_url);
+          }
+        } else {
+          setEmail(user?.email || '');
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setIsLoading(false);
       }
-      if (profile.gender) {
-        const genderMap: Record<string, string> = {
-          'male': 'Male',
-          'female': 'Female',
-          'other': 'Other',
-          'prefer_not_to_say': 'Prefer not to say'
-        };
-        setGender(genderMap[profile.gender] || 'Male');
-      }
-      if (profile.blood_type) {
-        setBloodType(profile.blood_type);
-      }
-      if (profile.height_feet && profile.height_inches !== undefined) {
-        setHeight(`${profile.height_feet}'${profile.height_inches}"`);
-      }
-      if (profile.weight_lbs) {
-        setWeight(`${profile.weight_lbs} lbs`);
-      }
-      setAddress(profile.address || '');
-      if (profile.avatar_url) {
-        setProfileImage(profile.avatar_url);
-      }
-    }
-  }, [profileQuery.data, user]);
+    };
+    
+    loadProfile();
+  }, [user]);
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
       console.log('💾 Starting profile save...');
       
-      const heightMatch = height.match(/(\d+)'(\d+)"/);
-      const heightFeet = heightMatch ? parseInt(heightMatch[1]) : undefined;
-      const heightInches = heightMatch ? parseInt(heightMatch[2]) : undefined;
-      
-      const weightMatch = weight.match(/(\d+)/);
-      const weightLbs = weightMatch ? parseInt(weightMatch[1]) : undefined;
-      
-      const genderMap: Record<string, 'male' | 'female' | 'other' | 'prefer_not_to_say'> = {
-        'Male': 'male',
-        'Female': 'female',
-        'Other': 'other',
-        'Prefer not to say': 'prefer_not_to_say'
-      };
-      
-      const updateData = {
+      const profileData = {
         full_name: name,
         date_of_birth: dateOfBirth.toISOString().split('T')[0],
-        gender: genderMap[gender],
+        gender: gender,
         phone_number: phone,
         address: address,
-        height_feet: heightFeet,
-        height_inches: heightInches,
-        weight_lbs: weightLbs,
-        blood_type: bloodType as any,
+        height: height,
+        weight: weight,
+        blood_type: bloodType,
         avatar_url: profileImage || undefined,
       };
       
-      console.log('📤 Sending update data:', JSON.stringify(updateData, null, 2));
-      
-      const result = await updateProfileMutation.mutateAsync(updateData);
-      
-      console.log('✅ Profile update result:', result);
+      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
       
       if (user) {
         setUser({
@@ -143,15 +118,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         });
       }
       
-      await profileQuery.refetch();
-      
       Alert.alert('Success', 'Profile updated successfully');
       setIsEditing(false);
     } catch (error: any) {
       console.error('❌ Error saving profile:', error);
-      console.error('❌ Error message:', error?.message);
-      console.error('❌ Error details:', JSON.stringify(error, null, 2));
-      
       const errorMessage = error?.message || 'Failed to update profile. Please try again.';
       Alert.alert('Error', errorMessage);
     } finally {
@@ -1026,9 +996,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     },
   });
 
-  const isInitialLoading = profileQuery.isLoading && !profileQuery.data;
-
-  if (isInitialLoading) {
+  if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
