@@ -5,15 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useMemo, useState } from 'react';
 import { LogBox } from 'react-native';
 import 'react-native-reanimated';
-import { 
-  useFonts,
-  ReadexPro_200ExtraLight,
-  ReadexPro_300Light,
-  ReadexPro_400Regular,
-  ReadexPro_500Medium,
-  ReadexPro_600SemiBold,
-  ReadexPro_700Bold
-} from '@expo-google-fonts/readex-pro';
+import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
@@ -96,12 +88,7 @@ export default function RootLayout() {
   const [queryClient] = useState(() => new QueryClient());
   
   const [loaded, error] = useFonts({
-    ReadexPro_200ExtraLight,
-    ReadexPro_300Light,
-    ReadexPro_400Regular,
-    ReadexPro_500Medium,
-    ReadexPro_600SemiBold,
-    ReadexPro_700Bold,
+    'ReadexPro-Medium': require('../assets/fonts/ReadexPro-Medium.ttf'),
   });
 
   useEffect(() => {
