@@ -1,6 +1,9 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
+import { SymptomCheckerIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/SymptomCheckerIcon';
+import { SeeDoctorIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/SeeDoctorIcon';
+import { MyMedicationIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/MyMedicationIcon';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -16,25 +19,13 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, onSkip }) => {
         <View style={styles.topSection}>
           <View style={styles.iconRow}>
             <View style={styles.iconContainer}>
-              <Image 
-                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/Icon%201.svg' }}
-                style={styles.icon}
-                resizeMode="contain"
-              />
+              <SymptomCheckerIcon width={48} height={48} color="#007AFF" />
             </View>
             <View style={styles.iconContainer}>
-              <Image 
-                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/Icon%202.svg' }}
-                style={styles.icon}
-                resizeMode="contain"
-              />
+              <SeeDoctorIcon width={48} height={48} color="#007AFF" />
             </View>
             <View style={styles.iconContainer}>
-              <Image 
-                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/icon%203.svg' }}
-                style={styles.icon}
-                resizeMode="contain"
-              />
+              <MyMedicationIcon width={48} height={48} color="#4C4A53" />
             </View>
           </View>
 
@@ -120,10 +111,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center' as const,
     alignItems: 'center' as const,
   },
-  icon: {
-    width: 48,
-    height: 48,
-  },
+
   title: {
     fontSize: 40,
     fontWeight: '700' as const,
