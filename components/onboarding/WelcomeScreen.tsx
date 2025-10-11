@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 
 interface WelcomeScreenProps {
@@ -13,7 +13,31 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, onSkip }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.textContainer}>
+        <View style={styles.topSection}>
+          <View style={styles.iconRow}>
+            <View style={styles.iconContainer}>
+              <Image 
+                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/Icon%201.svg' }}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.iconContainer}>
+              <Image 
+                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/Icon%202.svg' }}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.iconContainer}>
+              <Image 
+                source={{ uri: 'https://raw.githubusercontent.com/yourusername/yourrepo/main/assets/images/icon%203.svg' }}
+                style={styles.icon}
+                resizeMode="contain"
+              />
+            </View>
+          </View>
+
           <Text style={styles.title}>
             Smarter <Text style={styles.titleHighlight}>Health</Text>{'\n'}Starts Here
           </Text>
@@ -74,13 +98,31 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: 'space-between',
-    paddingTop: 80,
+    paddingTop: 60,
     paddingBottom: 40,
   },
-  textContainer: {
+  topSection: {
     flex: 1,
     justifyContent: 'flex-start',
-    paddingTop: 40,
+  },
+  iconRow: {
+    flexDirection: 'row' as const,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+    gap: 16,
+    marginBottom: 48,
+  },
+  iconContainer: {
+    width: 80,
+    height: 80,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 20,
+    justifyContent: 'center' as const,
+    alignItems: 'center' as const,
+  },
+  icon: {
+    width: 48,
+    height: 48,
   },
   title: {
     fontSize: 40,
