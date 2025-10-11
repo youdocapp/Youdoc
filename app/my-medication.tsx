@@ -4,6 +4,7 @@ import MyMedicationScreen from '../components/MyMedicationScreen';
 
 export default function MyMedication() {
   const handleBack = () => {
+    // Navigate back to dashboard instead of relying on navigation history
     router.replace('/dashboard');
   };
 
@@ -33,3 +34,4 @@ export default function MyMedication() {
     />
   );
 }
+
