@@ -42,9 +42,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
     }));
   };
 
-  const passwordRequirements = {
-    minLength: formData.password.length >= 8
-  };
+  const passwordsMatch = formData.password && formData.repeatPassword && formData.password === formData.repeatPassword;
 
   const isFormValid = () => {
     return formData.firstName && 
@@ -322,6 +320,29 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             </TouchableOpacity>
           </View>
 
+          {formData.repeatPassword.length > 0 && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+              <View style={{
+                width: 18,
+                height: 18,
+                borderRadius: 9,
+                borderWidth: 2,
+                borderColor: passwordsMatch ? '#10B981' : '#EF4444',
+                backgroundColor: passwordsMatch ? '#10B981' : '#EF4444',
+                marginRight: 8,
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                  {passwordsMatch ? '✓' : '✕'}
+                </Text>
+              </View>
+              <Text style={{ color: passwordsMatch ? '#10B981' : '#EF4444', fontSize: 14 }}>
+                {passwordsMatch ? 'Passwords match' : 'Passwords do not match'}
+              </Text>
+            </View>
+          )}
+
           <TouchableOpacity 
             onPress={() => setAgreeToTerms(!agreeToTerms)}
             style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 32 }}
@@ -343,7 +364,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               )}
             </View>
             <Text style={{ color: '#6B7280', fontSize: 14, flex: 1 }}>
-              Must be at least 8 characters
+              I agree to the terms and conditions
             </Text>
           </TouchableOpacity>
 
