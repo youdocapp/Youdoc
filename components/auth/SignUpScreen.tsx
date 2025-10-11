@@ -33,7 +33,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
 
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [repeatPasswordVisible, setRepeatPasswordVisible] = useState(false);
-  const [agreeToTerms, setAgreeToTerms] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -57,10 +56,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
       console.log('❌ Form validation failed');
       if (formData.password !== formData.repeatPassword) {
         Alert.alert('Password Mismatch', 'Passwords do not match.');
-        return;
-      }
-      if (!agreeToTerms) {
-        Alert.alert('Terms Required', 'Please agree to the terms to continue.');
         return;
       }
       Alert.alert('Invalid Form', 'Please fill in all fields correctly.');
@@ -313,7 +308,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           </View>
 
           {formData.repeatPassword.length > 0 && (
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 32 }}>
               <View style={{
                 width: 18,
                 height: 18,
@@ -334,31 +329,6 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
               </Text>
             </View>
           )}
-
-          <TouchableOpacity 
-            onPress={() => setAgreeToTerms(!agreeToTerms)}
-            style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: 32 }}
-          >
-            <View style={{
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              borderWidth: 2,
-              borderColor: agreeToTerms ? '#3B82F6' : '#D1D5DB',
-              backgroundColor: agreeToTerms ? '#3B82F6' : 'transparent',
-              marginRight: 8,
-              marginTop: 2,
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}>
-              {agreeToTerms && (
-                <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>✓</Text>
-              )}
-            </View>
-            <Text style={{ color: '#6B7280', fontSize: 14, flex: 1 }}>
-              I agree to the terms and conditions
-            </Text>
-          </TouchableOpacity>
 
           <TouchableOpacity 
             onPress={handleCreateAccount}
