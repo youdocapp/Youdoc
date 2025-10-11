@@ -7,7 +7,7 @@ import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
 import { articles } from '@/constants/articles';
 import { useTheme } from '@/contexts/ThemeContext';
-import { trpc } from '@/lib/trpc';
+import { useUser } from '@/contexts/UserContext';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -40,7 +40,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { medications, toggleMedicationTaken } = useMedication();
   const { healthData } = useHealthTracker();
   const router = useRouter();
-  const profileQuery = trpc.profile.get.useQuery();
+  const { user } = useUser();
 
   const todayMedications = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -458,21 +458,14 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.headerTop}>
             <View style={styles.userSection}>
               <View style={styles.avatar}>
-                {profileQuery.data?.avatar_url ? (
-                  <Image 
-                    source={{ uri: profileQuery.data.avatar_url }} 
-                    style={{ width: 48, height: 48, borderRadius: 24 }}
-                  />
-                ) : (
-                  <Text style={styles.avatarText}>
-                    {profileQuery.data?.full_name ? profileQuery.data.full_name.charAt(0).toUpperCase() : '👤'}
-                  </Text>
-                )}
+                <Text style={styles.avatarText}>
+                  {user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤'}
+                </Text>
               </View>
               <View>
                 <Text style={styles.welcomeText}>Welcome Back</Text>
                 <Text style={styles.userName}>
-                  {profileQuery.data?.full_name || 'User'}
+                  {user?.firstName || 'User'}
                 </Text>
               </View>
             </View>

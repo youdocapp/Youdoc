@@ -15,7 +15,6 @@ import {
   ReadexPro_700Bold
 } from '@expo-google-fonts/readex-pro';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { trpc, trpcClient } from '@/lib/trpc';
 
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
@@ -121,25 +120,23 @@ export default function RootLayout() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <trpc.Provider client={trpcClient} queryClient={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <UserProvider>
-              <MedicationProvider>
-                <HealthTrackerProvider>
-                  <EmergencyContactsProvider>
-                    <HealthRecordsProvider>
-                      <MedicalHistoryProvider>
-                        <AppContent />
-                      </MedicalHistoryProvider>
-                    </HealthRecordsProvider>
-                  </EmergencyContactsProvider>
-                </HealthTrackerProvider>
-              </MedicationProvider>
-            </UserProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </trpc.Provider>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserProvider>
+            <MedicationProvider>
+              <HealthTrackerProvider>
+                <EmergencyContactsProvider>
+                  <HealthRecordsProvider>
+                    <MedicalHistoryProvider>
+                      <AppContent />
+                    </MedicalHistoryProvider>
+                  </HealthRecordsProvider>
+                </EmergencyContactsProvider>
+              </HealthTrackerProvider>
+            </MedicationProvider>
+          </UserProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
