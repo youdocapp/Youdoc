@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Frontend Integration with Backend",
-    "slug": "frontend-backend-integration",
+    "name": "youdoc",
+    "slug": "youdoc",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -15,7 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.frontend-backend-integration",
+      "bundleIdentifier": "app.rork.youdoc",
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
         "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.frontend-backend-integration",
+      "package": "app.rork.youdoc",
       "permissions": [
         "android.permission.HIGH_SAMPLING_RATE_SENSORS",
         "CAMERA",
