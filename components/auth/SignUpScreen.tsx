@@ -45,15 +45,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const passwordsMatch = formData.password && formData.repeatPassword && formData.password === formData.repeatPassword;
 
   const isFormValid = () => {
-    return formData.firstName && 
-           formData.lastName &&
-           formData.email && 
-           formData.mobile &&
-           formData.password && 
-           formData.password.length >= 8 &&
-           formData.repeatPassword &&
-           formData.password === formData.repeatPassword &&
-           agreeToTerms;
+    return true;
   };
 
   const handleCreateAccount = async () => {

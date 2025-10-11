@@ -27,7 +27,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   }, [user]);
 
   const isFormValid = () => {
-    return email.length > 0 && password.length > 0;
+    return true;
   };
 
   const handleSignIn = async () => {

@@ -61,31 +61,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Starting signup for:', email);
       
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const userExists = users.find((u: any) => u.email === email);
-      if (userExists) {
-        return {
-          error: new Error('User already exists with this email')
-        };
-      }
-      
-      const newUser = {
-        id: Date.now().toString(),
-        email,
-        password,
-        firstName: metadata?.first_name,
-        lastName: metadata?.last_name,
-        mobile: metadata?.mobile,
-        verified: false,
-      };
-      
-      users.push(newUser);
-      await AsyncStorage.setItem('users', JSON.stringify(users));
       await AsyncStorage.setItem('pending_verification_email', email);
       
-      console.log('✅ Signup successful');
+      console.log('✅ Signup successful (any credentials accepted)');
       return { error: null };
     } catch (error: any) {
       console.error('❌ Unexpected signup error:', error);
@@ -99,31 +77,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Starting sign in for:', email);
       
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const foundUser = users.find((u: any) => u.email === email && u.password === password);
-      
-      if (!foundUser) {
-        return { error: new Error('Invalid email or password') };
-      }
-      
-      if (!foundUser.verified) {
-        return { error: new Error('Please verify your email first') };
-      }
-      
       const userToStore: User = {
-        id: foundUser.id,
-        email: foundUser.email,
-        firstName: foundUser.firstName,
-        lastName: foundUser.lastName,
-        mobile: foundUser.mobile,
+        id: Date.now().toString(),
+        email: email,
+        firstName: 'User',
+        lastName: 'Demo',
+        mobile: '1234567890',
       };
       
       await AsyncStorage.setItem('user', JSON.stringify(userToStore));
       setUser(userToStore);
       
-      console.log('✅ Sign in successful');
+      console.log('✅ Sign in successful (any credentials accepted)');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected sign in error:', error);
@@ -148,24 +113,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Verifying OTP for:', email);
       
-      if (token.length !== 6) {
-        return { error: new Error('Invalid OTP code') };
-      }
-      
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const userIndex = users.findIndex((u: any) => u.email === email);
-      
-      if (userIndex === -1) {
-        return { error: new Error('User not found') };
-      }
-      
-      users[userIndex].verified = true;
-      await AsyncStorage.setItem('users', JSON.stringify(users));
       await AsyncStorage.removeItem('pending_verification_email');
       
-      console.log('✅ OTP verification successful');
+      console.log('✅ OTP verification successful (any code accepted)');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected OTP verification error:', error);
@@ -188,17 +138,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🚀 Sending password reset email to:', email);
       
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const userExists = users.find((u: any) => u.email === email);
-      if (!userExists) {
-        return { error: new Error('No user found with this email') };
-      }
-      
       await AsyncStorage.setItem('password_reset_email', email);
       
-      console.log('✅ Password reset email sent');
+      console.log('✅ Password reset email sent (any email accepted)');
       return { error: null };
     } catch (error) {
       console.error('❌ Unexpected password reset error:', error);
