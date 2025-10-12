@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Aler
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
+import { GoogleIcon, AppleIcon } from '../ui';
 
 interface SignInScreenProps {
   onForgotPassword: () => void;
@@ -232,7 +233,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
               }}
               onPress={() => Alert.alert('Google Sign In', 'Google sign in coming soon')}
             >
-              <Text style={{ fontSize: 24 }}>G</Text>
+              <GoogleIcon size={24} />
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -248,7 +249,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
               }}
               onPress={() => Alert.alert('Apple Sign In', 'Apple sign in coming soon')}
             >
-              <Text style={{ fontSize: 24 }}>🍎</Text>
+              <AppleIcon size={24} color="#000000" />
             </TouchableOpacity>
           </View>
 
