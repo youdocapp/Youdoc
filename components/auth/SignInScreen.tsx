@@ -218,7 +218,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 32 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'center', gap: 16, marginBottom: 32 }}>
             <TouchableOpacity
               style={{
                 width: 56,
@@ -230,8 +230,25 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
+              onPress={() => Alert.alert('Google Sign In', 'Google sign in coming soon')}
             >
               <Text style={{ fontSize: 24 }}>G</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: 12,
+                borderWidth: 1,
+                borderColor: '#E5E7EB',
+                backgroundColor: '#FFFFFF',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+              onPress={() => Alert.alert('Apple Sign In', 'Apple sign in coming soon')}
+            >
+              <Text style={{ fontSize: 24 }}>🍎</Text>
             </TouchableOpacity>
           </View>
 
