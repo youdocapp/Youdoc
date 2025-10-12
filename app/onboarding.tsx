@@ -7,7 +7,7 @@ export default function OnboardingPage() {
   
   return (
     <AuthThemeProvider>
-      <OnboardingFlow startAtAuth={true} />
+      <OnboardingFlow startAtAuth={false} />
     </AuthThemeProvider>
   );
 }

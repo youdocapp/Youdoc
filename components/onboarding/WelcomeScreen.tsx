@@ -1,9 +1,5 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, SafeAreaView, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
-import { SymptomCheckerIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/SymptomCheckerIcon';
-import { SeeDoctorIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/SeeDoctorIcon';
-import { MyMedicationIcon } from '../../Users/thomas/Desktop/Youdoc/components/ui/MyMedicationIcon';
 
 interface WelcomeScreenProps {
   onNext: () => void;
@@ -11,67 +7,38 @@ interface WelcomeScreenProps {
 }
 
 const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onNext, onSkip }) => {
-  const router = useRouter();
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.topSection}>
-          <View style={styles.iconRow}>
-            <View style={styles.iconContainer}>
-              <SymptomCheckerIcon width={48} height={48} color="#007AFF" />
-            </View>
-            <View style={styles.iconContainer}>
-              <SeeDoctorIcon width={48} height={48} color="#007AFF" />
-            </View>
-            <View style={styles.iconContainer}>
-              <MyMedicationIcon width={48} height={48} color="#4C4A53" />
-            </View>
-          </View>
-
           <Text style={styles.title}>
-            Smarter <Text style={styles.titleHighlight}>Health</Text>{'\n'}Starts Here
+            Welcome to <Text style={styles.titleHighlight}>YouDoc</Text>
           </Text>
 
           <Text style={styles.subtitle}>
-            Youdoc personalizes your experience based on your interests, data, and wearable devices.
+            Your all-in-one health companion for trusted medical advice, remedies, and symptom checking—right at your fingertips.
           </Text>
         </View>
 
-        <View style={styles.buttonsContainer}>
-          <TouchableOpacity 
-            onPress={() => router.push('/signup')}
-            style={styles.emailButton}
-          >
-            <Text style={styles.emailButtonText}>
-              Sign up with Email
-            </Text>
-          </TouchableOpacity>
+        <View>
+          <View style={styles.pagination}>
+            <View style={[styles.dot, styles.dotActive]} />
+            <View style={styles.dot} />
+            <View style={styles.dot} />
+          </View>
 
-          <Text style={styles.orText}>Or</Text>
+          <View style={styles.buttonsContainer}>
+            <TouchableOpacity onPress={onSkip}>
+              <Text style={styles.skipText}>Skip</Text>
+            </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress={() => router.push('/signup')}
-            style={styles.googleButton}
-          >
-            <Text style={styles.socialButtonText}>
-              Sign up with Google
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            onPress={() => router.push('/signup')}
-            style={styles.appleButton}
-          >
-            <Text style={styles.socialButtonText}>
-              Sign up with Apple
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.signInContainer}>
-            <Text style={styles.signInText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => router.push('/signin')}>
-              <Text style={styles.signInLink}>Sign In</Text>
+            <TouchableOpacity 
+              onPress={onNext}
+              style={styles.nextButton}
+            >
+              <Text style={styles.nextButtonText}>
+                Next
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -94,31 +61,16 @@ const styles = StyleSheet.create({
   },
   topSection: {
     flex: 1,
-    justifyContent: 'flex-start',
-  },
-  iconRow: {
-    flexDirection: 'row' as const,
     justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    gap: 16,
-    marginBottom: 48,
+    paddingTop: 60,
   },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 20,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-  },
-
   title: {
-    fontSize: 40,
+    fontSize: 32,
     fontWeight: '700' as const,
     color: '#1F2937',
     textAlign: 'left' as const,
     marginBottom: 24,
-    lineHeight: 48,
+    lineHeight: 40,
   },
   titleHighlight: {
     color: '#4F7FFF',
@@ -129,59 +81,41 @@ const styles = StyleSheet.create({
     textAlign: 'left' as const,
     lineHeight: 24,
   },
-  buttonsContainer: {
-    gap: 16,
+  pagination: {
+    flexDirection: 'row' as const,
+    justifyContent: 'flex-start' as const,
+    marginBottom: 24,
+    gap: 6,
   },
-  emailButton: {
-    width: '100%',
+  dot: {
+    width: 24,
+    height: 3,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+  },
+  dotActive: {
     backgroundColor: '#4F7FFF',
-    paddingVertical: 18,
-    borderRadius: 28,
+  },
+  buttonsContainer: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
     alignItems: 'center' as const,
   },
-  emailButtonText: {
-    color: 'white',
-    fontSize: 17,
-    fontWeight: '600' as const,
-  },
-  orText: {
-    textAlign: 'center' as const,
-    color: '#9CA3AF',
+  skipText: {
     fontSize: 15,
+    color: '#9CA3AF',
     fontWeight: '500' as const,
   },
-  googleButton: {
-    width: '100%',
-    backgroundColor: '#1F2937',
-    paddingVertical: 18,
-    borderRadius: 28,
+  nextButton: {
+    backgroundColor: '#4F7FFF',
+    paddingVertical: 12,
+    paddingHorizontal: 48,
+    borderRadius: 24,
     alignItems: 'center' as const,
   },
-  appleButton: {
-    width: '100%',
-    backgroundColor: '#1F2937',
-    paddingVertical: 18,
-    borderRadius: 28,
-    alignItems: 'center' as const,
-  },
-  socialButtonText: {
+  nextButtonText: {
     color: 'white',
-    fontSize: 17,
-    fontWeight: '600' as const,
-  },
-  signInContainer: {
-    flexDirection: 'row' as const,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    marginTop: 8,
-  },
-  signInText: {
     fontSize: 15,
-    color: '#6B7280',
-  },
-  signInLink: {
-    fontSize: 15,
-    color: '#1F2937',
     fontWeight: '600' as const,
   },
 });

@@ -7,59 +7,36 @@ interface WellnessScreenProps {
 }
 
 const WellnessScreen: React.FC<WellnessScreenProps> = ({ onNext, onSkip }) => {
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
-      <View style={{ flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', paddingTop: 60, paddingBottom: 40 }}>
-        <View style={{ flex: 1, justifyContent: 'center', paddingTop: 60 }}>
-          <Text style={{
-            fontSize: 32,
-            fontWeight: '700',
-            color: '#1F2937',
-            textAlign: 'left',
-            marginBottom: 16,
-            lineHeight: 40
-          }}>
-            Stay On Top of Your <Text style={{ color: '#4F7FFF' }}>Wellness</Text>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.topSection}>
+          <Text style={styles.title}>
+            Stay On Top of Your <Text style={styles.titleHighlight}>Wellness</Text>
           </Text>
 
-          <Text style={{
-            fontSize: 15,
-            color: '#6B7280',
-            textAlign: 'left',
-            lineHeight: 22
-          }}>
+          <Text style={styles.subtitle}>
             Log symptoms, medications, mood, sleep, and more with your personal health journal and tracker.
           </Text>
         </View>
 
         <View>
-          <View style={{ flexDirection: 'row', justifyContent: 'flex-start', marginBottom: 24, gap: 6 }}>
-            <View style={{ width: 24, height: 3, backgroundColor: '#E5E7EB', borderRadius: 2 }} />
-            <View style={{ width: 24, height: 3, backgroundColor: '#4F7FFF', borderRadius: 2 }} />
-            <View style={{ width: 24, height: 3, backgroundColor: '#E5E7EB', borderRadius: 2 }} />
+          <View style={styles.pagination}>
+            <View style={styles.dot} />
+            <View style={[styles.dot, styles.dotActive]} />
+            <View style={styles.dot} />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+          <View style={styles.buttonsContainer}>
             <TouchableOpacity onPress={onSkip}>
-              <Text style={{ fontSize: 15, color: '#9CA3AF', fontWeight: '500' }}>Skip</Text>
+              <Text style={styles.skipText}>Skip</Text>
             </TouchableOpacity>
 
             <TouchableOpacity 
               onPress={onNext}
-              style={{
-                backgroundColor: '#4F7FFF',
-                paddingVertical: 12,
-                paddingHorizontal: 32,
-                borderRadius: 20,
-                alignItems: 'center'
-              }}
+              style={styles.nextButton}
             >
-              <Text style={{
-                color: 'white',
-                fontSize: 15,
-                fontWeight: '600'
-              }}>
+              <Text style={styles.nextButtonText}>
                 Next
               </Text>
             </TouchableOpacity>
@@ -69,5 +46,78 @@ const WellnessScreen: React.FC<WellnessScreenProps> = ({ onNext, onSkip }) => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 40,
+  },
+  topSection: {
+    flex: 1,
+    justifyContent: 'center' as const,
+    paddingTop: 60,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: '700' as const,
+    color: '#1F2937',
+    textAlign: 'left' as const,
+    marginBottom: 24,
+    lineHeight: 40,
+  },
+  titleHighlight: {
+    color: '#4F7FFF',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#6B7280',
+    textAlign: 'left' as const,
+    lineHeight: 24,
+  },
+  pagination: {
+    flexDirection: 'row' as const,
+    justifyContent: 'flex-start' as const,
+    marginBottom: 24,
+    gap: 6,
+  },
+  dot: {
+    width: 24,
+    height: 3,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+  },
+  dotActive: {
+    backgroundColor: '#4F7FFF',
+  },
+  buttonsContainer: {
+    flexDirection: 'row' as const,
+    justifyContent: 'space-between' as const,
+    alignItems: 'center' as const,
+  },
+  skipText: {
+    fontSize: 15,
+    color: '#9CA3AF',
+    fontWeight: '500' as const,
+  },
+  nextButton: {
+    backgroundColor: '#4F7FFF',
+    paddingVertical: 12,
+    paddingHorizontal: 48,
+    borderRadius: 24,
+    alignItems: 'center' as const,
+  },
+  nextButtonText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: '600' as const,
+  },
+});
 
 export default WellnessScreen;
