@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import React, { useMemo, useState, useEffect } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Moon, Flame, Heart, Footprints, TrendingUp } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
@@ -8,6 +8,7 @@ import { useRouter } from 'expo-router';
 import { articles } from '@/constants/articles';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUser } from '@/contexts/UserContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -41,6 +42,34 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { healthData } = useHealthTracker();
   const router = useRouter();
   const { user } = useUser();
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>('');
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true);
+
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        setIsLoadingProfile(true);
+        const storedProfile = await AsyncStorage.getItem('userProfile');
+        
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          if (profile.avatar_url) {
+            setProfileImage(profile.avatar_url);
+          }
+          if (profile.full_name) {
+            setUserName(profile.full_name);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading profile:', error);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+    
+    loadProfile();
+  }, []);
 
   const todayMedications = useMemo(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -82,6 +111,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
       fontSize: 20,
       color: '#FFFFFF',
       fontWeight: '600'
+    },
+    avatarImage: {
+      width: 48,
+      height: 48,
+      borderRadius: 24
     },
     welcomeText: {
       fontSize: 14,
@@ -458,14 +492,20 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.headerTop}>
             <View style={styles.userSection}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤'}
-                </Text>
+                {isLoadingProfile ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : profileImage ? (
+                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarText}>
+                    {userName ? userName.charAt(0).toUpperCase() : (user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤')}
+                  </Text>
+                )}
               </View>
               <View>
                 <Text style={styles.welcomeText}>Welcome Back</Text>
                 <Text style={styles.userName}>
-                  {user?.firstName || 'User'}
+                  {userName || user?.firstName || 'User'}
                 </Text>
               </View>
             </View>

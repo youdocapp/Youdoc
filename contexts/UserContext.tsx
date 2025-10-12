@@ -10,6 +10,7 @@ interface UserProfile {
   bloodType?: string;
   height?: string;
   weight?: string;
+  avatarUrl?: string;
 }
 
 interface UserContextType {
