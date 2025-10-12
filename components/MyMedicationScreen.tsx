@@ -454,7 +454,11 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
               </View>
             </TouchableOpacity>
           ))
-        ) : null}
+        ) : (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyText}>No medication today</Text>
+          </View>
+        )}
       </ScrollView>
 
       <TouchableOpacity style={styles.fab} onPress={onAddMedication}>
