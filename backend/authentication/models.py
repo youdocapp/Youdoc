@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.utils import timezone
+import uuid
 
 
 class UserManager(BaseUserManager):
@@ -35,6 +36,23 @@ class User(AbstractUser):
     """
     Custom User model with additional fields required by the frontend
     """
+    # Use UUID as primary key instead of sequential integer
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False,
+        help_text="Unique identifier for the user"
+    )
+    
+    # Public ID for API responses (shorter, more user-friendly)
+    public_id = models.CharField(
+        max_length=12,
+        unique=True,
+        editable=False,
+        default='temp_id',
+        help_text="Short public identifier for the user"
+    )
+    
     # Remove username field and use email as username
     username = None
     email = models.EmailField(unique=True)
@@ -123,10 +141,32 @@ class User(AbstractUser):
         """Return the user's full name"""
         return f"{self.first_name} {self.last_name}".strip()
     
+    def generate_public_id(self):
+        """Generate a short, unique public ID"""
+        import secrets
+        import string
+        
+        # Generate a 10-character alphanumeric ID
+        alphabet = string.ascii_letters + string.digits
+        public_id = ''.join(secrets.choice(alphabet) for _ in range(10))
+        
+        # Ensure uniqueness
+        while User.objects.filter(public_id=public_id).exists():
+            public_id = ''.join(secrets.choice(alphabet) for _ in range(10))
+        
+        return public_id
+    
+    def save(self, *args, **kwargs):
+        """Override save to generate public_id if not set"""
+        if not self.public_id:
+            self.public_id = self.generate_public_id()
+        super().save(*args, **kwargs)
+    
     def get_profile_data(self):
         """Return user profile data for frontend"""
         return {
-            'id': self.id,
+            'id': str(self.id),  # Convert UUID to string
+            'publicId': self.public_id,  # Add public ID
             'email': self.email,
             'firstName': self.first_name,
             'lastName': self.last_name,

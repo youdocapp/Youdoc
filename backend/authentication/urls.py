@@ -1,6 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
+from . import oauth_views
 
 app_name = 'authentication'
 
@@ -25,4 +26,8 @@ urlpatterns = [
     
     # Account management
     path('delete-account/', views.delete_account, name='delete_account'),
+    
+    # OAuth endpoints
+    path('google/', oauth_views.google_auth, name='google_auth'),
+    path('apple/', oauth_views.apple_auth, name='apple_auth'),
 ]

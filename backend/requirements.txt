@@ -1,11 +1,33 @@
 asgiref==3.10.0
+certifi==2025.10.5
+cffi==2.0.0
+charset-normalizer==3.4.3
+cryptography==46.0.2
+defusedxml==0.7.1
 dj-database-url==3.0.1
 Django==5.2.7
 django-cors-headers==4.9.0
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 django-jazzmin==3.0.1
+ecdsa==0.19.1
+idna==3.11
+oauthlib==3.3.1
 psycopg2-binary==2.9.11
+pyasn1==0.6.1
+pycparser==2.23
 PyJWT==2.10.1
 python-decouple==3.8
+python-jose==3.5.0
+python3-openid==3.2.0
+requests==2.32.5
+requests-oauthlib==2.0.0
+rsa==4.9.1
+six==1.17.0
+# Removed social-auth-app-django due to UUID compatibility issues
+# Using custom OAuth implementation instead
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
 sqlparse==0.5.3
+urllib3==2.5.0

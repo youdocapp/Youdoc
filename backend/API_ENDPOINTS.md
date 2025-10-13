@@ -265,6 +265,90 @@
 }
 ```
 
+## OAuth Authentication
+
+### Google OAuth2
+
+#### Get Google Login URL
+- **GET** `/google/url/`
+- **Description**: Get Google OAuth2 login URL
+- **Response**:
+```json
+{
+  "success": true,
+  "auth_url": "https://accounts.google.com/oauth/authorize?...",
+  "redirect_uri": "http://localhost:8000/api/auth/social/complete/google-oauth2/"
+}
+```
+
+#### Authenticate with Google
+- **POST** `/google/`
+- **Description**: Authenticate using Google OAuth2 token
+- **Request Body**:
+```json
+{
+  "access_token": "google_access_token_here"
+}
+```
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Google authentication successful",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 1,
+    "email": "user@gmail.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "isEmailVerified": true,
+    "createdAt": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
+### Apple Sign In
+
+#### Get Apple Login URL
+- **GET** `/apple/url/`
+- **Description**: Get Apple Sign In login URL
+- **Response**:
+```json
+{
+  "success": true,
+  "auth_url": "https://appleid.apple.com/auth/authorize?...",
+  "redirect_uri": "http://localhost:8000/api/auth/social/complete/apple-id/"
+}
+```
+
+#### Authenticate with Apple
+- **POST** `/apple/`
+- **Description**: Authenticate using Apple Sign In token
+- **Request Body**:
+```json
+{
+  "access_token": "apple_access_token_here"
+}
+```
+- **Response**:
+```json
+{
+  "success": true,
+  "message": "Apple authentication successful",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "id": 1,
+    "email": "user@privaterelay.appleid.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "isEmailVerified": true,
+    "createdAt": "2024-01-01T12:00:00Z"
+  }
+}
+```
+
 ## Authentication
 
 All protected endpoints require a JWT token in the Authorization header:

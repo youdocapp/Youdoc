@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    # 'social_django',  # Temporarily disabled due to UUID compatibility issues
     'authentication',
 ]
 
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'social_django.middleware.SocialAuthExceptionMiddleware',  # Temporarily disabled
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -287,3 +289,10 @@ JAZZMIN_UI_TWEAKS = {
         "success": "btn-success"
     }
 }
+
+# OAuth Configuration (Custom Implementation)
+# Google OAuth2 Configuration
+GOOGLE_OAUTH2_CLIENT_ID = config('GOOGLE_OAUTH2_CLIENT_ID', default='')
+
+# Apple Sign In Configuration
+APPLE_CLIENT_ID = config('APPLE_CLIENT_ID', default='')

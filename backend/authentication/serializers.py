@@ -87,14 +87,17 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for user profile data
     """
+    id = serializers.UUIDField(read_only=True)
+    public_id = serializers.CharField(read_only=True)
+    
     class Meta:
         model = User
         fields = [
-            'id', 'email', 'first_name', 'last_name', 'mobile', 
+            'id', 'public_id', 'email', 'first_name', 'last_name', 'mobile',
             'date_of_birth', 'gender', 'blood_type', 'height', 'weight',
             'is_email_verified', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'email', 'is_email_verified', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'public_id', 'email', 'is_email_verified', 'created_at', 'updated_at']
 
 
 class PasswordChangeSerializer(serializers.Serializer):
