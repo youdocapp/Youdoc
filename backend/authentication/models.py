@@ -158,7 +158,7 @@ class User(AbstractUser):
     
     def save(self, *args, **kwargs):
         """Override save to generate public_id if not set"""
-        if not self.public_id:
+        if not self.public_id or self.public_id == 'temp_id':
             self.public_id = self.generate_public_id()
         super().save(*args, **kwargs)
     

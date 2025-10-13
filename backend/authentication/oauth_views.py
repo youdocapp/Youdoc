@@ -21,17 +21,17 @@ def google_auth(request):
     Google OAuth2 authentication endpoint
     """
     try:
-        # Get access token from request
-        access_token = request.data.get('access_token')
-        if not access_token:
+        # Get ID token from request
+        id_token = request.data.get('access_token')  # Note: keeping 'access_token' key for API compatibility
+        if not id_token:
             return Response({
                 'error': True,
-                'message': 'Access token is required',
-                'details': 'Please provide a valid Google access token'
+                'message': 'ID token is required',
+                'details': 'Please provide a valid Google ID token'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Authenticate user with Google token
-        user, user_info = OAuthService.authenticate_user('google', access_token)
+        # Authenticate user with Google ID token
+        user, user_info = OAuthService.authenticate_user('google', id_token)
         
         if user and user.is_active:
             # Generate JWT tokens
@@ -67,17 +67,17 @@ def apple_auth(request):
     Apple Sign In authentication endpoint
     """
     try:
-        # Get access token from request
-        access_token = request.data.get('access_token')
-        if not access_token:
+        # Get ID token from request
+        id_token = request.data.get('access_token')  # Note: keeping 'access_token' key for API compatibility
+        if not id_token:
             return Response({
                 'error': True,
-                'message': 'Access token is required',
-                'details': 'Please provide a valid Apple access token'
+                'message': 'ID token is required',
+                'details': 'Please provide a valid Apple ID token'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Authenticate user with Apple token
-        user, user_info = OAuthService.authenticate_user('apple', access_token)
+        # Authenticate user with Apple ID token
+        user, user_info = OAuthService.authenticate_user('apple', id_token)
         
         if user and user.is_active:
             # Generate JWT tokens
