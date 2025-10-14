@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
+import { trpc } from '@/lib/trpc';
 
 type MedicationType = 'Pill' | 'Injection' | 'Drops' | 'Inhaler' | 'Cream' | 'Spray';
 type FrequencyType = 'Daily' | 'Weekly' | 'As needed';
@@ -45,31 +46,63 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const [showStartDatePicker, setShowStartDatePicker] = useState<boolean>(false);
   const [showEndDatePicker, setShowEndDatePicker] = useState<boolean>(false);
   const [showMultipleDatePicker, setShowMultipleDatePicker] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const handleSave = () => {
+  const addMedicationMutation = trpc.medications.add.useMutation();
+  const utils = trpc.useUtils();
+
+  const handleSave = async () => {
     if (!name || !dosage) {
       Alert.alert('Error', 'Please fill in medication name and dosage');
       return;
     }
 
-    addMedication({
-      name,
-      dosage: `${dosage}${unit}`,
-      frequency,
-      time: reminderTimes,
-      startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-      endDate: endDate ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
-      notes,
-      reminderEnabled: true,
-      taken: false,
-      dateAdded: startDate.toISOString().split('T')[0],
-      startDateObj: startDate,
-      endDateObj: endDate || undefined
-    });
+    setIsSaving(true);
 
-    Alert.alert('Success', 'Medication added successfully', [
-      { text: 'OK', onPress: () => onSave ? onSave() : onBack() }
-    ]);
+    try {
+      const frequencyMap: Record<FrequencyType, 'daily' | 'weekly' | 'as_needed'> = {
+        'Daily': 'daily',
+        'Weekly': 'weekly',
+        'As needed': 'as_needed'
+      };
+
+      await addMedicationMutation.mutateAsync({
+        name,
+        dosage: `${dosage}${unit}`,
+        frequency: frequencyMap[frequency],
+        time: reminderTimes,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate ? endDate.toISOString().split('T')[0] : undefined,
+        notes: notes || undefined,
+        reminder_enabled: true,
+      });
+
+      addMedication({
+        name,
+        dosage: `${dosage}${unit}`,
+        frequency,
+        time: reminderTimes,
+        startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+        endDate: endDate ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
+        notes,
+        reminderEnabled: true,
+        taken: false,
+        dateAdded: startDate.toISOString().split('T')[0],
+        startDateObj: startDate,
+        endDateObj: endDate || undefined
+      });
+
+      await utils.medications.getAll.invalidate();
+
+      Alert.alert('Success', 'Medication added successfully', [
+        { text: 'OK', onPress: () => onSave ? onSave() : onBack() }
+      ]);
+    } catch (error) {
+      console.error('Error saving medication:', error);
+      Alert.alert('Error', 'Failed to save medication. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const addReminderTime = () => {
@@ -620,11 +653,15 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       textAlignVertical: 'top' as const
     },
     saveButton: {
-      backgroundColor: '#D1D5DB',
+      backgroundColor: '#4F7FFF',
       borderRadius: 12,
       padding: 16,
       alignItems: 'center' as const,
       marginBottom: 24
+    },
+    saveButtonDisabled: {
+      backgroundColor: '#D1D5DB',
+      opacity: 0.6
     },
     saveButtonText: {
       color: '#FFFFFF',
@@ -995,8 +1032,16 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
           numberOfLines={4}
         />
 
-        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-          <Text style={styles.saveButtonText}>Save Medication</Text>
+        <TouchableOpacity 
+          style={[styles.saveButton, isSaving && styles.saveButtonDisabled]} 
+          onPress={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator color="#FFFFFF" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Medication</Text>
+          )}
         </TouchableOpacity>
       </ScrollView>
       </KeyboardAvoidingView>
