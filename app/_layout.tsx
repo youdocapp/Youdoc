@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
+import { trpc, trpcClient } from '../lib/trpc';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
@@ -106,24 +107,26 @@ export default function RootLayout() {
   console.log('✅ RootLayout rendering with providers');
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <AuthProvider>
-          <UserProvider>
-            <MedicationProvider>
-              <HealthTrackerProvider>
-                <EmergencyContactsProvider>
-                  <HealthRecordsProvider>
-                    <MedicalHistoryProvider>
-                      <AppContent />
-                    </MedicalHistoryProvider>
-                  </HealthRecordsProvider>
-                </EmergencyContactsProvider>
-              </HealthTrackerProvider>
-            </MedicationProvider>
-          </UserProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <UserProvider>
+              <MedicationProvider>
+                <HealthTrackerProvider>
+                  <EmergencyContactsProvider>
+                    <HealthRecordsProvider>
+                      <MedicalHistoryProvider>
+                        <AppContent />
+                      </MedicalHistoryProvider>
+                    </HealthRecordsProvider>
+                  </EmergencyContactsProvider>
+                </HealthTrackerProvider>
+              </MedicationProvider>
+            </UserProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </trpc.Provider>
   );
 }
