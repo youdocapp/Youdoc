@@ -44,8 +44,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'corsheaders',
+    'django_filters',
     # 'social_django',  # Temporarily disabled due to UUID compatibility issues
     'authentication',
+    'medication',
+    'health_records',
+    'medical_history',
 ]
 
 MIDDLEWARE = [
@@ -125,6 +129,11 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -220,7 +229,7 @@ JAZZMIN_SETTINGS = {
     "copyright": "Youdoc Health Platform",
 
     # List of model admins to search from the search bar
-    "search_model": ["authentication.User"],
+    "search_model": ["authentication.User", "medication.Medication", "health_records.HealthRecord"],
 
     # Whether to display the side menu
     "show_sidebar": True,
@@ -229,7 +238,7 @@ JAZZMIN_SETTINGS = {
     "navigation_expanded": True,
 
     # List of apps (and/or models) to base side menu ordering off of
-    "order_with_respect_to": ["authentication", "auth"],
+    "order_with_respect_to": ["authentication", "medication", "health_records", "auth"],
 
     # Custom icons for side menu apps/models
     "icons": {
@@ -237,6 +246,12 @@ JAZZMIN_SETTINGS = {
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
         "authentication.User": "fas fa-user-md",
+        "medication": "fas fa-pills",
+        "medication.Medication": "fas fa-capsules",
+        "medication.MedicationReminder": "fas fa-bell",
+        "medication.MedicationTaken": "fas fa-check-circle",
+        "health_records": "fas fa-file-medical",
+        "health_records.HealthRecord": "fas fa-file-medical-alt",
     },
 
     # Use modals instead of popups
@@ -296,3 +311,12 @@ GOOGLE_OAUTH2_CLIENT_ID = config('GOOGLE_OAUTH2_CLIENT_ID', default='')
 
 # Apple Sign In Configuration
 APPLE_CLIENT_ID = config('APPLE_CLIENT_ID', default='')
+
+# Email Configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')

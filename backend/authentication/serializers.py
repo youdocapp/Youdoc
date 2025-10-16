@@ -45,13 +45,13 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         email = validated_data.pop('email')  # Extract email to avoid duplication
         
-        # Generate email verification token
-        token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
+        # Generate 6-digit OTP for email verification
+        otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
         
         user = User.objects.create_user(
             email=email,
             password=password,
-            email_verification_token=token,
+            email_verification_token=otp_code,
             email_verification_sent_at=datetime.now(),
             **validated_data
         )
@@ -77,6 +77,8 @@ class UserLoginSerializer(serializers.Serializer):
                 raise serializers.ValidationError('Invalid email or password')
             if not user.is_active:
                 raise serializers.ValidationError('User account is disabled')
+            if not user.is_email_verified:
+                raise serializers.ValidationError('Please verify your email address before logging in. Check your email for the verification code.')
             attrs['user'] = user
             return attrs
         else:
@@ -87,17 +89,16 @@ class UserProfileSerializer(serializers.ModelSerializer):
     """
     Serializer for user profile data
     """
-    id = serializers.UUIDField(read_only=True)
     public_id = serializers.CharField(read_only=True)
     
     class Meta:
         model = User
         fields = [
-            'id', 'public_id', 'email', 'first_name', 'last_name', 'mobile',
+            'public_id', 'email', 'first_name', 'last_name', 'mobile',
             'date_of_birth', 'gender', 'blood_type', 'height', 'weight',
             'is_email_verified', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'public_id', 'email', 'is_email_verified', 'created_at', 'updated_at']
+        read_only_fields = ['public_id', 'email', 'is_email_verified', 'created_at', 'updated_at']
 
 
 class PasswordChangeSerializer(serializers.Serializer):
@@ -177,10 +178,10 @@ class EmailVerificationSerializer(serializers.Serializer):
             if user.is_email_verified:
                 raise serializers.ValidationError("Email is already verified")
             
-            # Check if token is expired (24 hours)
-            if user.email_verification_sent_at and datetime.now() - user.email_verification_sent_at > timedelta(hours=24):
-                raise serializers.ValidationError("Verification token has expired")
+            # Check if token is expired (10 minutes for OTP)
+            if user.email_verification_sent_at and datetime.now() - user.email_verification_sent_at > timedelta(minutes=10):
+                raise serializers.ValidationError("Verification code has expired")
             
             return value
         except User.DoesNotExist:
-            raise serializers.ValidationError("Invalid verification token")
+            raise serializers.ValidationError("Invalid verification code")

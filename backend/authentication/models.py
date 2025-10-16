@@ -4,6 +4,21 @@ from django.utils import timezone
 import uuid
 
 
+class BloodType(models.TextChoices):
+    """
+    Blood type choices following international medical standards.
+    These are standardized values that rarely change.
+    """
+    A_POSITIVE = 'A+', 'A+'
+    A_NEGATIVE = 'A-', 'A-'
+    B_POSITIVE = 'B+', 'B+'
+    B_NEGATIVE = 'B-', 'B-'
+    AB_POSITIVE = 'AB+', 'AB+'
+    AB_NEGATIVE = 'AB-', 'AB-'
+    O_POSITIVE = 'O+', 'O+'
+    O_NEGATIVE = 'O-', 'O-'
+
+
 class UserManager(BaseUserManager):
     """
     Custom user manager for email-based authentication
@@ -77,16 +92,7 @@ class User(AbstractUser):
     )
     blood_type = models.CharField(
         max_length=5,
-        choices=[
-            ('A+', 'A+'),
-            ('A-', 'A-'),
-            ('B+', 'B+'),
-            ('B-', 'B-'),
-            ('AB+', 'AB+'),
-            ('AB-', 'AB-'),
-            ('O+', 'O+'),
-            ('O-', 'O-'),
-        ],
+        choices=BloodType.choices,
         blank=True,
         null=True,
         help_text="User's blood type"
@@ -165,8 +171,7 @@ class User(AbstractUser):
     def get_profile_data(self):
         """Return user profile data for frontend"""
         return {
-            'id': str(self.id),  # Convert UUID to string
-            'publicId': self.public_id,  # Add public ID
+            'publicId': self.public_id,  # Only return public ID for security
             'email': self.email,
             'firstName': self.first_name,
             'lastName': self.last_name,

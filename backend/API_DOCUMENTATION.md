@@ -409,6 +409,277 @@ The API field is named `access_token` for compatibility, but it expects an **ID 
 }
 ```
 
+### BloodType Enum Usage
+
+The `bloodType` field uses Django's `TextChoices` enum for type safety and validation. Here's how to use it:
+
+#### Backend Implementation
+```python
+from authentication.models import BloodType
+
+# Valid blood type values
+valid_blood_types = BloodType.choices
+# Returns: [('A+', 'A+'), ('A-', 'A-'), ('B+', 'B+'), ...]
+
+# Check if a value is valid
+user_blood_type = "O+"
+if user_blood_type in [choice[0] for choice in BloodType.choices]:
+    print("Valid blood type")
+
+# Use in model validation
+user.blood_type = BloodType.O_POSITIVE  # 'O+'
+user.blood_type = BloodType.A_NEGATIVE  # 'A-'
+```
+
+#### Available Blood Type Values
+- `A+` - A Positive
+- `A-` - A Negative  
+- `B+` - B Positive
+- `B-` - B Negative
+- `AB+` - AB Positive
+- `AB-` - AB Negative
+- `O+` - O Positive
+- `O-` - O Negative
+
+#### API Usage Examples
+
+**Valid blood type in registration:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword",
+  "first_name": "John",
+  "last_name": "Doe",
+  "blood_type": "O+"
+}
+```
+
+**Valid blood type in profile update:**
+```json
+{
+  "blood_type": "A-"
+}
+```
+
+**Invalid blood type (will return validation error):**
+```json
+{
+  "blood_type": "AB+"  // Valid
+  "blood_type": "X+"   // Invalid - will return 400 error
+}
+```
+
+#### Error Response for Invalid Blood Type
+```json
+{
+  "error": true,
+  "message": "Profile update failed",
+  "details": {
+    "blood_type": ["\"X+\" is not a valid choice."]
+  }
+}
+```
+
+#### React Native Integration
+
+The BloodType enum works seamlessly with React Native applications. Here's how to integrate it:
+
+##### 1. Frontend Constants (Recommended)
+Create a constants file to match the backend enum:
+
+```typescript
+// constants/bloodTypes.ts
+export const BLOOD_TYPES = [
+  'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
+] as const;
+
+export type BloodType = typeof BLOOD_TYPES[number];
+
+// For TypeScript users
+export const BLOOD_TYPE_OPTIONS = BLOOD_TYPES.map(type => ({
+  value: type,
+  label: type
+}));
+```
+
+##### 2. Component Usage
+```typescript
+// In your React Native component
+import { BLOOD_TYPES } from '../constants/bloodTypes';
+
+const ProfileScreen = () => {
+  const [bloodType, setBloodType] = useState<string>('O+');
+  const [showBloodTypeModal, setShowBloodTypeModal] = useState(false);
+
+  return (
+    <Modal visible={showBloodTypeModal}>
+      <View>
+        <Text>Select Blood Type</Text>
+        {BLOOD_TYPES.map((option) => (
+          <TouchableOpacity
+            key={option}
+            style={[styles.option, bloodType === option && styles.selectedOption]}
+            onPress={() => {
+              setBloodType(option);
+              setShowBloodTypeModal(false);
+            }}
+          >
+            <Text>{option}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </Modal>
+  );
+};
+```
+
+##### 3. API Integration
+```typescript
+// API service functions
+const updateUserProfile = async (profileData: { blood_type?: string }) => {
+  try {
+    const response = await fetch('/api/auth/profile/', {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(profileData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Update failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Profile update error:', error);
+    throw error;
+  }
+};
+
+// Usage in component
+const handleBloodTypeUpdate = async (newBloodType: string) => {
+  try {
+    await updateUserProfile({ blood_type: newBloodType });
+    Alert.alert('Success', 'Blood type updated successfully');
+  } catch (error) {
+    Alert.alert('Error', 'Failed to update blood type');
+  }
+};
+```
+
+##### 4. Error Handling
+```typescript
+// Enhanced error handling for blood type validation
+const handleProfileUpdate = async (bloodType: string) => {
+  try {
+    const response = await updateUserProfile({ blood_type: bloodType });
+    // Success handling
+  } catch (error: any) {
+    if (error.details?.blood_type) {
+      // Backend validation error
+      Alert.alert(
+        'Invalid Blood Type', 
+        'Please select a valid blood type from the list'
+      );
+    } else {
+      // Other errors
+      Alert.alert('Error', error.message || 'Update failed');
+    }
+  }
+};
+```
+
+##### 5. Form Validation (Optional)
+```typescript
+// Optional frontend validation (backend is the source of truth)
+const validateBloodType = (bloodType: string): boolean => {
+  return BLOOD_TYPES.includes(bloodType as BloodType);
+};
+
+// Usage in form submission
+const handleFormSubmit = () => {
+  if (!validateBloodType(bloodType)) {
+    Alert.alert('Error', 'Please select a valid blood type');
+    return;
+  }
+  
+  // Proceed with API call
+  handleBloodTypeUpdate(bloodType);
+};
+```
+
+##### 6. Registration Flow
+```typescript
+// User registration with blood type
+const registerUser = async (userData: {
+  email: string;
+  password: string;
+  first_name: string;
+  last_name: string;
+  blood_type: string;
+}) => {
+  try {
+    const response = await fetch('/api/auth/register/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Registration failed');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Registration error:', error);
+    throw error;
+  }
+};
+```
+
+##### 7. Data Display
+```typescript
+// Displaying user profile data
+const UserProfile = ({ user }: { user: any }) => {
+  return (
+    <View>
+      <Text>Blood Type: {user.bloodType || 'Not specified'}</Text>
+      {/* Other profile fields */}
+    </View>
+  );
+};
+```
+
+##### 8. TypeScript Integration (Advanced)
+```typescript
+// For TypeScript projects - type-safe blood type handling
+interface UserProfile {
+  id: string;
+  email: string;
+  bloodType: BloodType | null;
+  // other fields...
+}
+
+const ProfileComponent: React.FC<{ user: UserProfile }> = ({ user }) => {
+  const [selectedBloodType, setSelectedBloodType] = useState<BloodType | null>(
+    user.bloodType
+  );
+
+  const handleBloodTypeChange = (newType: BloodType) => {
+    setSelectedBloodType(newType);
+    // Update via API
+  };
+
+  return (
+    // Component JSX
+  );
+};
+```
+
 ---
 
 ## ❌ Error Responses

@@ -24,6 +24,7 @@ from .serializers import (
     PasswordResetConfirmSerializer,
     EmailVerificationSerializer
 )
+from .email_utils import send_otp_email, send_password_reset_email, send_welcome_email
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -75,19 +76,24 @@ def register(request):
         if serializer.is_valid():
             user = serializer.save()
             
-            # Generate JWT tokens for the new user
-            refresh = RefreshToken.for_user(user)
-            access = refresh.access_token
-            
-            # TODO: Send email verification email
-            # send_verification_email(user)
+            # Send OTP verification email (welcome email will be sent after verification)
+            try:
+                # Generate 6-digit OTP
+                otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+                user.email_verification_token = otp_code
+                user.email_verification_sent_at = datetime.now()
+                user.save()
+                
+                send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+            except Exception as email_error:
+                # Log email error but don't fail registration
+                print(f"Failed to send OTP email: {email_error}")
             
             return Response({
                 'success': True,
-                'message': 'User registered successfully. Please verify your email.',
-                'access': str(access),
-                'refresh': str(refresh),
-                'user': user.get_profile_data()
+                'message': 'Registration successful! Please check your email for the verification code.',
+                'email': user.email,
+                'requires_verification': True
             }, status=status.HTTP_201_CREATED)
         
         # Return validation errors in proper JSON format
@@ -164,14 +170,25 @@ def password_reset_request(request):
         user.password_reset_sent_at = datetime.now()
         user.save()
         
-        # TODO: Send password reset email
-        # send_password_reset_email(user, token)
-        
-        return Response({
-            'message': 'Password reset email sent successfully'
-        }, status=status.HTTP_200_OK)
+        # Send password reset email
+        try:
+            send_password_reset_email(user.email, token, user.first_name or user.email.split('@')[0])
+            return Response({
+                'success': True,
+                'message': 'Password reset email sent successfully. Please check your email.'
+            }, status=status.HTTP_200_OK)
+        except Exception as email_error:
+            return Response({
+                'error': True,
+                'message': 'Failed to send password reset email. Please try again.',
+                'details': str(email_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'error': True,
+        'message': 'Invalid email address',
+        'details': serializer.errors
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST'])
@@ -226,37 +243,47 @@ def verify_email(request):
 @permission_classes([AllowAny])
 def resend_verification_email(request):
     """
-    Resend email verification
+    Resend email verification OTP
     """
     email = request.data.get('email')
     if not email:
         return Response({
-            'error': 'Email is required'
+            'error': True,
+            'message': 'Email is required'
         }, status=status.HTTP_400_BAD_REQUEST)
     
     try:
         user = User.objects.get(email=email)
         if user.is_email_verified:
             return Response({
-                'error': 'Email is already verified'
+                'error': True,
+                'message': 'Email is already verified'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Generate new verification token
-        token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
-        user.email_verification_token = token
+        # Generate new 6-digit OTP
+        otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+        user.email_verification_token = otp_code
         user.email_verification_sent_at = datetime.now()
         user.save()
         
-        # TODO: Send verification email
-        # send_verification_email(user)
-        
-        return Response({
-            'message': 'Verification email sent successfully'
-        }, status=status.HTTP_200_OK)
+        # Send OTP verification email
+        try:
+            send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+            return Response({
+                'success': True,
+                'message': 'Verification code sent successfully. Please check your email.'
+            }, status=status.HTTP_200_OK)
+        except Exception as email_error:
+            return Response({
+                'error': True,
+                'message': 'Failed to send verification email. Please try again.',
+                'details': str(email_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     except User.DoesNotExist:
         return Response({
-            'error': 'User not found'
+            'error': True,
+            'message': 'User not found'
         }, status=status.HTTP_404_NOT_FOUND)
 
 
@@ -295,21 +322,73 @@ def delete_account(request):
     }, status=status.HTTP_200_OK)
 
 
-# Helper functions for email sending (to be implemented)
-def send_verification_email(user):
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_otp(request):
     """
-    Send email verification email
+    Verify OTP code for email verification
     """
-    # TODO: Implement email sending
-    pass
-
-
-def send_password_reset_email(user, token):
-    """
-    Send password reset email
-    """
-    # TODO: Implement email sending
-    pass
+    otp_code = request.data.get('otp')
+    email = request.data.get('email')
+    
+    if not otp_code or not email:
+        return Response({
+            'error': True,
+            'message': 'OTP code and email are required'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        user = User.objects.get(email=email)
+        
+        if user.is_email_verified:
+            return Response({
+                'error': True,
+                'message': 'Email is already verified'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if user.email_verification_token != otp_code:
+            return Response({
+                'error': True,
+                'message': 'Invalid OTP code'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if OTP is expired (10 minutes)
+        if user.email_verification_sent_at and datetime.now() - user.email_verification_sent_at > timedelta(minutes=10):
+            return Response({
+                'error': True,
+                'message': 'OTP code has expired. Please request a new one.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Mark email as verified and clear token
+        user.is_email_verified = True
+        user.email_verification_token = None
+        user.email_verification_sent_at = None
+        user.save()
+        
+        # Send welcome email after successful verification
+        try:
+            send_welcome_email(user.email, user.first_name or user.email.split('@')[0])
+        except Exception as email_error:
+            # Log email error but don't fail verification
+            print(f"Failed to send welcome email: {email_error}")
+        
+        # Generate JWT tokens after successful verification (user is now logged in)
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+        
+        return Response({
+            'success': True,
+            'message': 'Email verified successfully! Welcome to Youdoc!',
+            'access': str(access),
+            'refresh': str(refresh),
+            'user': user.get_profile_data()
+        }, status=status.HTTP_200_OK)
+    
+    except User.DoesNotExist:
+        return Response({
+            'error': True,
+            'message': 'User not found'
+        }, status=status.HTTP_404_NOT_FOUND)
 
 
 # Custom exception handler for JSON error responses

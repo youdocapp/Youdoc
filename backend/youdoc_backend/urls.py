@@ -16,6 +16,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
 
 # Customize admin site
 admin.site.site_header = "Youdoc Administration"
@@ -26,4 +28,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('rest_framework.urls')),
     path('api/auth/', include('authentication.urls')),
+    path('api/medications/', include('medication.urls')),
+    path('api/health-records/', include('health_records.urls')),
+    path('api/medical-history/', include('medical_history.urls')),
 ]
+
+# Serve media files during development
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
