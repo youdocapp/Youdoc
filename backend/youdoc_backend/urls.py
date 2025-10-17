@@ -33,6 +33,8 @@ urlpatterns = [
     path('api/medical-history/', include('medical_history.urls')),
     path('api/emergency-contacts/', include('emergency_contacts.urls')),
     path('api/articles/', include('articles.urls')),
+    path('api/health-tracking/', include('health_tracking.urls')),
+    path('api/notifications/', include('notifications.urls')),
 ]
 
 # Serve media files during development

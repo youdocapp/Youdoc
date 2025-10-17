@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     'medical_history',
     'emergency_contacts',
     'articles',
+    'health_tracking',
+    'notifications',
 ]
 
 MIDDLEWARE = [
