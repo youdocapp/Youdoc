@@ -81,7 +81,7 @@ def register(request):
                 # Generate 6-digit OTP
                 otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
                 user.email_verification_token = otp_code
-                user.email_verification_sent_at = datetime.now()
+                user.email_verification_sent_at = timezone.now()
                 user.save()
                 
                 send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
@@ -167,7 +167,7 @@ def password_reset_request(request):
         # Generate reset token
         token = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(32))
         user.password_reset_token = token
-        user.password_reset_sent_at = datetime.now()
+        user.password_reset_sent_at = timezone.now()
         user.save()
         
         # Send password reset email
@@ -263,7 +263,7 @@ def resend_verification_email(request):
         # Generate new 6-digit OTP
         otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
         user.email_verification_token = otp_code
-        user.email_verification_sent_at = datetime.now()
+        user.email_verification_sent_at = timezone.now()
         user.save()
         
         # Send OTP verification email
@@ -353,7 +353,7 @@ def verify_otp(request):
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Check if OTP is expired (10 minutes)
-        if user.email_verification_sent_at and datetime.now() - user.email_verification_sent_at > timedelta(minutes=10):
+        if user.email_verification_sent_at and timezone.now() - user.email_verification_sent_at > timedelta(minutes=10):
             return Response({
                 'error': True,
                 'message': 'OTP code has expired. Please request a new one.'

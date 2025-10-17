@@ -17,7 +17,6 @@ urlpatterns = [
     path('change-password/', views.change_password, name='change_password'),
     
     # Email verification
-    path('verify-email/', views.verify_email, name='verify_email'),
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('resend-verification/', views.resend_verification_email, name='resend_verification'),
     

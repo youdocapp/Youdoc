@@ -31,6 +31,8 @@ urlpatterns = [
     path('api/medications/', include('medication.urls')),
     path('api/health-records/', include('health_records.urls')),
     path('api/medical-history/', include('medical_history.urls')),
+    path('api/emergency-contacts/', include('emergency_contacts.urls')),
+    path('api/articles/', include('articles.urls')),
 ]
 
 # Serve media files during development
