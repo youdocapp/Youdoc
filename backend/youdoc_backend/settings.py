@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'django_filters',
+    'cloudinary_storage',
+    'cloudinary',
     # 'social_django',  # Temporarily disabled due to UUID compatibility issues
     'authentication',
     'medication',
@@ -135,9 +137,33 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# Media files (User uploads)
+# Media files (User uploads) - Using Cloudinary
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary Configuration
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': config('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': config('CLOUDINARY_API_KEY'),
+    'API_SECRET': config('CLOUDINARY_API_SECRET'),
+    'SECURE': True,
+    'MEDIA_TAG': 'youdoc',
+    'INVALID_VIDEO_ERROR_CODE': 400,
+    'EXCLUDE_DELETE_ORPHANED_MEDIA_PATHS': (),
+    'STATIC_TAG': 'youdoc_static',
+    'STATICFILES_MANAGED': False,
+    'STATIC_IMAGES_EXTENSIONS': ['jpg', 'jpe', 'jpeg', 'jpc', 'jp2', 'j2k', 'wdp', 'jxr', 'hdp', 'png', 'gif', 'webp', 'bmp', 'tiff', 'tif', 'ico', 'pdf', 'eps', 'psd', 'svg', 'webp', 'wdp', 'jxr', 'hdp'],
+    'STATIC_IMAGES_TRANSFORMATIONS': {
+        'width': 1200,
+        'height': 630,
+        'crop': 'fill',
+        'quality': 'auto',
+        'fetch_format': 'auto'
+    }
+}
+
+# Default file storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

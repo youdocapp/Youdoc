@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView
+from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView, ArticleLike, ArticleComment, CommentLike
 
 
 @admin.register(ArticleCategory)
@@ -60,3 +60,34 @@ class ArticleViewAdmin(admin.ModelAdmin):
     search_fields = ['article__title', 'user__username', 'ip_address']
     ordering = ['-viewed_at']
     date_hierarchy = 'viewed_at'
+
+
+@admin.register(ArticleLike)
+class ArticleLikeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'article', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username', 'article__title']
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+
+
+@admin.register(ArticleComment)
+class ArticleCommentAdmin(admin.ModelAdmin):
+    list_display = ['article', 'user', 'text_preview', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['article__title', 'user__username', 'text']
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'
+    
+    def text_preview(self, obj):
+        return obj.text[:50] + '...' if len(obj.text) > 50 else obj.text
+    text_preview.short_description = 'Text Preview'
+
+
+@admin.register(CommentLike)
+class CommentLikeAdmin(admin.ModelAdmin):
+    list_display = ['user', 'comment', 'created_at']
+    list_filter = ['created_at']
+    search_fields = ['user__username', 'comment__text']
+    ordering = ['-created_at']
+    date_hierarchy = 'created_at'

@@ -49,6 +49,26 @@ The backend now provides a comprehensive articles management system with full CR
 - `ip_address` - Viewer IP address
 - `viewed_at` - View timestamp
 
+### ArticleLike
+- `id` - Primary key
+- `user` - Foreign key to User (who liked the article)
+- `article` - Foreign key to Article (the liked article)
+- `created_at` - When the like was created
+
+### ArticleComment
+- `id` - UUID primary key
+- `article` - Foreign key to Article (the commented article)
+- `user` - Foreign key to User (who wrote the comment)
+- `text` - The comment content
+- `created_at` - When the comment was created
+- `updated_at` - When the comment was last updated
+
+### CommentLike
+- `id` - Primary key
+- `user` - Foreign key to User (who liked the comment)
+- `comment` - Foreign key to ArticleComment (the liked comment)
+- `created_at` - When the like was created
+
 ## API Endpoints
 
 ### Articles
@@ -128,6 +148,44 @@ POST/DELETE /api/articles/{article_id}/bookmark/
 GET /api/articles/bookmarked/
 ```
 
+#### Article Likes
+```
+POST/DELETE /api/articles/{article_id}/like/
+```
+
+**Response:**
+```json
+{
+  "liked": true/false,
+  "like_count": 42
+}
+```
+
+#### Article Comments
+```
+GET/POST /api/articles/{article_id}/comments/
+GET/PUT/PATCH/DELETE /api/articles/{article_id}/comments/{comment_id}/
+POST/DELETE /api/articles/{article_id}/comments/{comment_id}/like/
+```
+
+**Comment Response:**
+```json
+{
+  "id": "comment-uuid",
+  "text": "Great article!",
+  "user": {
+    "id": 1,
+    "username": "john_doe",
+    "name": "John Doe",
+    "avatar": null
+  },
+  "created_at": "2024-01-15T10:30:00Z",
+  "updated_at": "2024-01-15T10:30:00Z",
+  "is_liked": false,
+  "like_count": 5
+}
+```
+
 ### Categories
 
 #### List Categories
@@ -205,7 +263,10 @@ All endpoints require authentication except:
     "featured": true,
     "published_date": "2024-01-15T10:30:00Z",
     "read_time": "5 min read",
-    "is_bookmarked": false
+    "is_bookmarked": false,
+    "is_liked": true,
+    "like_count": 42,
+    "comment_count": 15
   }
 ]
 ```
@@ -227,7 +288,10 @@ All endpoints require authentication except:
   "created_at": "2024-01-15T10:30:00Z",
   "updated_at": "2024-01-15T10:30:00Z",
   "is_bookmarked": false,
-  "view_count": 42
+  "is_liked": true,
+  "like_count": 42,
+  "comment_count": 15,
+  "view_count": 128
 }
 ```
 

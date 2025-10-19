@@ -1,15 +1,17 @@
-from rest_framework import generics, status, filters
+from rest_framework import generics, status, filters, serializers
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from django.utils import timezone
-from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView
+from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView, ArticleLike, ArticleComment, CommentLike
 from .serializers import (
     ArticleListSerializer, ArticleDetailSerializer, ArticleCreateUpdateSerializer,
     ArticleCategorySerializer, AuthorSerializer, ArticleBookmarkSerializer,
-    ArticleSearchSerializer
+    ArticleSearchSerializer, ArticleCommentSerializer, ArticleCommentCreateSerializer,
+    ArticleLikeSerializer, CommentLikeSerializer
 )
 
 
@@ -21,6 +23,7 @@ class ArticleListCreateView(generics.ListCreateAPIView):
     search_fields = ['title', 'description', 'content', 'author__name']
     ordering_fields = ['published_date', 'created_at', 'title']
     ordering = ['-published_date']
+    parser_classes = [MultiPartParser, FormParser]
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -44,8 +47,9 @@ class ArticleListCreateView(generics.ListCreateAPIView):
 
 class ArticleDetailView(generics.RetrieveUpdateDestroyAPIView):
     """Retrieve, update, or delete an article"""
-    queryset = Article.objects.select_related('category', 'author').prefetch_related('bookmarks', 'views')
+    queryset = Article.objects.select_related('category', 'author').prefetch_related('bookmarks', 'views', 'likes', 'comments')
     lookup_field = 'id'
+    parser_classes = [MultiPartParser, FormParser]
     
     def get_serializer_class(self):
         if self.request.method in ['PUT', 'PATCH']:
@@ -167,3 +171,96 @@ def user_bookmarked_articles(request):
     articles = [bookmark.article for bookmark in bookmarks]
     serializer = ArticleListSerializer(articles, many=True, context={'request': request})
     return Response(serializer.data)
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def toggle_article_like(request, article_id):
+    """Toggle like for an article"""
+    try:
+        article = Article.objects.get(id=article_id)
+    except Article.DoesNotExist:
+        return Response({'error': 'Article not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    like, created = ArticleLike.objects.get_or_create(
+        user=request.user,
+        article=article
+    )
+    
+    if request.method == 'DELETE' or not created:
+        like.delete()
+        return Response({'liked': False, 'like_count': article.likes.count()})
+    
+    return Response({'liked': True, 'like_count': article.likes.count()})
+
+
+class ArticleCommentListCreateView(generics.ListCreateAPIView):
+    """List and create comments for an article"""
+    serializer_class = ArticleCommentSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        article_id = self.kwargs['article_id']
+        return ArticleComment.objects.filter(article_id=article_id).select_related('user').prefetch_related('likes')
+    
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return ArticleCommentCreateSerializer
+        return ArticleCommentSerializer
+    
+    def perform_create(self, serializer):
+        article_id = self.kwargs['article_id']
+        try:
+            article = Article.objects.get(id=article_id)
+        except Article.DoesNotExist:
+            raise serializers.ValidationError({'error': 'Article not found'})
+        
+        serializer.save(
+            user=self.request.user,
+            article=article
+        )
+
+
+class ArticleCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update, or delete a comment"""
+    serializer_class = ArticleCommentSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+    
+    def get_queryset(self):
+        article_id = self.kwargs['article_id']
+        return ArticleComment.objects.filter(article_id=article_id).select_related('user').prefetch_related('likes')
+    
+    def perform_update(self, serializer):
+        # Only allow the comment author to update their comment
+        if serializer.instance.user != self.request.user:
+            raise serializers.ValidationError({'error': 'You can only edit your own comments'})
+        serializer.save()
+    
+    def perform_destroy(self, instance):
+        # Only allow the comment author to delete their comment
+        if instance.user != self.request.user:
+            raise serializers.ValidationError({'error': 'You can only delete your own comments'})
+        instance.delete()
+
+
+@api_view(['POST', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def toggle_comment_like(request, article_id, comment_id):
+    """Toggle like for a comment"""
+    try:
+        comment = ArticleComment.objects.get(id=comment_id, article_id=article_id)
+    except ArticleComment.DoesNotExist:
+        return Response({'error': 'Comment not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    like, created = CommentLike.objects.get_or_create(
+        user=request.user,
+        comment=comment
+    )
+    
+    if request.method == 'DELETE' or not created:
+        like.delete()
+        return Response({'liked': False, 'like_count': comment.likes.count()})
+    
+    return Response({'liked': True, 'like_count': comment.likes.count()})
+

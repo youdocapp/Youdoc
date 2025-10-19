@@ -2,6 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 import uuid
+import cloudinary
+from cloudinary.models import CloudinaryField
 
 
 class ArticleCategory(models.Model):
@@ -25,7 +27,7 @@ class Author(models.Model):
     name = models.CharField(max_length=200)
     title = models.CharField(max_length=100, blank=True)  # e.g., "Dr.", "MD", "RN"
     bio = models.TextField(blank=True)
-    avatar = models.ImageField(upload_to='authors/avatars/', blank=True, null=True)
+    avatar = CloudinaryField('image', folder='youdoc/authors/avatars', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -43,7 +45,7 @@ class Article(models.Model):
     category = models.ForeignKey(ArticleCategory, on_delete=models.CASCADE, related_name='articles')
     author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name='articles')
     content = models.TextField()
-    image = models.ImageField(upload_to='articles/images/', blank=True, null=True)
+    image = CloudinaryField('image', folder='youdoc/articles/images', blank=True, null=True)
     featured = models.BooleanField(default=False)
     published_date = models.DateTimeField(default=timezone.now)
     read_time = models.CharField(max_length=20, default='5 min read')  # Estimated read time
@@ -97,3 +99,56 @@ class ArticleView(models.Model):
     
     def __str__(self):
         return f"View of {self.article.title} at {self.viewed_at}"
+
+
+class ArticleLike(models.Model):
+    """User likes for articles"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='article_likes')
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'article']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['article', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} liked {self.article.title}"
+
+
+class ArticleComment(models.Model):
+    """Comments on articles"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    article = models.ForeignKey(Article, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='article_comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['article', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.article.title}"
+
+
+class CommentLike(models.Model):
+    """User likes for comments"""
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comment_likes')
+    comment = models.ForeignKey(ArticleComment, on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['user', 'comment']
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['comment', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.username} liked comment by {self.comment.user.username}"

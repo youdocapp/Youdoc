@@ -8,7 +8,13 @@ urlpatterns = [
     path('featured/', views.FeaturedArticlesView.as_view(), name='featured-articles'),
     path('search/', views.search_articles, name='article-search'),
     path('<uuid:article_id>/bookmark/', views.toggle_article_bookmark, name='toggle-article-bookmark'),
+    path('<uuid:article_id>/like/', views.toggle_article_like, name='toggle-article-like'),
     path('bookmarked/', views.user_bookmarked_articles, name='user-bookmarked-articles'),
+    
+    # Comment endpoints
+    path('<uuid:article_id>/comments/', views.ArticleCommentListCreateView.as_view(), name='article-comment-list-create'),
+    path('<uuid:article_id>/comments/<uuid:id>/', views.ArticleCommentDetailView.as_view(), name='article-comment-detail'),
+    path('<uuid:article_id>/comments/<uuid:comment_id>/like/', views.toggle_comment_like, name='toggle-comment-like'),
     
     # Category and author endpoints
     path('categories/', views.ArticleCategoriesView.as_view(), name='article-categories'),

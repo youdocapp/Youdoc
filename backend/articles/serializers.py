@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView
+from .models import Article, ArticleCategory, Author, ArticleBookmark, ArticleView, ArticleLike, ArticleComment, CommentLike
 
 
 class ArticleCategorySerializer(serializers.ModelSerializer):
@@ -27,12 +27,16 @@ class ArticleListSerializer(serializers.ModelSerializer):
     category = ArticleCategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
     is_bookmarked = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
     
     class Meta:
         model = Article
         fields = [
             'id', 'title', 'description', 'category', 'author', 
-            'image', 'featured', 'published_date', 'read_time', 'is_bookmarked'
+            'image', 'featured', 'published_date', 'read_time', 
+            'is_bookmarked', 'is_liked', 'like_count', 'comment_count'
         ]
     
     def get_is_bookmarked(self, obj):
@@ -40,6 +44,18 @@ class ArticleListSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.bookmarks.filter(user=request.user).exists()
         return False
+    
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
+    
+    def get_comment_count(self, obj):
+        return obj.comments.count()
 
 
 class ArticleDetailSerializer(serializers.ModelSerializer):
@@ -47,6 +63,9 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
     category = ArticleCategorySerializer(read_only=True)
     author = AuthorSerializer(read_only=True)
     is_bookmarked = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    comment_count = serializers.SerializerMethodField()
     view_count = serializers.SerializerMethodField()
     
     class Meta:
@@ -54,7 +73,8 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'title', 'description', 'category', 'author', 'content',
             'image', 'featured', 'published_date', 'read_time', 'slug',
-            'created_at', 'updated_at', 'is_bookmarked', 'view_count'
+            'created_at', 'updated_at', 'is_bookmarked', 'is_liked', 
+            'like_count', 'comment_count', 'view_count'
         ]
     
     def get_is_bookmarked(self, obj):
@@ -62,6 +82,18 @@ class ArticleDetailSerializer(serializers.ModelSerializer):
         if request and request.user.is_authenticated:
             return obj.bookmarks.filter(user=request.user).exists()
         return False
+    
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
+    
+    def get_comment_count(self, obj):
+        return obj.comments.count()
     
     def get_view_count(self, obj):
         return obj.views.count()
@@ -86,6 +118,7 @@ class ArticleCreateUpdateSerializer(serializers.ModelSerializer):
                 defaults={'name': request.user.get_full_name() or request.user.username}
             )
             validated_data['author'] = author
+        
         return super().create(validated_data)
 
 
@@ -111,3 +144,64 @@ class ArticleSearchSerializer(serializers.Serializer):
         default='-published_date',
         required=False
     )
+
+
+class CommentLikeSerializer(serializers.ModelSerializer):
+    """Serializer for comment likes"""
+    
+    class Meta:
+        model = CommentLike
+        fields = ['id', 'created_at']
+
+
+class ArticleCommentSerializer(serializers.ModelSerializer):
+    """Serializer for article comments"""
+    user = serializers.SerializerMethodField()
+    is_liked = serializers.SerializerMethodField()
+    like_count = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ArticleComment
+        fields = [
+            'id', 'text', 'user', 'created_at', 'updated_at', 
+            'is_liked', 'like_count'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+    
+    def get_user(self, obj):
+        return {
+            'id': obj.user.id,
+            'username': obj.user.username,
+            'name': obj.user.get_full_name() or obj.user.username,
+            'avatar': None  # Add avatar field if you have user avatars
+        }
+    
+    def get_is_liked(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.likes.filter(user=request.user).exists()
+        return False
+    
+    def get_like_count(self, obj):
+        return obj.likes.count()
+
+
+class ArticleCommentCreateSerializer(serializers.ModelSerializer):
+    """Serializer for creating article comments"""
+    
+    class Meta:
+        model = ArticleComment
+        fields = ['text']
+    
+    def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
+        validated_data['article'] = self.context['article']
+        return super().create(validated_data)
+
+
+class ArticleLikeSerializer(serializers.ModelSerializer):
+    """Serializer for article likes"""
+    
+    class Meta:
+        model = ArticleLike
+        fields = ['id', 'created_at']
