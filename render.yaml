@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: youdoc-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn youdoc_backend.wsgi:application --bind 0.0.0.0:$PORT
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "your-app-name.onrender.com"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "https://your-frontend-domain.com"
