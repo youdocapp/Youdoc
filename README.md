@@ -8,7 +8,9 @@ This backend is configured for deployment on Render with the following settings:
 
 - **Runtime**: Python 3.11
 - **Build Command**: `pip install -r requirements.txt`
-- **Start Command**: `gunicorn youdoc_backend.wsgi:application --bind 0.0.0.0:$PORT`
+- **Start Command**: `cd backend && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn youdoc_backend.wsgi:application --bind 0.0.0.0:$PORT`
+
+The Procfile is already configured with the correct commands.
 
 ## Environment Variables
 
