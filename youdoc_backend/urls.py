@@ -70,6 +70,11 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
 ]
 
-# Serve media files during development
+# Serve static and media files
 if settings.DEBUG:
+    # Development: serve static and media files
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # Production: WhiteNoise handles static files, but we still need media files
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
