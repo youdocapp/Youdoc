@@ -204,7 +204,7 @@ CORS_ALLOWED_ORIGINS = config(
 
 CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default='True', cast=bool)
 
-CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default='False', cast=bool)  # Set to False for production
+CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default='True', cast=bool)  # True for mobile apps
 
 # JWT Configuration
 from datetime import timedelta
