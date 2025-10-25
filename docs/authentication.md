@@ -1,343 +1,749 @@
-# Authentication App Documentation
+# Authentication API Documentation
 
 ## Overview
-The authentication app handles user registration, login, email verification, and password management for the Youdoc health platform. It uses JWT tokens for authentication and requires email verification before users can access the platform.
+The Authentication API provides user registration, login, profile management, and email verification functionality for the Youdoc Health Platform. This API uses JWT tokens for authentication and includes comprehensive email verification and password reset features.
 
-## Models
+## Base URL
+```
+https://youdoc.onrender.com/api/auth/
+```
 
-### User Model
-**File**: `authentication/models.py`
+## Authentication
+All endpoints (except registration, login, password reset, and email verification) require JWT authentication. Include the access token in the Authorization header:
 
-Custom user model extending Django's AbstractUser with additional health-related fields.
+```
+Authorization: Bearer <access_token>
+```
 
-#### Key Fields:
-- **id**: UUID primary key for security
-- **public_id**: Short, user-friendly identifier (10 characters)
-- **email**: Unique email address (used as username)
-- **first_name, last_name**: User's name
-- **mobile**: Phone number
-- **date_of_birth**: Birth date
-- **gender**: Gender selection (male, female, other, prefer_not_to_say)
-- **blood_type**: Blood type (A+, A-, B+, B-, AB+, AB-, O+, O-)
-- **height**: Height in cm
-- **weight**: Weight in kg
-- **is_email_verified**: Email verification status
-- **email_verification_token**: OTP code for verification
-- **password_reset_token**: Token for password reset
-- **notification_preferences**: JSON field for user preferences
+---
 
-#### Key Methods:
-- `generate_public_id()`: Creates unique 10-character ID
-- `get_profile_data()`: Returns formatted user data for frontend
-- `full_name`: Property returning formatted full name
+## Endpoints
 
-### BloodType Enum
-Predefined blood type choices following international medical standards.
+### 1. User Registration
+**POST** `/register/`
 
-## Serializers
+Register a new user account. An OTP verification code will be sent to the user's email.
 
-### UserRegistrationSerializer
-**File**: `authentication/serializers.py`
+#### Request Body
+```json
+{
+  "firstName": "John",
+  "lastName": "Doe",
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!",
+  "passwordConfirm": "SecurePassword123!",
+  "mobile": "+1234567890",
+  "dateOfBirth": "1990-01-15",
+  "gender": "male",
+  "bloodType": "O+",
+  "height": 175.5,
+  "weight": 70.2
+}
+```
 
-Handles user registration with validation:
-- Email uniqueness validation
-- Password confirmation matching
-- Generates 6-digit OTP for email verification
-- Creates user with `is_email_verified=False`
+#### Required Fields
+- `firstName` (string): User's first name
+- `lastName` (string): User's last name  
+- `email` (string): Valid email address
+- `password` (string): Strong password (min 8 chars, mixed case, numbers, symbols)
+- `passwordConfirm` (string): Must match password
 
-### UserLoginSerializer
-**File**: `authentication/serializers.py`
+#### Optional Fields
+- `mobile` (string): Phone number
+- `dateOfBirth` (string): Date in YYYY-MM-DD format
+- `gender` (string): "male", "female", "other", "prefer_not_to_say"
+- `bloodType` (string): "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"
+- `height` (number): Height in cm
+- `weight` (number): Weight in kg
 
-Handles user authentication:
-- Validates email and password
-- **Requires email verification** before login
-- Returns user object on successful authentication
-
-### UserProfileSerializer
-**File**: `authentication/serializers.py`
-
-Manages user profile updates with read-only fields for security.
-
-### PasswordChangeSerializer
-**File**: `authentication/serializers.py`
-
-Handles password changes with old password validation.
-
-### PasswordResetRequestSerializer
-**File**: `authentication/serializers.py`
-
-Validates email exists for password reset requests.
-
-### PasswordResetConfirmSerializer
-**File**: `authentication/serializers.py`
-
-Validates reset token and new password confirmation.
-
-### EmailVerificationSerializer
-**File**: `authentication/serializers.py`
-
-Validates OTP codes for email verification with 10-minute expiration.
-
-## Views
-
-### Registration Flow
-**Endpoint**: `POST /api/auth/register/`
-
-**Process**:
-1. Validates registration data
-2. Creates user account with `is_email_verified=False`
-3. Generates 6-digit OTP
-4. Sends OTP via email
-5. Returns success message (NO JWT tokens)
-
-**Response**:
+#### Success Response (201)
 ```json
 {
   "success": true,
   "message": "Registration successful! Please check your email for the verification code.",
-  "email": "user@example.com",
-  "requires_verification": true
+  "email": "john.doe@example.com",
+  "requiresVerification": true
 }
 ```
 
-### Email Verification
-**Endpoint**: `POST /api/auth/verify-otp/`
-
-**Process**:
-1. Validates 6-digit OTP code
-2. Checks expiration (10 minutes)
-3. Marks email as verified
-4. Sends welcome email
-5. Generates JWT tokens
-6. User is now logged in
-
-**Request**:
+#### Error Response (400)
 ```json
 {
-  "email": "user@example.com",
-  "otp": "123456"
+  "error": true,
+  "message": "Registration failed",
+  "details": {
+    "email": ["A user with this email already exists"],
+    "password": ["This password is too common"]
+  }
 }
 ```
 
-**Response**:
+---
+
+### 2. User Login
+**POST** `/login/`
+
+Authenticate user and return JWT tokens. Email must be verified before login.
+
+#### Request Body
 ```json
 {
-  "success": true,
-  "message": "Email verified successfully! Welcome to Youdoc!",
-  "access": "jwt_access_token",
-  "refresh": "jwt_refresh_token",
-  "user": { ... }
+  "email": "john.doe@example.com",
+  "password": "SecurePassword123!"
 }
 ```
 
-### Login
-**Endpoint**: `POST /api/auth/login/`
-
-**Process**:
-1. Validates email and password
-2. **Checks if email is verified**
-3. Returns JWT tokens if verified
-4. Returns error if not verified
-
-**Response (Verified)**:
+#### Success Response (200)
 ```json
 {
   "success": true,
   "message": "Login successful",
-  "access": "jwt_access_token",
-  "refresh": "jwt_refresh_token",
-  "user": { ... }
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "publicId": "abc123def4",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "mobile": "+1234567890",
+    "dateOfBirth": "1990-01-15",
+    "gender": "male",
+    "bloodType": "O+",
+    "height": 175.5,
+    "weight": 70.2,
+    "isEmailVerified": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
 }
 ```
 
-**Response (Not Verified)**:
+#### Error Response (400)
 ```json
 {
   "error": true,
-  "message": "Please verify your email address before logging in. Check your email for the verification code."
+  "message": "Please verify your email address before logging in. Check your email for the verification code.",
+  "details": {}
 }
 ```
 
-### Resend OTP
-**Endpoint**: `POST /api/auth/resend-verification/`
+---
 
-**Process**:
-1. Validates email exists
-2. Checks if already verified
-3. Generates new 6-digit OTP
-4. Sends OTP via email
+### 3. Email Verification (OTP)
+**POST** `/verify-otp/`
 
-### Password Reset
-**Endpoint**: `POST /api/auth/password-reset-request/`
+Verify user's email using the 6-digit OTP code sent during registration.
 
-**Process**:
-1. Validates email exists
-2. Generates 32-character reset token
-3. Sends password reset email with link
-4. Stores token with timestamp
-
-**Endpoint**: `POST /api/auth/password-reset-confirm/`
-
-**Process**:
-1. Validates reset token
-2. Checks expiration (24 hours)
-3. Updates password
-4. Clears reset token
-
-### Profile Management
-**Endpoint**: `GET/PUT/PATCH /api/auth/profile/`
-
-Manages user profile data with authentication required.
-
-### Account Management
-**Endpoint**: `POST /api/auth/logout/`
-**Endpoint**: `DELETE /api/auth/delete-account/`
-
-Handles logout (token blacklisting) and account deletion.
-
-## Email Integration
-
-### Email Utils
-**File**: `authentication/email_utils.py`
-
-#### Functions:
-- `send_otp_email()`: Sends 6-digit OTP verification
-- `send_password_reset_email()`: Sends password reset link
-- `send_welcome_email()`: Sends welcome message after verification
-- `test_email_connection()`: Tests email configuration
-
-#### Email Templates:
-- **OTP Email**: Professional template with 6-digit code
-- **Welcome Email**: Branded welcome with getting started info
-- **Password Reset**: Security-focused with reset link
-
-### Email Configuration
-**File**: `youdoc_backend/settings.py`
-
-Uses Gmail SMTP with environment variables:
-- `EMAIL_HOST`: smtp.gmail.com
-- `EMAIL_PORT`: 587
-- `EMAIL_USE_TLS`: True
-- `EMAIL_HOST_USER`: Youdocapp@gmail.com
-- `EMAIL_HOST_PASSWORD`: App Password (required)
-
-## Security Features
-
-### Authentication Flow
-1. **Registration**: No access until email verified
-2. **Email Verification**: Required before login
-3. **JWT Tokens**: Generated only after verification
-4. **Token Expiration**: 60 minutes access, 7 days refresh
-
-### Password Security
-- Django's built-in password validation
-- Secure password reset with tokens
-- Old password verification for changes
-
-### Email Security
-- OTP expiration (10 minutes)
-- Reset token expiration (24 hours)
-- App passwords for Gmail authentication
-
-## API Endpoints Summary
-
-| Endpoint | Method | Purpose | Auth Required | Email Verified |
-|----------|--------|---------|---------------|----------------|
-| `/register/` | POST | User registration | No | N/A |
-| `/verify-otp/` | POST | Email verification | No | No |
-| `/resend-verification/` | POST | Resend OTP | No | No |
-| `/login/` | POST | User login | No | Yes |
-| `/logout/` | POST | User logout | Yes | Yes |
-| `/profile/` | GET/PUT/PATCH | Profile management | Yes | Yes |
-| `/change-password/` | POST | Change password | Yes | Yes |
-| `/password-reset-request/` | POST | Request password reset | No | N/A |
-| `/password-reset-confirm/` | POST | Confirm password reset | No | N/A |
-| `/delete-account/` | DELETE | Delete account | Yes | Yes |
-
-## Testing
-
-### Management Command
-```bash
-python manage.py test_email --otp --email test@example.com
+#### Request Body
+```json
+{
+  "email": "john.doe@example.com",
+  "otp": "123456"
+}
 ```
 
-### Manual Testing
-1. Register user → Check email for OTP
-2. Verify OTP → Should receive welcome email + JWT tokens
-3. Login with verified email → Should work
-4. Try login with unverified email → Should fail
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Email verified successfully! Welcome to Youdoc!",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "publicId": "abc123def4",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "isEmailVerified": true,
+    // ... other user fields
+  }
+}
+```
 
-## Dependencies
+#### Error Response (400)
+```json
+{
+  "error": true,
+  "message": "Invalid OTP code",
+  "details": {}
+}
+```
 
-### Required Packages
-- `django`: Web framework
-- `djangorestframework`: API framework
-- `djangorestframework-simplejwt`: JWT authentication
-- `django-cors-headers`: CORS handling
-- `python-decouple`: Environment variables
-- `dj-database-url`: Database configuration
+---
 
-### Email Requirements
-- Gmail account with 2FA enabled
-- App Password generated for SMTP access
-- Environment variables configured
+### 4. Resend Verification Email
+**POST** `/resend-verification/`
+
+Resend OTP verification code to user's email.
+
+#### Request Body
+```json
+{
+  "email": "john.doe@example.com"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Verification code sent successfully. Please check your email."
+}
+```
+
+---
+
+### 5. Get User Profile
+**GET** `/profile/`
+
+Get current user's profile information.
+
+#### Headers
+```
+Authorization: Bearer <access_token>
+```
+
+#### Success Response (200)
+```json
+{
+  "publicId": "abc123def4",
+  "email": "john.doe@example.com",
+  "firstName": "John",
+  "lastName": "Doe",
+  "mobile": "+1234567890",
+  "dateOfBirth": "1990-01-15",
+  "gender": "male",
+  "bloodType": "O+",
+  "height": 175.5,
+  "weight": 70.2,
+  "isEmailVerified": true,
+  "createdAt": "2024-01-15T10:30:00Z",
+  "updatedAt": "2024-01-15T10:30:00Z"
+}
+```
+
+---
+
+### 6. Update User Profile
+**PUT/PATCH** `/profile/`
+
+Update current user's profile information.
+
+#### Headers
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body (PATCH - partial update)
+```json
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "mobile": "+1987654321",
+  "height": 180.0,
+  "weight": 75.0
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "message": "Profile updated successfully",
+  "user": {
+    "publicId": "abc123def4",
+    "email": "john.doe@example.com",
+    "firstName": "John",
+    "lastName": "Smith",
+    "mobile": "+1987654321",
+    "height": 180.0,
+    "weight": 75.0,
+    // ... other user fields
+  }
+}
+```
+
+---
+
+### 7. Change Password
+**POST** `/change-password/`
+
+Change user's password (requires current password).
+
+#### Headers
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+```json
+{
+  "oldPassword": "OldPassword123!",
+  "newPassword": "NewSecurePassword456!",
+  "newPasswordConfirm": "NewSecurePassword456!"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "message": "Password changed successfully"
+}
+```
+
+---
+
+### 8. Password Reset Request
+**POST** `/password-reset-request/`
+
+Request password reset link to be sent to user's email.
+
+#### Request Body
+```json
+{
+  "email": "john.doe@example.com"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Password reset email sent successfully. Please check your email."
+}
+```
+
+---
+
+### 9. Password Reset Confirm
+**POST** `/password-reset-confirm/`
+
+Confirm password reset using the token from email.
+
+#### Request Body
+```json
+{
+  "token": "abc123def456ghi789",
+  "newPassword": "NewSecurePassword456!",
+  "newPasswordConfirm": "NewSecurePassword456!"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "message": "Password reset successfully"
+}
+```
+
+---
+
+### 10. Logout
+**POST** `/logout/`
+
+Logout user and blacklist refresh token.
+
+#### Headers
+```
+Authorization: Bearer <access_token>
+```
+
+#### Request Body
+```json
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+---
+
+### 11. Delete Account
+**DELETE** `/delete-account/`
+
+Permanently delete user account and all associated data.
+
+#### Headers
+```
+Authorization: Bearer <access_token>
+```
+
+#### Success Response (200)
+```json
+{
+  "message": "Account deleted successfully"
+}
+```
+
+---
+
+### 12. Token Refresh
+**POST** `/token/refresh/`
+
+Refresh access token using refresh token.
+
+#### Request Body
+```json
+{
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+}
+```
+
+---
+
+## React Native Integration
+
+### 1. Authentication Service
+```javascript
+// services/authService.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_BASE_URL = 'https://youdoc.onrender.com/api/auth';
+
+class AuthService {
+  async register(userData) {
+    const response = await fetch(`${API_BASE_URL}/register/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userData),
+    });
+    return response.json();
+  }
+
+  async login(email, password) {
+    const response = await fetch(`${API_BASE_URL}/login/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+    return response.json();
+  }
+
+  async verifyOTP(email, otp) {
+    const response = await fetch(`${API_BASE_URL}/verify-otp/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, otp }),
+    });
+    return response.json();
+  }
+
+  async getProfile() {
+    const token = await AsyncStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/profile/`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    return response.json();
+  }
+
+  async updateProfile(profileData) {
+    const token = await AsyncStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/profile/`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(profileData),
+    });
+    return response.json();
+  }
+
+  async changePassword(oldPassword, newPassword) {
+    const token = await AsyncStorage.getItem('accessToken');
+    const response = await fetch(`${API_BASE_URL}/change-password/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        oldPassword,
+        newPassword,
+        newPasswordConfirm: newPassword,
+      }),
+    });
+    return response.json();
+  }
+
+  async logout() {
+    const refreshToken = await AsyncStorage.getItem('refreshToken');
+    const response = await fetch(`${API_BASE_URL}/logout/`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ refresh: refreshToken }),
+    });
+    
+    // Clear stored tokens
+    await AsyncStorage.multiRemove(['accessToken', 'refreshToken']);
+    return response.json();
+  }
+}
+
+export default new AuthService();
+```
+
+### 2. Authentication Context
+```javascript
+// context/AuthContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import AuthService from '../services/authService';
+
+const AuthContext = createContext();
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem('accessToken');
+      if (token) {
+        const profile = await AuthService.getProfile();
+        setUser(profile);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const login = async (email, password) => {
+    try {
+      const response = await AuthService.login(email, password);
+      if (response.success) {
+        await AsyncStorage.setItem('accessToken', response.access);
+        await AsyncStorage.setItem('refreshToken', response.refresh);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return { success: false, message: 'Login failed' };
+    }
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await AuthService.register(userData);
+      return response;
+    } catch (error) {
+      return { success: false, message: 'Registration failed' };
+    }
+  };
+
+  const verifyOTP = async (email, otp) => {
+    try {
+      const response = await AuthService.verifyOTP(email, otp);
+      if (response.success) {
+        await AsyncStorage.setItem('accessToken', response.access);
+        await AsyncStorage.setItem('refreshToken', response.refresh);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return { success: false, message: 'Verification failed' };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await AuthService.logout();
+      setUser(null);
+      setIsAuthenticated(false);
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
+  const value = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    register,
+    verifyOTP,
+    logout,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+```
+
+### 3. Registration Screen Example
+```javascript
+// screens/RegistrationScreen.js
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
+import { useAuth } from '../context/AuthContext';
+
+const RegistrationScreen = ({ navigation }) => {
+  const { register } = useAuth();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    passwordConfirm: '',
+    mobile: '',
+    dateOfBirth: '',
+    gender: '',
+    bloodType: '',
+    height: '',
+    weight: '',
+  });
+
+  const handleRegister = async () => {
+    const response = await register(formData);
+    if (response.success) {
+      Alert.alert('Success', response.message);
+      navigation.navigate('OTPVerification', { email: formData.email });
+    } else {
+      Alert.alert('Error', response.message);
+    }
+  };
+
+  return (
+    <View style={{ padding: 20 }}>
+      <TextInput
+        placeholder="First Name"
+        value={formData.firstName}
+        onChangeText={(text) => setFormData({ ...formData, firstName: text })}
+      />
+      <TextInput
+        placeholder="Last Name"
+        value={formData.lastName}
+        onChangeText={(text) => setFormData({ ...formData, lastName: text })}
+      />
+      <TextInput
+        placeholder="Email"
+        value={formData.email}
+        onChangeText={(text) => setFormData({ ...formData, email: text })}
+        keyboardType="email-address"
+      />
+      <TextInput
+        placeholder="Password"
+        value={formData.password}
+        onChangeText={(text) => setFormData({ ...formData, password: text })}
+        secureTextEntry
+      />
+      <TouchableOpacity onPress={handleRegister}>
+        <Text>Register</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
+export default RegistrationScreen;
+```
+
+---
 
 ## Error Handling
 
-### Custom Exception Handler
-**File**: `authentication/views.py`
+### Common Error Responses
 
-Returns consistent JSON error responses:
+#### 400 Bad Request
 ```json
 {
   "error": true,
-  "message": "Error description",
-  "details": { ... }
+  "message": "Validation failed",
+  "details": {
+    "field": ["Error message"]
+  }
 }
 ```
 
-### Common Error Scenarios
-- Invalid credentials
-- Email not verified
-- Expired OTP/reset tokens
-- Duplicate email registration
-- Invalid password format
+#### 401 Unauthorized
+```json
+{
+  "error": true,
+  "message": "Authentication credentials were not provided"
+}
+```
 
-## Frontend Integration
+#### 403 Forbidden
+```json
+{
+  "error": true,
+  "message": "You do not have permission to perform this action"
+}
+```
 
-### Registration Flow
-1. Submit registration form
-2. Show "Check email for verification code"
-3. Display OTP input field
-4. Submit OTP → Auto-login on success
+#### 500 Internal Server Error
+```json
+{
+  "error": true,
+  "message": "An unexpected error occurred",
+  "details": "Error details"
+}
+```
 
-### Login Flow
-1. Submit login form
-2. If not verified → Show verification prompt
-3. If verified → Normal login flow
+---
 
-### Password Reset Flow
-1. Submit email on forgot password page
-2. Show "Check email for reset link"
-3. Handle reset link in frontend
-4. Submit new password
+## Security Notes
 
-## Best Practices
+1. **JWT Tokens**: Access tokens expire in 60 minutes, refresh tokens in 7 days
+2. **Email Verification**: Required before login
+3. **Password Requirements**: Minimum 8 characters with mixed case, numbers, and symbols
+4. **OTP Expiry**: Email verification codes expire in 10 minutes
+5. **Rate Limiting**: Password reset requests are rate-limited to prevent abuse
+6. **HTTPS Only**: All API calls must use HTTPS in production
 
-### Security
-- Always verify email before granting access
-- Use secure token generation
-- Implement proper error handling
-- Log authentication attempts
+---
 
-### User Experience
-- Clear error messages
-- Automatic login after verification
-- Consistent response format
-- Helpful validation messages
+## Testing
 
-### Development
-- Use environment variables for sensitive data
-- Test email functionality thoroughly
-- Implement proper logging
-- Follow Django best practices
+Use the following test credentials for development:
+
+```json
+{
+  "email": "test@example.com",
+  "password": "TestPassword123!"
+}
+```
+
+**Note**: Replace with actual test user credentials in your development environment.

@@ -1,536 +1,1093 @@
-# Medical History App Documentation
+# Medical History API Documentation
 
 ## Overview
-The medical history app manages user medical conditions, surgeries, and allergies. It provides comprehensive tracking of medical history with detailed information about conditions, procedures, and allergic reactions.
+The Medical History API provides comprehensive functionality for managing personal medical history, including medical conditions, surgical procedures, and allergies. This API helps users maintain detailed medical records for better healthcare management and emergency situations.
 
-## Models
+## Base URL
+```
+https://youdoc.onrender.com/api/medical-history/
+```
 
-### MedicalCondition Model
-**File**: `medical_history/models.py`
+## Authentication
+All endpoints require JWT authentication. Include the access token in the Authorization header:
 
-Tracks medical conditions with status and diagnosis information.
+```
+Authorization: Bearer <access_token>
+```
 
-#### Key Fields:
-- **id**: UUID primary key
-- **user**: Foreign key to User model
-- **name**: Name of the medical condition
-- **diagnosed_date**: Date when condition was diagnosed
-- **status**: Current status (active, resolved, chronic)
-- **notes**: Additional notes about the condition
-- **created_at, updated_at**: Timestamps
+---
 
-#### Status Choices:
-- **active**: Currently active condition
-- **resolved**: Condition has been resolved
-- **chronic**: Long-term chronic condition
-
-### Surgery Model
-**File**: `medical_history/models.py`
-
-Tracks surgical procedures with hospital and surgeon information.
-
-#### Key Fields:
-- **id**: UUID primary key
-- **user**: Foreign key to User model
-- **name**: Name of the surgical procedure
-- **date**: Date when surgery was performed
-- **hospital**: Hospital where surgery was performed
-- **surgeon**: Name of the surgeon
-- **notes**: Additional notes about the surgery
-- **created_at, updated_at**: Timestamps
-
-### Allergy Model
-**File**: `medical_history/models.py`
-
-Tracks allergies with severity and reaction information.
-
-#### Key Fields:
-- **id**: UUID primary key
-- **user**: Foreign key to User model
-- **allergen**: Substance that causes allergic reaction
-- **reaction**: Description of the allergic reaction
-- **severity**: Severity level (mild, moderate, severe)
-- **notes**: Additional notes about the allergy
-- **created_at, updated_at**: Timestamps
-
-#### Severity Choices:
-- **mild**: Mild allergic reaction
-- **moderate**: Moderate allergic reaction
-- **severe**: Severe allergic reaction
-
-#### Unique Constraint:
-- One allergy record per user per allergen
-
-## Serializers
-
-### MedicalConditionSerializer
-**File**: `medical_history/serializers.py`
-
-Full medical condition serializer with all fields.
-
-### MedicalConditionCreateSerializer
-**File**: `medical_history/serializers.py`
-
-Serializer for creating new medical conditions.
-
-### SurgerySerializer
-**File**: `medical_history/serializers.py`
-
-Full surgery serializer with all fields.
-
-### SurgeryCreateSerializer
-**File**: `medical_history/serializers.py`
-
-Serializer for creating new surgeries.
-
-### AllergySerializer
-**File**: `medical_history/serializers.py`
-
-Full allergy serializer with all fields.
-
-### AllergyCreateSerializer
-**File**: `medical_history/serializers.py`
-
-Serializer for creating new allergies.
-
-## Views
+## Endpoints
 
 ### Medical Conditions
 
-#### MedicalConditionListCreateView
-**Endpoint**: `GET/POST /api/medical-history/conditions/`
+#### 1. List Medical Conditions
+**GET** `/conditions/`
 
-##### GET - List Medical Conditions
-**Purpose**: Retrieve user's medical conditions
+Get all medical conditions for the authenticated user.
 
-**Response**:
+#### Success Response (200)
 ```json
 {
   "success": true,
   "data": [
     {
-      "id": "uuid",
-      "name": "Diabetes Type 2",
-      "diagnosed_date": "2020-03-15",
+      "id": "uuid-here",
+      "name": "Type 2 Diabetes",
+      "diagnosedDate": "2020-03-15",
       "status": "chronic",
       "notes": "Well controlled with medication",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
     }
   ],
   "count": 1
 }
 ```
 
-##### POST - Create Medical Condition
-**Purpose**: Create new medical condition
+#### 2. Create Medical Condition
+**POST** `/conditions/`
 
-**Request**:
+Add a new medical condition to the user's history.
+
+#### Request Body
 ```json
 {
-  "name": "Diabetes Type 2",
-  "diagnosed_date": "2020-03-15",
-  "status": "chronic",
-  "notes": "Well controlled with medication"
+  "name": "Hypertension",
+  "diagnosedDate": "2023-06-10",
+  "status": "active",
+  "notes": "Controlled with ACE inhibitor"
 }
 ```
 
-**Response**:
+#### Required Fields
+- `name` (string): Name of the medical condition
+- `diagnosedDate` (string): Date diagnosed in YYYY-MM-DD format
+
+#### Optional Fields
+- `status` (string): "active", "resolved", "chronic" (default: "active")
+- `notes` (string): Additional notes about the condition
+
+#### Success Response (201)
 ```json
 {
   "success": true,
   "message": "Medical condition added successfully",
   "data": {
-    "id": "uuid",
-    "name": "Diabetes Type 2",
-    "diagnosed_date": "2020-03-15",
-    "status": "chronic",
-    "notes": "Well controlled with medication",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "id": "uuid-here",
+    "name": "Hypertension",
+    "diagnosedDate": "2023-06-10",
+    "status": "active",
+    "notes": "Controlled with ACE inhibitor",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
 ```
 
-#### MedicalConditionDetailView
-**Endpoint**: `GET/PUT/PATCH/DELETE /api/medical-history/conditions/{id}/`
+#### 3. Get Medical Condition Details
+**GET** `/conditions/{condition_id}/`
 
-##### GET - Retrieve Medical Condition
-**Purpose**: Get specific medical condition details
+Get detailed information about a specific medical condition.
 
-##### PUT/PATCH - Update Medical Condition
-**Purpose**: Update medical condition
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-here",
+    "name": "Hypertension",
+    "diagnosedDate": "2023-06-10",
+    "status": "active",
+    "notes": "Controlled with ACE inhibitor",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
 
-##### DELETE - Delete Medical Condition
-**Purpose**: Delete medical condition
+#### 4. Update Medical Condition
+**PUT/PATCH** `/conditions/{condition_id}/`
+
+Update an existing medical condition.
+
+#### Request Body (PATCH - partial update)
+```json
+{
+  "status": "resolved",
+  "notes": "Resolved with lifestyle changes and medication"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Medical condition updated successfully",
+  "data": {
+    "id": "uuid-here",
+    "name": "Hypertension",
+    "diagnosedDate": "2023-06-10",
+    "status": "resolved",
+    "notes": "Resolved with lifestyle changes and medication",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T11:30:00Z"
+  }
+}
+```
+
+#### 5. Delete Medical Condition
+**DELETE** `/conditions/{condition_id}/`
+
+Permanently delete a medical condition.
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Medical condition deleted successfully"
+}
+```
+
+---
 
 ### Surgeries
 
-#### SurgeryListCreateView
-**Endpoint**: `GET/POST /api/medical-history/surgeries/`
+#### 1. List Surgeries
+**GET** `/surgeries/`
 
-##### GET - List Surgeries
-**Purpose**: Retrieve user's surgeries
+Get all surgical procedures for the authenticated user.
 
-**Response**:
+#### Success Response (200)
 ```json
 {
   "success": true,
   "data": [
     {
-      "id": "uuid",
+      "id": "uuid-here",
       "name": "Appendectomy",
-      "date": "2019-06-10",
+      "date": "2018-05-20",
       "hospital": "City General Hospital",
       "surgeon": "Dr. Smith",
       "notes": "Laparoscopic procedure, recovery was smooth",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
     }
   ],
   "count": 1
 }
 ```
 
-##### POST - Create Surgery
-**Purpose**: Create new surgery record
+#### 2. Create Surgery
+**POST** `/surgeries/`
 
-**Request**:
+Add a new surgical procedure to the user's history.
+
+#### Request Body
 ```json
 {
-  "name": "Appendectomy",
-  "date": "2019-06-10",
-  "hospital": "City General Hospital",
-  "surgeon": "Dr. Smith",
-  "notes": "Laparoscopic procedure, recovery was smooth"
+  "name": "Knee Arthroscopy",
+  "date": "2022-08-15",
+  "hospital": "Orthopedic Center",
+  "surgeon": "Dr. Johnson",
+  "notes": "Repaired meniscus tear, full recovery expected"
 }
 ```
 
-**Response**:
+#### Required Fields
+- `name` (string): Name of the surgical procedure
+- `date` (string): Date of surgery in YYYY-MM-DD format
+
+#### Optional Fields
+- `hospital` (string): Hospital where surgery was performed
+- `surgeon` (string): Name of the surgeon
+- `notes` (string): Additional notes about the surgery
+
+#### Success Response (201)
 ```json
 {
   "success": true,
   "message": "Surgery added successfully",
   "data": {
-    "id": "uuid",
-    "name": "Appendectomy",
-    "date": "2019-06-10",
-    "hospital": "City General Hospital",
-    "surgeon": "Dr. Smith",
-    "notes": "Laparoscopic procedure, recovery was smooth",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "id": "uuid-here",
+    "name": "Knee Arthroscopy",
+    "date": "2022-08-15",
+    "hospital": "Orthopedic Center",
+    "surgeon": "Dr. Johnson",
+    "notes": "Repaired meniscus tear, full recovery expected",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
 ```
 
-#### SurgeryDetailView
-**Endpoint**: `GET/PUT/PATCH/DELETE /api/medical-history/surgeries/{id}/`
+#### 3. Get Surgery Details
+**GET** `/surgeries/{surgery_id}/`
 
-##### GET - Retrieve Surgery
-**Purpose**: Get specific surgery details
+Get detailed information about a specific surgery.
 
-##### PUT/PATCH - Update Surgery
-**Purpose**: Update surgery record
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "data": {
+    "id": "uuid-here",
+    "name": "Knee Arthroscopy",
+    "date": "2022-08-15",
+    "hospital": "Orthopedic Center",
+    "surgeon": "Dr. Johnson",
+    "notes": "Repaired meniscus tear, full recovery expected",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
 
-##### DELETE - Delete Surgery
-**Purpose**: Delete surgery record
+#### 4. Update Surgery
+**PUT/PATCH** `/surgeries/{surgery_id}/`
+
+Update an existing surgical procedure.
+
+#### Request Body (PATCH - partial update)
+```json
+{
+  "notes": "Updated: Full recovery achieved, no complications"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Surgery updated successfully",
+  "data": {
+    "id": "uuid-here",
+    "name": "Knee Arthroscopy",
+    "date": "2022-08-15",
+    "hospital": "Orthopedic Center",
+    "surgeon": "Dr. Johnson",
+    "notes": "Updated: Full recovery achieved, no complications",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T11:30:00Z"
+  }
+}
+```
+
+#### 5. Delete Surgery
+**DELETE** `/surgeries/{surgery_id}/`
+
+Permanently delete a surgical procedure.
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Surgery deleted successfully"
+}
+```
+
+---
 
 ### Allergies
 
-#### AllergyListCreateView
-**Endpoint**: `GET/POST /api/medical-history/allergies/`
+#### 1. List Allergies
+**GET** `/allergies/`
 
-##### GET - List Allergies
-**Purpose**: Retrieve user's allergies
+Get all allergies for the authenticated user.
 
-**Response**:
+#### Success Response (200)
 ```json
 {
   "success": true,
   "data": [
     {
-      "id": "uuid",
+      "id": "uuid-here",
       "allergen": "Penicillin",
-      "reaction": "Rash and difficulty breathing",
+      "reaction": "Severe rash and difficulty breathing",
       "severity": "severe",
-      "notes": "Avoid all penicillin-based antibiotics",
-      "created_at": "2024-01-01T00:00:00Z",
-      "updated_at": "2024-01-01T00:00:00Z"
+      "notes": "Requires immediate medical attention",
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
     }
   ],
   "count": 1
 }
 ```
 
-##### POST - Create Allergy
-**Purpose**: Create new allergy record
+#### 2. Create Allergy
+**POST** `/allergies/`
 
-**Request**:
+Add a new allergy to the user's history.
+
+#### Request Body
 ```json
 {
-  "allergen": "Penicillin",
-  "reaction": "Rash and difficulty breathing",
-  "severity": "severe",
-  "notes": "Avoid all penicillin-based antibiotics"
+  "allergen": "Shellfish",
+  "reaction": "Hives and stomach upset",
+  "severity": "moderate",
+  "notes": "Avoid all shellfish and products containing shellfish"
 }
 ```
 
-**Response**:
+#### Required Fields
+- `allergen` (string): Substance that causes the allergic reaction
+- `reaction` (string): Description of the allergic reaction
+
+#### Optional Fields
+- `severity` (string): "mild", "moderate", "severe" (default: "moderate")
+- `notes` (string): Additional notes about the allergy
+
+#### Success Response (201)
 ```json
 {
   "success": true,
   "message": "Allergy added successfully",
   "data": {
-    "id": "uuid",
-    "allergen": "Penicillin",
-    "reaction": "Rash and difficulty breathing",
-    "severity": "severe",
-    "notes": "Avoid all penicillin-based antibiotics",
-    "created_at": "2024-01-01T00:00:00Z",
-    "updated_at": "2024-01-01T00:00:00Z"
+    "id": "uuid-here",
+    "allergen": "Shellfish",
+    "reaction": "Hives and stomach upset",
+    "severity": "moderate",
+    "notes": "Avoid all shellfish and products containing shellfish",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
   }
 }
 ```
 
-#### AllergyDetailView
-**Endpoint**: `GET/PUT/PATCH/DELETE /api/medical-history/allergies/{id}/`
+#### 3. Get Allergy Details
+**GET** `/allergies/{allergy_id}/`
 
-##### GET - Retrieve Allergy
-**Purpose**: Get specific allergy details
+Get detailed information about a specific allergy.
 
-##### PUT/PATCH - Update Allergy
-**Purpose**: Update allergy record
-
-##### DELETE - Delete Allergy
-**Purpose**: Delete allergy record
-
-## API Endpoints Summary
-
-| Endpoint | Method | Purpose | Auth Required |
-|----------|--------|---------|---------------|
-| `/medical-history/conditions/` | GET | List medical conditions | Yes |
-| `/medical-history/conditions/` | POST | Create medical condition | Yes |
-| `/medical-history/conditions/{id}/` | GET | Get medical condition | Yes |
-| `/medical-history/conditions/{id}/` | PUT/PATCH | Update medical condition | Yes |
-| `/medical-history/conditions/{id}/` | DELETE | Delete medical condition | Yes |
-| `/medical-history/surgeries/` | GET | List surgeries | Yes |
-| `/medical-history/surgeries/` | POST | Create surgery | Yes |
-| `/medical-history/surgeries/{id}/` | GET | Get surgery | Yes |
-| `/medical-history/surgeries/{id}/` | PUT/PATCH | Update surgery | Yes |
-| `/medical-history/surgeries/{id}/` | DELETE | Delete surgery | Yes |
-| `/medical-history/allergies/` | GET | List allergies | Yes |
-| `/medical-history/allergies/` | POST | Create allergy | Yes |
-| `/medical-history/allergies/{id}/` | GET | Get allergy | Yes |
-| `/medical-history/allergies/{id}/` | PUT/PATCH | Update allergy | Yes |
-| `/medical-history/allergies/{id}/` | DELETE | Delete allergy | Yes |
-
-## Data Models
-
-### MedicalCondition Object
-```json
-{
-  "id": "uuid",
-  "name": "Diabetes Type 2",
-  "diagnosed_date": "2020-03-15",
-  "status": "chronic",
-  "notes": "Well controlled with medication",
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
-}
-```
-
-### Surgery Object
-```json
-{
-  "id": "uuid",
-  "name": "Appendectomy",
-  "date": "2019-06-10",
-  "hospital": "City General Hospital",
-  "surgeon": "Dr. Smith",
-  "notes": "Laparoscopic procedure, recovery was smooth",
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
-}
-```
-
-### Allergy Object
-```json
-{
-  "id": "uuid",
-  "allergen": "Penicillin",
-  "reaction": "Rash and difficulty breathing",
-  "severity": "severe",
-  "notes": "Avoid all penicillin-based antibiotics",
-  "created_at": "2024-01-01T00:00:00Z",
-  "updated_at": "2024-01-01T00:00:00Z"
-}
-```
-
-## Business Logic
-
-### Medical Conditions
-- **Status Tracking**: Active, resolved, or chronic conditions
-- **Date Management**: Diagnosis date tracking
-- **Notes**: Additional information about condition management
-
-### Surgeries
-- **Procedure Tracking**: Name and date of surgery
-- **Provider Information**: Hospital and surgeon details
-- **Recovery Notes**: Additional information about recovery
-
-### Allergies
-- **Allergen Tracking**: Specific substances causing reactions
-- **Reaction Description**: Detailed reaction information
-- **Severity Levels**: Mild, moderate, or severe classifications
-- **Duplicate Prevention**: One record per allergen per user
-
-## Frontend Integration
-
-### Medical Conditions
-- Display conditions by status
-- Show diagnosis dates
-- Allow status updates
-- Provide condition management notes
-
-### Surgeries
-- Chronological surgery history
-- Hospital and surgeon information
-- Recovery notes and details
-- Date-based organization
-
-### Allergies
-- Prominent allergy display
-- Severity indicators
-- Reaction descriptions
-- Emergency information
-
-## Security
-
-### Access Control
-- User can only access their own medical history
-- Authentication required for all endpoints
-- Permission validation in views
-
-### Data Validation
-- Input sanitization
-- Date validation
-- Required field validation
-- Unique constraint enforcement
-
-## Performance Optimizations
-
-### Database Indexes
-- User-based filtering
-- Date-based ordering
-- Efficient querying
-
-### Query Optimization
-- Filtered querysets by user
-- Efficient date queries
-- Optimized serialization
-
-## Error Handling
-
-### Common Errors
-- Medical history item not found
-- Permission denied (not user's record)
-- Duplicate allergy entry
-- Invalid date format
-- Missing required fields
-
-### Response Format
+#### Success Response (200)
 ```json
 {
   "success": true,
-  "message": "Operation successful",
-  "data": { ... }
+  "data": {
+    "id": "uuid-here",
+    "allergen": "Shellfish",
+    "reaction": "Hives and stomach upset",
+    "severity": "moderate",
+    "notes": "Avoid all shellfish and products containing shellfish",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
 }
 ```
 
+#### 4. Update Allergy
+**PUT/PATCH** `/allergies/{allergy_id}/`
+
+Update an existing allergy.
+
+#### Request Body (PATCH - partial update)
+```json
+{
+  "severity": "severe",
+  "notes": "Updated: Now causes anaphylaxis, carry epinephrine"
+}
+```
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Allergy updated successfully",
+  "data": {
+    "id": "uuid-here",
+    "allergen": "Shellfish",
+    "reaction": "Hives and stomach upset",
+  "severity": "severe",
+    "notes": "Updated: Now causes anaphylaxis, carry epinephrine",
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T11:30:00Z"
+  }
+}
+```
+
+#### 5. Delete Allergy
+**DELETE** `/allergies/{allergy_id}/`
+
+Permanently delete an allergy.
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Allergy deleted successfully"
+}
+```
+
+---
+
+## Data Models
+
+### Medical Condition Status
+- `active`: Currently experiencing the condition
+- `resolved`: Condition has been resolved/cured
+- `chronic`: Long-term condition that requires ongoing management
+
+### Allergy Severity
+- `mild`: Minor reactions, usually not life-threatening
+- `moderate`: Moderate reactions, may require medical attention
+- `severe`: Severe reactions, potentially life-threatening (anaphylaxis)
+
+---
+
+## React Native Integration
+
+### 1. Medical History Service
+```javascript
+// services/medicalHistoryService.js
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_BASE_URL = 'https://youdoc.onrender.com/api/medical-history';
+
+class MedicalHistoryService {
+  async getAuthHeaders() {
+    const token = await AsyncStorage.getItem('accessToken');
+    return {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+    };
+  }
+
+  // Medical Conditions
+  async getMedicalConditions() {
+    const response = await fetch(`${API_BASE_URL}/conditions/`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  async createMedicalCondition(conditionData) {
+    const response = await fetch(`${API_BASE_URL}/conditions/`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(conditionData),
+    });
+    return response.json();
+  }
+
+  async updateMedicalCondition(conditionId, conditionData) {
+    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}/`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(conditionData),
+    });
+    return response.json();
+  }
+
+  async deleteMedicalCondition(conditionId) {
+    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}/`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  // Surgeries
+  async getSurgeries() {
+    const response = await fetch(`${API_BASE_URL}/surgeries/`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  async createSurgery(surgeryData) {
+    const response = await fetch(`${API_BASE_URL}/surgeries/`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(surgeryData),
+    });
+    return response.json();
+  }
+
+  async updateSurgery(surgeryId, surgeryData) {
+    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}/`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(surgeryData),
+    });
+    return response.json();
+  }
+
+  async deleteSurgery(surgeryId) {
+    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}/`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  // Allergies
+  async getAllergies() {
+    const response = await fetch(`${API_BASE_URL}/allergies/`, {
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+
+  async createAllergy(allergyData) {
+    const response = await fetch(`${API_BASE_URL}/allergies/`, {
+      method: 'POST',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(allergyData),
+    });
+    return response.json();
+  }
+
+  async updateAllergy(allergyId, allergyData) {
+    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}/`, {
+      method: 'PATCH',
+      headers: await this.getAuthHeaders(),
+      body: JSON.stringify(allergyData),
+    });
+    return response.json();
+  }
+
+  async deleteAllergy(allergyId) {
+    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}/`, {
+      method: 'DELETE',
+      headers: await this.getAuthHeaders(),
+    });
+    return response.json();
+  }
+}
+
+export default new MedicalHistoryService();
+```
+
+### 2. Medical History Context
+```javascript
+// context/MedicalHistoryContext.js
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import MedicalHistoryService from '../services/medicalHistoryService';
+
+const MedicalHistoryContext = createContext();
+
+export const useMedicalHistory = () => {
+  const context = useContext(MedicalHistoryContext);
+  if (!context) {
+    throw new Error('useMedicalHistory must be used within a MedicalHistoryProvider');
+  }
+  return context;
+};
+
+export const MedicalHistoryProvider = ({ children }) => {
+  const [medicalConditions, setMedicalConditions] = useState([]);
+  const [surgeries, setSurgeries] = useState([]);
+  const [allergies, setAllergies] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const loadMedicalConditions = async () => {
+    setIsLoading(true);
+    try {
+      const response = await MedicalHistoryService.getMedicalConditions();
+      if (response.success) {
+        setMedicalConditions(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load medical conditions:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadSurgeries = async () => {
+    setIsLoading(true);
+    try {
+      const response = await MedicalHistoryService.getSurgeries();
+      if (response.success) {
+        setSurgeries(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load surgeries:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadAllergies = async () => {
+    setIsLoading(true);
+    try {
+      const response = await MedicalHistoryService.getAllergies();
+      if (response.success) {
+        setAllergies(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to load allergies:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addMedicalCondition = async (conditionData) => {
+    try {
+      const response = await MedicalHistoryService.createMedicalCondition(conditionData);
+      if (response.success) {
+        setMedicalConditions(prev => [response.data, ...prev]);
+        return { success: true, condition: response.data };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const addSurgery = async (surgeryData) => {
+    try {
+      const response = await MedicalHistoryService.createSurgery(surgeryData);
+      if (response.success) {
+        setSurgeries(prev => [response.data, ...prev]);
+        return { success: true, surgery: response.data };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const addAllergy = async (allergyData) => {
+    try {
+      const response = await MedicalHistoryService.createAllergy(allergyData);
+      if (response.success) {
+        setAllergies(prev => [response.data, ...prev]);
+        return { success: true, allergy: response.data };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const updateMedicalCondition = async (conditionId, conditionData) => {
+    try {
+      const response = await MedicalHistoryService.updateMedicalCondition(conditionId, conditionData);
+      if (response.success) {
+        setMedicalConditions(prev => 
+          prev.map(condition => condition.id === conditionId ? response.data : condition)
+        );
+        return { success: true, condition: response.data };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const deleteMedicalCondition = async (conditionId) => {
+    try {
+      const response = await MedicalHistoryService.deleteMedicalCondition(conditionId);
+      if (response.success) {
+        setMedicalConditions(prev => prev.filter(condition => condition.id !== conditionId));
+        return { success: true };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const deleteSurgery = async (surgeryId) => {
+    try {
+      const response = await MedicalHistoryService.deleteSurgery(surgeryId);
+      if (response.success) {
+        setSurgeries(prev => prev.filter(surgery => surgery.id !== surgeryId));
+        return { success: true };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  const deleteAllergy = async (allergyId) => {
+    try {
+      const response = await MedicalHistoryService.deleteAllergy(allergyId);
+      if (response.success) {
+        setAllergies(prev => prev.filter(allergy => allergy.id !== allergyId));
+        return { success: true };
+      } else {
+        return { success: false, error: response.message };
+      }
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  };
+
+  useEffect(() => {
+    loadMedicalConditions();
+    loadSurgeries();
+    loadAllergies();
+  }, []);
+
+  const value = {
+    medicalConditions,
+    surgeries,
+    allergies,
+    isLoading,
+    loadMedicalConditions,
+    loadSurgeries,
+    loadAllergies,
+    addMedicalCondition,
+    addSurgery,
+    addAllergy,
+    updateMedicalCondition,
+    deleteMedicalCondition,
+    deleteSurgery,
+    deleteAllergy,
+  };
+
+  return (
+    <MedicalHistoryContext.Provider value={value}>
+      {children}
+    </MedicalHistoryContext.Provider>
+  );
+};
+```
+
+### 3. Medical History Dashboard Component
+```javascript
+// components/MedicalHistoryDashboard.js
+import React, { useState } from 'react';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { useMedicalHistory } from '../context/MedicalHistoryContext';
+
+const MedicalHistoryDashboard = () => {
+  const { 
+    medicalConditions, 
+    surgeries, 
+    allergies, 
+    deleteMedicalCondition,
+    deleteSurgery,
+    deleteAllergy 
+  } = useMedicalHistory();
+  const [activeTab, setActiveTab] = useState('conditions');
+
+  const handleDelete = async (type, id, name) => {
+    Alert.alert(
+      'Delete Record',
+      `Are you sure you want to delete "${name}"?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            let result;
+            switch (type) {
+              case 'condition':
+                result = await deleteMedicalCondition(id);
+                break;
+              case 'surgery':
+                result = await deleteSurgery(id);
+                break;
+              case 'allergy':
+                result = await deleteAllergy(id);
+                break;
+            }
+            if (!result.success) {
+              Alert.alert('Error', result.error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const renderMedicalCondition = (condition) => (
+    <View key={condition.id} style={styles.recordCard}>
+      <View style={styles.recordHeader}>
+        <Text style={styles.recordTitle}>{condition.name}</Text>
+        <Text style={styles.recordDate}>
+          {new Date(condition.diagnosedDate).toLocaleDateString()}
+        </Text>
+      </View>
+      <Text style={styles.recordStatus}>
+        Status: {condition.status.charAt(0).toUpperCase() + condition.status.slice(1)}
+      </Text>
+      {condition.notes && (
+        <Text style={styles.recordNotes}>{condition.notes}</Text>
+      )}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDelete('condition', condition.id, condition.name)}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderSurgery = (surgery) => (
+    <View key={surgery.id} style={styles.recordCard}>
+      <View style={styles.recordHeader}>
+        <Text style={styles.recordTitle}>{surgery.name}</Text>
+        <Text style={styles.recordDate}>
+          {new Date(surgery.date).toLocaleDateString()}
+        </Text>
+      </View>
+      {surgery.hospital && (
+        <Text style={styles.recordDetail}>Hospital: {surgery.hospital}</Text>
+      )}
+      {surgery.surgeon && (
+        <Text style={styles.recordDetail}>Surgeon: {surgery.surgeon}</Text>
+      )}
+      {surgery.notes && (
+        <Text style={styles.recordNotes}>{surgery.notes}</Text>
+      )}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDelete('surgery', surgery.id, surgery.name)}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderAllergy = (allergy) => (
+    <View key={allergy.id} style={styles.recordCard}>
+      <View style={styles.recordHeader}>
+        <Text style={styles.recordTitle}>{allergy.allergen}</Text>
+        <Text style={[styles.severityBadge, getSeverityColor(allergy.severity)]}>
+          {allergy.severity.toUpperCase()}
+        </Text>
+      </View>
+      <Text style={styles.recordDetail}>Reaction: {allergy.reaction}</Text>
+      {allergy.notes && (
+        <Text style={styles.recordNotes}>{allergy.notes}</Text>
+      )}
+      <TouchableOpacity
+        style={styles.deleteButton}
+        onPress={() => handleDelete('allergy', allergy.id, allergy.allergen)}
+      >
+        <Text style={styles.deleteButtonText}>Delete</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  const getSeverityColor = (severity) => {
+    const colors = {
+      mild: { backgroundColor: '#4CAF50' },
+      moderate: { backgroundColor: '#FF9800' },
+      severe: { backgroundColor: '#f44336' },
+    };
+    return colors[severity] || colors.moderate;
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case 'conditions':
+        return medicalConditions.map(renderMedicalCondition);
+      case 'surgeries':
+        return surgeries.map(renderSurgery);
+      case 'allergies':
+        return allergies.map(renderAllergy);
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'conditions' && styles.activeTab]}
+          onPress={() => setActiveTab('conditions')}
+        >
+          <Text style={[styles.tabText, activeTab === 'conditions' && styles.activeTabText]}>
+            Conditions ({medicalConditions.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'surgeries' && styles.activeTab]}
+          onPress={() => setActiveTab('surgeries')}
+        >
+          <Text style={[styles.tabText, activeTab === 'surgeries' && styles.activeTabText]}>
+            Surgeries ({surgeries.length})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'allergies' && styles.activeTab]}
+          onPress={() => setActiveTab('allergies')}
+        >
+          <Text style={[styles.tabText, activeTab === 'allergies' && styles.activeTabText]}>
+            Allergies ({allergies.length})
+          </Text>
+        </TouchableOpacity>
+      </View>
+      
+      <ScrollView style={styles.content}>
+        {renderContent()}
+      </ScrollView>
+    </View>
+  );
+};
+
+const styles = {
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e0e0e0',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#2196F3',
+  },
+  tabText: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#2196F3',
+    fontWeight: 'bold',
+  },
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  recordCard: {
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  recordHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recordTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    flex: 1,
+  },
+  recordDate: {
+    fontSize: 14,
+    color: '#666',
+  },
+  recordStatus: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  recordDetail: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  recordNotes: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 12,
+  },
+  severityBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    alignSelf: 'flex-start',
+  },
+  deleteButton: {
+    alignSelf: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    backgroundColor: '#f44336',
+    borderRadius: 4,
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+};
+
+export default MedicalHistoryDashboard;
+```
+
+---
+
+## Error Handling
+
+### Common Error Responses
+
+#### 400 Bad Request
 ```json
 {
   "error": true,
-  "message": "Error description",
-  "details": { ... }
+  "message": "Failed to add medical condition",
+  "details": {
+    "name": ["This field is required"],
+    "diagnosedDate": ["Invalid date format"]
+  }
 }
 ```
 
+#### 404 Not Found
+```json
+{
+  "error": true,
+  "message": "Medical condition not found"
+}
+```
+
+#### 403 Forbidden
+```json
+{
+  "error": true,
+  "message": "You can only access your own medical history"
+}
+```
+
+---
+
+## Security Notes
+
+1. **User Isolation**: Users can only access their own medical history
+2. **Data Validation**: All input is validated on the server
+3. **JWT Authentication**: Required for all operations
+4. **HTTPS Only**: All API calls must use HTTPS in production
+5. **Sensitive Data**: Medical history contains sensitive health information
+6. **Data Retention**: Consider data retention policies for medical records
+
+---
+
 ## Testing
 
-### Unit Tests
-- Model validation
-- Serializer validation
-- View permissions
-- Business logic
+Use the following test data for development:
 
-### Integration Tests
-- API endpoints
-- Authentication
-- Data persistence
-- Error handling
+```json
+{
+  "name": "Test Condition",
+  "diagnosedDate": "2024-01-01",
+  "status": "active",
+  "notes": "Test medical condition"
+}
+```
 
-### Manual Testing
-- Create medical condition
-- Add surgery record
-- Record allergy
-- Update and delete records
-
-## Dependencies
-
-### Required Packages
-- `django`: Web framework
-- `djangorestframework`: API framework
-
-### Database
-- PostgreSQL (recommended)
-- SQLite (development)
-
-## Best Practices
-
-### Development
-- Use proper serializers for different operations
-- Implement comprehensive validation
-- Handle errors gracefully
-- Optimize database queries
-
-### User Experience
-- Clear error messages
-- Consistent response format
-- Efficient data loading
-- Intuitive API design
-
-### Security
-- Validate all inputs
-- Check user permissions
-- Use secure data types
-- Implement proper logging
-
-## Future Enhancements
-
-### Planned Features
-- Medical history sharing with providers
-- Condition progression tracking
-- Surgery outcome tracking
-- Allergy severity monitoring
-- Medical history reports
-- Integration with EHR systems
-- Family medical history tracking
-
-### API Versioning
-- Version 1: Current implementation
-- Version 2: Enhanced features (planned)
-
-## Troubleshooting
-
-### Common Issues
-- Duplicate allergy entries
-- Date validation errors
-- Permission denied errors
-- Missing required fields
-
-### Solutions
-- Check unique constraints
-- Validate date formats
-- Verify user permissions
-- Ensure required fields are provided
+**Note**: Replace with actual test data in your development environment.

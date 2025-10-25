@@ -58,3 +58,4 @@ class Command(BaseCommand):
                 self.stdout.write(
                     self.style.ERROR(f"❌ Manual email failed: {str(e)}")
                 )
+
