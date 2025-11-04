@@ -71,35 +71,115 @@ def send_otp_email(user_email, otp_code, user_name=None):
         Youdoc Team
         """
         
-        # Send email - try with fail_silently=False first to get actual error
-        # If that fails, we'll catch the exception with details
-        try:
-            result = send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user_email],
-                html_message=html_message,
-                fail_silently=False,  # Changed to False to get actual error details
-            )
+        # Gmail SMTP - try multiple configurations for cloud compatibility
+        smtp_configs = [
+            # Try port 465 with SSL (often works better on cloud)
+            {
+                'host': 'smtp.gmail.com',
+                'port': 465,
+                'use_tls': False,
+                'use_ssl': True,
+                'name': 'Gmail SMTP (port 465 SSL)'
+            },
+            # Try port 587 with TLS (standard)
+            {
+                'host': 'smtp.gmail.com',
+                'port': 587,
+                'use_tls': True,
+                'use_ssl': False,
+                'name': 'Gmail SMTP (port 587 TLS)'
+            },
+            # Try port 25 (sometimes allowed on cloud)
+            {
+                'host': 'smtp.gmail.com',
+                'port': 25,
+                'use_tls': True,
+                'use_ssl': False,
+                'name': 'Gmail SMTP (port 25 TLS)'
+            },
+        ]
+        
+        # Also try with current settings if different
+        current_host = getattr(settings, 'EMAIL_HOST', 'smtp.gmail.com')
+        current_port = getattr(settings, 'EMAIL_PORT', 587)
+        current_use_ssl = getattr(settings, 'EMAIL_USE_SSL', False)
+        current_use_tls = getattr(settings, 'EMAIL_USE_TLS', True)
+        
+        if {'host': current_host, 'port': current_port, 'use_tls': current_use_tls, 'use_ssl': current_use_ssl} not in smtp_configs:
+            smtp_configs.insert(0, {
+                'host': current_host,
+                'port': current_port,
+                'use_tls': current_use_tls,
+                'use_ssl': current_use_ssl,
+                'name': f'Current SMTP config ({current_host}:{current_port})'
+            })
+        
+        last_error = None
+        for config in smtp_configs:
+            try:
+                logger.info(f"Trying {config['name']} to send email to {user_email}")
+                
+                # Create a custom email backend for this configuration
+                from django.core.mail.backends.smtp import EmailBackend
+                
+                backend = EmailBackend(
+                    host=config['host'],
+                    port=config['port'],
+                    username=settings.EMAIL_HOST_USER,
+                    password=settings.EMAIL_HOST_PASSWORD,
+                    use_tls=config['use_tls'],
+                    use_ssl=config['use_ssl'],
+                    fail_silently=False,
+                    timeout=getattr(settings, 'EMAIL_TIMEOUT', 30)
+                )
+                
+                # Create email message
+                from django.core.mail.message import EmailMultiAlternatives
+                email = EmailMultiAlternatives(
+                    subject=subject,
+                    body=plain_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[user_email],
+                    connection=backend
+                )
+                email.attach_alternative(html_message, "text/html")
+                
+                # Send email
+                result = email.send()
+                
+                if result:
+                    logger.info(f"{config['name']}: OTP email sent successfully to {user_email}")
+                    return True
+                else:
+                    logger.warning(f"{config['name']}: Email send returned {result}")
+                    
+            except Exception as smtp_error:
+                error_msg = str(smtp_error)
+                last_error = smtp_error
+                logger.warning(f"{config['name']} failed: {error_msg}")
+                
+                # If it's a network unreachable error, try next config
+                if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
+                    continue  # Try next configuration
+                elif 'authentication' in error_msg.lower() or '535' in error_msg:
+                    # Authentication error - don't try other configs
+                    logger.error(f"SMTP authentication failed - check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD")
+                    raise
+                # For other errors, try next config
+                continue
+        
+        # All configurations failed
+        if last_error:
+            error_msg = str(last_error)
+            logger.error(f"All SMTP configurations failed. Last error: {error_msg}", exc_info=True)
             
-            if result == 0:
-                # Email failed to send but no exception raised
-                logger.error(f"Email sending returned 0 for {user_email} - check SMTP configuration")
-                return False
+            if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
+                logger.error(f"Network unreachable - Render may be blocking SMTP. Solutions:")
+                logger.error(f"1. Use SendGrid API: Set SENDGRID_API_KEY environment variable")
+                logger.error(f"2. Use Gmail API instead of SMTP")
+                logger.error(f"3. Contact Render support about SMTP port restrictions")
             
-            logger.info(f"OTP email sent successfully to {user_email}")
-            return True
-            
-        except Exception as smtp_error:
-            # Log the actual SMTP error for debugging
-            logger.error(f"SMTP error sending OTP email to {user_email}: {str(smtp_error)}", exc_info=True)
-            # Check if it's a configuration issue
-            if 'EMAIL_HOST_USER' in str(smtp_error) or 'EMAIL_HOST_PASSWORD' in str(smtp_error):
-                logger.error(f"Email configuration issue detected for {user_email}")
-            elif 'connection' in str(smtp_error).lower() or 'timeout' in str(smtp_error).lower():
-                logger.error(f"Email connection issue for {user_email}")
-            raise  # Re-raise to be caught by outer exception handler
+            raise last_error
         
     except Exception as e:
         logger.error(f"Failed to send OTP email to {user_email}: {str(e)}", exc_info=True)

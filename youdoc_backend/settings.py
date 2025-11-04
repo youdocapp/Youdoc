@@ -360,14 +360,26 @@ GOOGLE_OAUTH2_CLIENT_ID = config('GOOGLE_OAUTH2_CLIENT_ID', default='')
 # Apple Sign In Configuration
 APPLE_CLIENT_ID = config('APPLE_CLIENT_ID', default='')
 
-# Email Configuration
+# Email Configuration - Gmail SMTP with multiple port support
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+
+# Try port 465 with SSL first (more reliable on cloud platforms like Render)
+# If that doesn't work, fallback to port 587 with TLS
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+if EMAIL_USE_SSL:
+    EMAIL_PORT = config('EMAIL_PORT', default=465, cast=int)
+    EMAIL_USE_TLS = False
+else:
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+
 EMAIL_HOST_USER = config('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+
+# Gmail SMTP timeout settings (important for cloud platforms)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
 # SSL Security Settings (only in production)
 if not DEBUG:
