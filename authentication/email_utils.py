@@ -71,15 +71,20 @@ def send_otp_email(user_email, otp_code, user_name=None):
         Youdoc Team
         """
         
-        # Send email
-        send_mail(
+        # Send email - use fail_silently=True to prevent exceptions from blocking the request
+        # Check return value to determine if email was sent successfully
+        result = send_mail(
             subject=subject,
             message=plain_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user_email],
             html_message=html_message,
-            fail_silently=False,
+            fail_silently=True,
         )
+        
+        if result == 0:
+            # Email failed to send but no exception raised
+            raise Exception("Email sending failed (no exception raised)")
         
         logger.info(f"OTP email sent successfully to {user_email}")
         return True

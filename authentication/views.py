@@ -13,6 +13,7 @@ from rest_framework.views import exception_handler
 from datetime import datetime, timedelta
 import secrets
 import string
+import logging
 
 from .models import User
 from .serializers import (
@@ -25,6 +26,8 @@ from .serializers import (
     EmailVerificationSerializer
 )
 from .email_utils import send_otp_email, send_password_reset_email, send_welcome_email
+
+logger = logging.getLogger(__name__)
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -76,7 +79,17 @@ def register(request):
         if serializer.is_valid():
             user = serializer.save()
             
+            # Prepare response data first (before any potentially blocking operations)
+            response_data = {
+                'success': True,
+                'message': 'Registration successful! Please check your email for the verification code.',
+                'email': user.email,
+                'requires_verification': True
+            }
+            
             # Send OTP verification email (welcome email will be sent after verification)
+            # Use try-except-finally to ensure response is always sent
+            email_sent = False
             try:
                 # Generate 6-digit OTP
                 otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
@@ -84,17 +97,17 @@ def register(request):
                 user.email_verification_sent_at = timezone.now()
                 user.save()
                 
+                # Send email - this might block or timeout, but we'll catch any exceptions
                 send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                email_sent = True
             except Exception as email_error:
                 # Log email error but don't fail registration
-                print(f"Failed to send OTP email: {email_error}")
+                logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
+                # Still return success since user was created
+                # The user can request a new OTP via resend endpoint
             
-            return Response({
-                'success': True,
-                'message': 'Registration successful! Please check your email for the verification code.',
-                'email': user.email,
-                'requires_verification': True
-            }, status=status.HTTP_201_CREATED)
+            # Always return success response, even if email failed
+            return Response(response_data, status=status.HTTP_201_CREATED)
         
         # Return validation errors in proper JSON format
         return Response({
@@ -104,6 +117,7 @@ def register(request):
         }, status=status.HTTP_400_BAD_REQUEST)
         
     except Exception as e:
+        logger.error(f"Registration error: {str(e)}", exc_info=True)
         return Response({
             'error': True,
             'message': 'An unexpected error occurred during registration',
@@ -389,6 +403,78 @@ def verify_otp(request):
             'error': True,
             'message': 'User not found'
         }, status=status.HTTP_404_NOT_FOUND)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def test_email(request):
+    """
+    Test email sending functionality
+    """
+    try:
+        from django.conf import settings
+        from django.core.mail import send_mail
+        
+        # Get email from request or use default
+        test_email = request.data.get('email', settings.EMAIL_HOST_USER)
+        
+        if not test_email:
+            return Response({
+                'error': True,
+                'message': 'Email address is required. Provide email in request body or set EMAIL_HOST_USER in settings.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check email configuration
+        email_config = {
+            'EMAIL_BACKEND': getattr(settings, 'EMAIL_BACKEND', 'Not set'),
+            'EMAIL_HOST': getattr(settings, 'EMAIL_HOST', 'Not set'),
+            'EMAIL_PORT': getattr(settings, 'EMAIL_PORT', 'Not set'),
+            'EMAIL_USE_TLS': getattr(settings, 'EMAIL_USE_TLS', 'Not set'),
+            'EMAIL_HOST_USER': getattr(settings, 'EMAIL_HOST_USER', 'Not set'),
+            'DEFAULT_FROM_EMAIL': getattr(settings, 'DEFAULT_FROM_EMAIL', 'Not set'),
+            'EMAIL_HOST_PASSWORD': '***' if getattr(settings, 'EMAIL_HOST_PASSWORD', None) else 'Not set',
+        }
+        
+        # Try to send test email
+        try:
+            result = send_mail(
+                subject='Youdoc - Email Test',
+                message='This is a test email to verify email configuration is working correctly.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[test_email],
+                fail_silently=False,
+            )
+            
+            if result == 1:
+                return Response({
+                    'success': True,
+                    'message': f'Test email sent successfully to {test_email}',
+                    'email_config': email_config,
+                    'result': 'Email sent successfully'
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': True,
+                    'message': f'Failed to send email. Result: {result}',
+                    'email_config': email_config,
+                    'result': result
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                
+        except Exception as email_error:
+            logger.error(f"Email test failed: {str(email_error)}", exc_info=True)
+            return Response({
+                'error': True,
+                'message': f'Failed to send test email: {str(email_error)}',
+                'email_config': email_config,
+                'error_details': str(email_error)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+    except Exception as e:
+        logger.error(f"Email test error: {str(e)}", exc_info=True)
+        return Response({
+            'error': True,
+            'message': f'An unexpected error occurred: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # Custom exception handler for JSON error responses

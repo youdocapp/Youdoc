@@ -30,4 +30,7 @@ urlpatterns = [
     # OAuth endpoints
     path('google/', oauth_views.google_auth, name='google_auth'),
     path('apple/', oauth_views.apple_auth, name='apple_auth'),
+    
+    # Testing endpoint
+    path('test-email/', views.test_email, name='test_email'),
 ]
