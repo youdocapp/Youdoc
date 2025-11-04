@@ -75,12 +75,19 @@ def register(request):
     """
     User registration endpoint
     """
+    logger.info("Registration request received")
     try:
         serializer = UserRegistrationSerializer(data=request.data)
+        logger.info("Serializer created, validating...")
+        
         if serializer.is_valid():
-            user = serializer.save()
+            logger.info("Serializer is valid, creating user...")
             
-            # Prepare response data first (before any potentially blocking operations)
+            # Create user - serializer already generates OTP and sets email_verification_sent_at
+            user = serializer.save()
+            logger.info(f"User created: {user.email}")
+            
+            # Prepare response data immediately after user creation
             response_data = {
                 'success': True,
                 'message': 'Registration successful! Please check your email for the verification code.',
@@ -88,25 +95,27 @@ def register(request):
                 'requires_verification': True
             }
             
-            # Generate 6-digit OTP and save to user
-            otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
-            user.email_verification_token = otp_code
-            user.email_verification_sent_at = timezone.now()
-            user.save()
+            # Get OTP code from user (already set by serializer)
+            otp_code = user.email_verification_token
+            logger.info(f"OTP code generated for {user.email}")
             
             # Send OTP email in background thread to avoid blocking the request
+            # This MUST happen after response is prepared to ensure non-blocking
             def send_email_async():
                 try:
+                    logger.info(f"Background thread: Starting email send to {user.email}")
                     send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                    logger.info(f"OTP email sent successfully to {user.email}")
+                    logger.info(f"Background thread: OTP email sent successfully to {user.email}")
                 except Exception as email_error:
-                    logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
+                    logger.error(f"Background thread: Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
             
             # Start email sending in background thread
+            logger.info(f"Starting background email thread for {user.email}")
             email_thread = threading.Thread(target=send_email_async, daemon=True)
             email_thread.start()
+            logger.info(f"Background email thread started, returning response for {user.email}")
             
-            # Always return success response, even if email failed
+            # Return response immediately - don't wait for email
             return Response(response_data, status=status.HTTP_201_CREATED)
         
         # Return validation errors in proper JSON format

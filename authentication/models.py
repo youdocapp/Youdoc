@@ -154,12 +154,19 @@ class User(AbstractUser):
         
         # Generate a 10-character alphanumeric ID
         alphabet = string.ascii_letters + string.digits
-        public_id = ''.join(secrets.choice(alphabet) for _ in range(10))
         
-        # Ensure uniqueness
-        while User.objects.filter(public_id=public_id).exists():
+        # Try up to 10 times to find a unique ID (very unlikely to need more)
+        max_attempts = 10
+        for _ in range(max_attempts):
             public_id = ''.join(secrets.choice(alphabet) for _ in range(10))
+            # Check uniqueness efficiently
+            if not User.objects.filter(public_id=public_id).exists():
+                return public_id
         
+        # Fallback: use longer ID with timestamp to ensure uniqueness
+        import time
+        timestamp = str(int(time.time()))[-6:]  # Last 6 digits of timestamp
+        public_id = ''.join(secrets.choice(alphabet) for _ in range(4)) + timestamp
         return public_id
     
     def save(self, *args, **kwargs):
