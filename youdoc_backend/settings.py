@@ -381,6 +381,11 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 # Gmail SMTP timeout settings (important for cloud platforms)
 EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
+# Gmail API Configuration (alternative to SMTP - works on cloud platforms)
+# Set GMAIL_API_CREDENTIALS as JSON string with OAuth2 credentials
+# This uses HTTPS instead of SMTP, so it works even when SMTP ports are blocked
+GMAIL_API_CREDENTIALS = config('GMAIL_API_CREDENTIALS', default=None)
+
 # SSL Security Settings (only in production)
 if not DEBUG:
     SECURE_HSTS_SECONDS = 31536000  # 1 year

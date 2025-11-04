@@ -36,5 +36,10 @@ yarn-error.*
 *.tsbuildinfo
 .vercel
 
+# Gmail API credentials (sensitive - do not commit)
+credentials.json
+gmail_token.json
+render_credentials.json
+
 
 

@@ -7,8 +7,22 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import logging
+import base64
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 logger = logging.getLogger(__name__)
+
+# Try to import Gmail API (works on cloud platforms - uses HTTPS instead of SMTP)
+try:
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.auth.transport.requests import Request
+    from googleapiclient.discovery import build
+    from googleapiclient.errors import HttpError
+    GMAIL_API_AVAILABLE = True
+except ImportError:
+    GMAIL_API_AVAILABLE = False
 
 
 def send_otp_email(user_email, otp_code, user_name=None):
@@ -71,7 +85,63 @@ def send_otp_email(user_email, otp_code, user_name=None):
         Youdoc Team
         """
         
-        # Gmail SMTP - try multiple configurations for cloud compatibility
+        # Try Gmail API first (uses HTTPS, works on cloud platforms like Render)
+        # Gmail API doesn't use SMTP so it bypasses network restrictions
+        gmail_api_credentials = getattr(settings, 'GMAIL_API_CREDENTIALS', None)
+        
+        if gmail_api_credentials and GMAIL_API_AVAILABLE:
+            try:
+                logger.info(f"Using Gmail API to send email to {user_email}")
+                import json
+                
+                # Parse credentials from JSON string or dict
+                if isinstance(gmail_api_credentials, str):
+                    creds_data = json.loads(gmail_api_credentials)
+                else:
+                    creds_data = gmail_api_credentials
+                
+                # Create credentials object
+                creds = Credentials.from_authorized_user_info(creds_data)
+                
+                # Refresh token if needed
+                if creds.expired and creds.refresh_token:
+                    creds.refresh(Request())
+                
+                # Build Gmail service
+                service = build('gmail', 'v1', credentials=creds)
+                
+                # Create email message
+                message = MIMEMultipart('alternative')
+                message['Subject'] = subject
+                message['From'] = settings.DEFAULT_FROM_EMAIL
+                message['To'] = user_email
+                
+                # Add text and HTML parts
+                text_part = MIMEText(plain_message, 'plain')
+                html_part = MIMEText(html_message, 'html')
+                message.attach(text_part)
+                message.attach(html_part)
+                
+                # Encode message for Gmail API
+                # Convert message to string, then encode to bytes, then base64 encode
+                raw_message = base64.urlsafe_b64encode(
+                    message.as_string().encode('utf-8')
+                ).decode()
+                
+                # Send email via Gmail API
+                send_message = service.users().messages().send(
+                    userId='me',
+                    body={'raw': raw_message}
+                ).execute()
+                
+                logger.info(f"Gmail API: OTP email sent successfully to {user_email}, message ID: {send_message.get('id')}")
+                return True
+                
+            except Exception as gmail_api_error:
+                logger.error(f"Gmail API error: {str(gmail_api_error)}", exc_info=True)
+                # Fall through to SMTP if Gmail API fails
+        
+        # Fallback to SMTP - try multiple configurations for cloud compatibility
         smtp_configs = [
             # Try port 465 with SSL (often works better on cloud)
             {
@@ -136,9 +206,9 @@ def send_otp_email(user_email, otp_code, user_name=None):
                 # Create email message
                 from django.core.mail.message import EmailMultiAlternatives
                 email = EmailMultiAlternatives(
-                    subject=subject,
+            subject=subject,
                     body=plain_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+            from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[user_email],
                     connection=backend
                 )
@@ -174,10 +244,12 @@ def send_otp_email(user_email, otp_code, user_name=None):
             logger.error(f"All SMTP configurations failed. Last error: {error_msg}", exc_info=True)
             
             if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
-                logger.error(f"Network unreachable - Render may be blocking SMTP. Solutions:")
-                logger.error(f"1. Use SendGrid API: Set SENDGRID_API_KEY environment variable")
-                logger.error(f"2. Use Gmail API instead of SMTP")
-                logger.error(f"3. Contact Render support about SMTP port restrictions")
+                logger.error(f"Network unreachable - Render is blocking SMTP ports. Solutions:")
+                logger.error(f"1. Use Gmail API (recommended): Set GMAIL_API_CREDENTIALS environment variable")
+                logger.error(f"   - Enable Gmail API in Google Cloud Console")
+                logger.error(f"   - Create OAuth2 credentials and get refresh token")
+                logger.error(f"   - Set GMAIL_API_CREDENTIALS as JSON with 'client_id', 'client_secret', 'refresh_token', 'token_uri'")
+                logger.error(f"2. Contact Render support about SMTP port restrictions")
             
             raise last_error
         
