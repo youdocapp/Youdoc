@@ -113,18 +113,23 @@ def register(request):
                     logger.error(f"Background thread: Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
             
             # Start email sending in background thread (non-blocking)
+            # Use non-daemon thread so Gunicorn waits for it to complete
+            # This ensures emails are sent even if the request completes quickly
             logger.info(f"Starting background email thread for {user.email}")
             try:
-                email_thread = threading.Thread(target=send_email_async, daemon=True)
+                # Use daemon=False so Gunicorn doesn't kill the thread immediately
+                # The thread will complete even after response is sent
+                email_thread = threading.Thread(target=send_email_async, daemon=False)
                 email_thread.start()
-                logger.info(f"Background email thread started for {user.email}")
+                logger.info(f"Background email thread started for {user.email} (non-daemon)")
             except Exception as thread_error:
                 logger.error(f"Failed to start email thread for {user.email}: {str(thread_error)}", exc_info=True)
-                # If threading fails, try to send directly (non-blocking with timeout would be better)
+                # If threading fails, try to send directly as fallback
                 try:
+                    logger.warning(f"Falling back to synchronous email send for {user.email}")
                     send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                except:
-                    pass  # Don't fail registration if email fails
+                except Exception as fallback_error:
+                    logger.error(f"Fallback email send also failed for {user.email}: {str(fallback_error)}", exc_info=True)
             
             # Return response immediately - don't wait for email
             return Response(response_data, status=status.HTTP_201_CREATED)
