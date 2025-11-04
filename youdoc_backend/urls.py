@@ -19,7 +19,7 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse
-from datetime import datetime
+from django.utils import timezone
 
 
 # Customize admin site
@@ -52,7 +52,7 @@ def health_check(request):
     return JsonResponse({
         'status': 'healthy',
         'service': 'youdoc-backend',
-        'timestamp': str(datetime.now())
+        'timestamp': str(timezone.now())
     })
 
 urlpatterns = [

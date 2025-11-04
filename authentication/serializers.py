@@ -2,10 +2,11 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 from .models import User
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -52,7 +53,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             email=email,
             password=password,
             email_verification_token=otp_code,
-            email_verification_sent_at=datetime.now(),
+            email_verification_sent_at=timezone.now(),
             **validated_data
         )
         
@@ -156,7 +157,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Invalid reset token")
             
             # Check if token is expired (24 hours)
-            if datetime.now() - user.password_reset_sent_at > timedelta(hours=24):
+            if timezone.now() - user.password_reset_sent_at > timedelta(hours=24):
                 raise serializers.ValidationError("Reset token has expired")
             
             attrs['user'] = user
@@ -179,7 +180,7 @@ class EmailVerificationSerializer(serializers.Serializer):
                 raise serializers.ValidationError("Email is already verified")
             
             # Check if token is expired (10 minutes for OTP)
-            if user.email_verification_sent_at and datetime.now() - user.email_verification_sent_at > timedelta(minutes=10):
+            if user.email_verification_sent_at and timezone.now() - user.email_verification_sent_at > timedelta(minutes=10):
                 raise serializers.ValidationError("Verification code has expired")
             
             return value
