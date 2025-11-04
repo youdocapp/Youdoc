@@ -71,26 +71,38 @@ def send_otp_email(user_email, otp_code, user_name=None):
         Youdoc Team
         """
         
-        # Send email - use fail_silently=True to prevent exceptions from blocking the request
-        # Check return value to determine if email was sent successfully
-        result = send_mail(
-            subject=subject,
-            message=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user_email],
-            html_message=html_message,
-            fail_silently=True,
-        )
-        
-        if result == 0:
-            # Email failed to send but no exception raised
-            raise Exception("Email sending failed (no exception raised)")
-        
-        logger.info(f"OTP email sent successfully to {user_email}")
-        return True
+        # Send email - try with fail_silently=False first to get actual error
+        # If that fails, we'll catch the exception with details
+        try:
+            result = send_mail(
+                subject=subject,
+                message=plain_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user_email],
+                html_message=html_message,
+                fail_silently=False,  # Changed to False to get actual error details
+            )
+            
+            if result == 0:
+                # Email failed to send but no exception raised
+                logger.error(f"Email sending returned 0 for {user_email} - check SMTP configuration")
+                return False
+            
+            logger.info(f"OTP email sent successfully to {user_email}")
+            return True
+            
+        except Exception as smtp_error:
+            # Log the actual SMTP error for debugging
+            logger.error(f"SMTP error sending OTP email to {user_email}: {str(smtp_error)}", exc_info=True)
+            # Check if it's a configuration issue
+            if 'EMAIL_HOST_USER' in str(smtp_error) or 'EMAIL_HOST_PASSWORD' in str(smtp_error):
+                logger.error(f"Email configuration issue detected for {user_email}")
+            elif 'connection' in str(smtp_error).lower() or 'timeout' in str(smtp_error).lower():
+                logger.error(f"Email connection issue for {user_email}")
+            raise  # Re-raise to be caught by outer exception handler
         
     except Exception as e:
-        logger.error(f"Failed to send OTP email to {user_email}: {str(e)}")
+        logger.error(f"Failed to send OTP email to {user_email}: {str(e)}", exc_info=True)
         return False
 
 
