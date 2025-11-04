@@ -14,6 +14,7 @@ from datetime import datetime, timedelta
 import secrets
 import string
 import logging
+import threading
 
 from .models import User
 from .serializers import (
@@ -87,24 +88,23 @@ def register(request):
                 'requires_verification': True
             }
             
-            # Send OTP verification email (welcome email will be sent after verification)
-            # Use try-except-finally to ensure response is always sent
-            email_sent = False
-            try:
-                # Generate 6-digit OTP
-                otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
-                user.email_verification_token = otp_code
-                user.email_verification_sent_at = timezone.now()
-                user.save()
-                
-                # Send email - this might block or timeout, but we'll catch any exceptions
-                send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                email_sent = True
-            except Exception as email_error:
-                # Log email error but don't fail registration
-                logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
-                # Still return success since user was created
-                # The user can request a new OTP via resend endpoint
+            # Generate 6-digit OTP and save to user
+            otp_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+            user.email_verification_token = otp_code
+            user.email_verification_sent_at = timezone.now()
+            user.save()
+            
+            # Send OTP email in background thread to avoid blocking the request
+            def send_email_async():
+                try:
+                    send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                    logger.info(f"OTP email sent successfully to {user.email}")
+                except Exception as email_error:
+                    logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
+            
+            # Start email sending in background thread
+            email_thread = threading.Thread(target=send_email_async, daemon=True)
+            email_thread.start()
             
             # Always return success response, even if email failed
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -184,19 +184,22 @@ def password_reset_request(request):
         user.password_reset_sent_at = timezone.now()
         user.save()
         
-        # Send password reset email
-        try:
-            send_password_reset_email(user.email, token, user.first_name or user.email.split('@')[0])
-            return Response({
-                'success': True,
-                'message': 'Password reset email sent successfully. Please check your email.'
-            }, status=status.HTTP_200_OK)
-        except Exception as email_error:
-            return Response({
-                'error': True,
-                'message': 'Failed to send password reset email. Please try again.',
-                'details': str(email_error)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Send password reset email in background thread to avoid blocking
+        def send_email_async():
+            try:
+                send_password_reset_email(user.email, token, user.first_name or user.email.split('@')[0])
+                logger.info(f"Password reset email sent successfully to {user.email}")
+            except Exception as email_error:
+                logger.error(f"Failed to send password reset email to {user.email}: {str(email_error)}", exc_info=True)
+        
+        # Start email sending in background thread
+        email_thread = threading.Thread(target=send_email_async, daemon=True)
+        email_thread.start()
+        
+        return Response({
+            'success': True,
+            'message': 'Password reset email sent successfully. Please check your email.'
+        }, status=status.HTTP_200_OK)
     
     return Response({
         'error': True,
@@ -280,19 +283,22 @@ def resend_verification_email(request):
         user.email_verification_sent_at = timezone.now()
         user.save()
         
-        # Send OTP verification email
-        try:
-            send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-            return Response({
-                'success': True,
-                'message': 'Verification code sent successfully. Please check your email.'
-            }, status=status.HTTP_200_OK)
-        except Exception as email_error:
-            return Response({
-                'error': True,
-                'message': 'Failed to send verification email. Please try again.',
-                'details': str(email_error)
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        # Send OTP verification email in background thread to avoid blocking
+        def send_email_async():
+            try:
+                send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                logger.info(f"Resend OTP email sent successfully to {user.email}")
+            except Exception as email_error:
+                logger.error(f"Failed to send resend OTP email to {user.email}: {str(email_error)}", exc_info=True)
+        
+        # Start email sending in background thread
+        email_thread = threading.Thread(target=send_email_async, daemon=True)
+        email_thread.start()
+        
+        return Response({
+            'success': True,
+            'message': 'Verification code sent successfully. Please check your email.'
+        }, status=status.HTTP_200_OK)
     
     except User.DoesNotExist:
         return Response({
@@ -379,12 +385,17 @@ def verify_otp(request):
         user.email_verification_sent_at = None
         user.save()
         
-        # Send welcome email after successful verification
-        try:
-            send_welcome_email(user.email, user.first_name or user.email.split('@')[0])
-        except Exception as email_error:
-            # Log email error but don't fail verification
-            print(f"Failed to send welcome email: {email_error}")
+        # Send welcome email in background thread after successful verification
+        def send_email_async():
+            try:
+                send_welcome_email(user.email, user.first_name or user.email.split('@')[0])
+                logger.info(f"Welcome email sent successfully to {user.email}")
+            except Exception as email_error:
+                logger.error(f"Failed to send welcome email to {user.email}: {str(email_error)}", exc_info=True)
+        
+        # Start email sending in background thread
+        email_thread = threading.Thread(target=send_email_async, daemon=True)
+        email_thread.start()
         
         # Generate JWT tokens after successful verification (user is now logged in)
         refresh = RefreshToken.for_user(user)
