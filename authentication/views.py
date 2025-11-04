@@ -99,21 +99,32 @@ def register(request):
             otp_code = user.email_verification_token
             logger.info(f"OTP code generated for {user.email}")
             
-            # Send OTP email in background thread to avoid blocking the request
-            # This MUST happen after response is prepared to ensure non-blocking
+            # Send OTP email - try to send but don't block if it fails
+            # Use background thread for production to avoid blocking, but ensure it's sent
             def send_email_async():
                 try:
                     logger.info(f"Background thread: Starting email send to {user.email}")
-                    send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                    logger.info(f"Background thread: OTP email sent successfully to {user.email}")
+                    result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                    if result:
+                        logger.info(f"Background thread: OTP email sent successfully to {user.email}")
+                    else:
+                        logger.warning(f"Background thread: OTP email returned False for {user.email}")
                 except Exception as email_error:
                     logger.error(f"Background thread: Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
             
-            # Start email sending in background thread
+            # Start email sending in background thread (non-blocking)
             logger.info(f"Starting background email thread for {user.email}")
-            email_thread = threading.Thread(target=send_email_async, daemon=True)
-            email_thread.start()
-            logger.info(f"Background email thread started, returning response for {user.email}")
+            try:
+                email_thread = threading.Thread(target=send_email_async, daemon=True)
+                email_thread.start()
+                logger.info(f"Background email thread started for {user.email}")
+            except Exception as thread_error:
+                logger.error(f"Failed to start email thread for {user.email}: {str(thread_error)}", exc_info=True)
+                # If threading fails, try to send directly (non-blocking with timeout would be better)
+                try:
+                    send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                except:
+                    pass  # Don't fail registration if email fails
             
             # Return response immediately - don't wait for email
             return Response(response_data, status=status.HTTP_201_CREATED)
