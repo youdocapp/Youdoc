@@ -13,7 +13,7 @@ urlpatterns = [
     path('taken/<uuid:pk>', views.MedicationTakenDetailView.as_view(), name='medication-taken-detail'),
     
     # Frontend-specific endpoints
-    path('<str:medication_id>/toggle-taken/', views.toggle_medication_taken, name='toggle-medication-taken'),
+    path('<str:medication_id>/toggle-taken', views.toggle_medication_taken, name='toggle-medication-taken'),
     path('calendar', views.medication_calendar, name='medication-calendar'),
     path('today', views.today_medications, name='today-medications'),
 ]
