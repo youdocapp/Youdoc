@@ -403,6 +403,72 @@ Refresh access token using refresh token.
 
 ---
 
+### 13. Google OAuth Authentication
+**POST** `/google`
+
+Authenticate user using Google OAuth2. The frontend should use the Google Sign-In SDK to obtain an ID token, then send it to this endpoint.
+
+#### Request Body
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IjEyMzQ1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+#### Required Fields
+- `access_token` (string): Google ID token obtained from Google Sign-In SDK
+
+#### Success Response (200)
+```json
+{
+  "success": true,
+  "message": "Google authentication successful",
+  "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+  "user": {
+    "publicId": "abc123def4",
+    "email": "john.doe@gmail.com",
+    "firstName": "John",
+    "lastName": "Doe",
+    "mobile": null,
+    "dateOfBirth": null,
+    "gender": null,
+    "bloodType": null,
+    "height": null,
+    "weight": null,
+    "isEmailVerified": true,
+    "createdAt": "2024-01-15T10:30:00Z",
+    "updatedAt": "2024-01-15T10:30:00Z"
+  }
+}
+```
+
+#### Error Response (400)
+```json
+{
+  "error": true,
+  "message": "ID token is required",
+  "details": "Please provide a valid Google ID token"
+}
+```
+
+#### Error Response (400) - Invalid Token
+```json
+{
+  "error": true,
+  "message": "Google authentication failed",
+  "details": "Invalid token or user creation failed"
+}
+```
+
+#### Notes
+- No authentication required for this endpoint
+- If a user with the same email already exists, they will be logged in
+- If no user exists, a new account will be created automatically
+- Email verification is automatically set to true for Google-authenticated users
+
+---
+
 ## React Native Integration
 
 ### 1. Authentication Service
@@ -442,6 +508,17 @@ class AuthService {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, otp }),
+    });
+    return response.json();
+  }
+
+  async googleAuth(idToken) {
+    const response = await fetch(`${API_BASE_URL}/google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ access_token: idToken }),
     });
     return response.json();
   }
@@ -589,6 +666,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const googleAuth = async (idToken) => {
+    try {
+      const response = await AuthService.googleAuth(idToken);
+      if (response.success) {
+        await AsyncStorage.setItem('accessToken', response.access);
+        await AsyncStorage.setItem('refreshToken', response.refresh);
+        setUser(response.user);
+        setIsAuthenticated(true);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return { success: false, message: 'Google authentication failed' };
+    }
+  };
+
   const logout = async () => {
     try {
       await AuthService.logout();
@@ -606,6 +700,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     verifyOTP,
+    googleAuth,
     logout,
   };
 
