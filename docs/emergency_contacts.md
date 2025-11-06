@@ -5,7 +5,7 @@ The Emergency Contacts API provides comprehensive functionality for managing eme
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/emergency-contacts/
+https://youdoc.onrender.com/emergency-contacts
 ```
 
 ## Authentication
@@ -114,7 +114,7 @@ Add a new emergency contact. Users can have up to 28 emergency contacts.
 ---
 
 ### 3. Get Emergency Contact Details
-**GET** `/{contact_id}/`
+**GET** `/{contact_id}`
 
 Get detailed information about a specific emergency contact.
 
@@ -138,7 +138,7 @@ Get detailed information about a specific emergency contact.
 ---
 
 ### 4. Update Emergency Contact
-**PUT/PATCH** `/{contact_id}/`
+**PUT/PATCH** `/{contact_id}`
 
 Update an existing emergency contact.
 
@@ -170,7 +170,7 @@ Update an existing emergency contact.
 ---
 
 ### 5. Delete Emergency Contact
-**DELETE** `/{contact_id}/`
+**DELETE** `/{contact_id}`
 
 Permanently delete an emergency contact.
 
@@ -184,7 +184,7 @@ Permanently delete an emergency contact.
 ---
 
 ### 6. Set Primary Contact
-**POST** `/set-primary/`
+**POST** `/set-primary`
 
 Set a specific emergency contact as the primary contact. Only one contact can be primary at a time.
 
@@ -218,7 +218,7 @@ Set a specific emergency contact as the primary contact. Only one contact can be
 ---
 
 ### 7. Get Primary Contact
-**GET** `/primary/`
+**GET** `/primary`
 
 Get the current primary emergency contact.
 
@@ -249,7 +249,7 @@ Get the current primary emergency contact.
 ---
 
 ### 8. Get Contact Statistics
-**GET** `/stats/`
+**GET** `/stats`
 
 Get statistics about the user's emergency contacts.
 
@@ -267,7 +267,7 @@ Get statistics about the user's emergency contacts.
 ---
 
 ### 9. Bulk Delete Contacts
-**POST** `/bulk-delete/`
+**POST** `/bulk-delete`
 
 Delete multiple emergency contacts at once.
 
@@ -328,7 +328,7 @@ Delete multiple emergency contacts at once.
 // services/emergencyContactsService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/emergency-contacts';
+const API_BASE_URL = 'https://youdoc.onrender.com/emergency-contacts';
 
 class EmergencyContactsService {
   async getAuthHeaders() {
@@ -340,14 +340,14 @@ class EmergencyContactsService {
   }
 
   async getEmergencyContacts() {
-    const response = await fetch(`${API_BASE_URL}/`, {
+    const response = await fetch(`${API_BASE_URL}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createEmergencyContact(contactData) {
-    const response = await fetch(`${API_BASE_URL}/`, {
+    const response = await fetch(`${API_BASE_URL}`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(contactData),
@@ -356,7 +356,7 @@ class EmergencyContactsService {
   }
 
   async updateEmergencyContact(contactId, contactData) {
-    const response = await fetch(`${API_BASE_URL}/${contactId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${contactId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(contactData),
@@ -365,7 +365,7 @@ class EmergencyContactsService {
   }
 
   async deleteEmergencyContact(contactId) {
-    const response = await fetch(`${API_BASE_URL}/${contactId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${contactId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -373,7 +373,7 @@ class EmergencyContactsService {
   }
 
   async setPrimaryContact(contactId) {
-    const response = await fetch(`${API_BASE_URL}/set-primary/`, {
+    const response = await fetch(`${API_BASE_URL}/set-primary`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify({ contact_id: contactId }),
@@ -382,21 +382,21 @@ class EmergencyContactsService {
   }
 
   async getPrimaryContact() {
-    const response = await fetch(`${API_BASE_URL}/primary/`, {
+    const response = await fetch(`${API_BASE_URL}/primary`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async getContactStats() {
-    const response = await fetch(`${API_BASE_URL}/stats/`, {
+    const response = await fetch(`${API_BASE_URL}/stats`, {
       headers: await this.getAuthHeaders(),
   });
   return response.json();
   }
 
   async bulkDeleteContacts(contactIds) {
-    const response = await fetch(`${API_BASE_URL}/bulk-delete/`, {
+    const response = await fetch(`${API_BASE_URL}/bulk-delete`, {
     method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify({ contact_ids: contactIds }),

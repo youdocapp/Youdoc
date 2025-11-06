@@ -5,7 +5,7 @@ The Authentication API provides user registration, login, profile management, an
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/auth/
+https://youdoc.onrender.com/auth
 ```
 
 ## Authentication
@@ -20,7 +20,7 @@ Authorization: Bearer <access_token>
 ## Endpoints
 
 ### 1. User Registration
-**POST** `/register/`
+**POST** `/register`
 
 Register a new user account. An OTP verification code will be sent to the user's email.
 
@@ -81,7 +81,7 @@ Register a new user account. An OTP verification code will be sent to the user's
 ---
 
 ### 2. User Login
-**POST** `/login/`
+**POST** `/login`
 
 Authenticate user and return JWT tokens. Email must be verified before login.
 
@@ -130,7 +130,7 @@ Authenticate user and return JWT tokens. Email must be verified before login.
 ---
 
 ### 3. Email Verification (OTP)
-**POST** `/verify-otp/`
+**POST** `/verify-otp`
 
 Verify user's email using the 6-digit OTP code sent during registration.
 
@@ -172,7 +172,7 @@ Verify user's email using the 6-digit OTP code sent during registration.
 ---
 
 ### 4. Resend Verification Email
-**POST** `/resend-verification/`
+**POST** `/resend-verification`
 
 Resend OTP verification code to user's email.
 
@@ -194,7 +194,7 @@ Resend OTP verification code to user's email.
 ---
 
 ### 5. Get User Profile
-**GET** `/profile/`
+**GET** `/profile`
 
 Get current user's profile information.
 
@@ -225,7 +225,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 6. Update User Profile
-**PUT/PATCH** `/profile/`
+**PUT/PATCH** `/profile`
 
 Update current user's profile information.
 
@@ -265,7 +265,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 7. Change Password
-**POST** `/change-password/`
+**POST** `/change-password`
 
 Change user's password (requires current password).
 
@@ -293,7 +293,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 8. Password Reset Request
-**POST** `/password-reset-request/`
+**POST** `/password-reset-request`
 
 Request password reset link to be sent to user's email.
 
@@ -315,7 +315,7 @@ Request password reset link to be sent to user's email.
 ---
 
 ### 9. Password Reset Confirm
-**POST** `/password-reset-confirm/`
+**POST** `/password-reset-confirm`
 
 Confirm password reset using the token from email.
 
@@ -338,7 +338,7 @@ Confirm password reset using the token from email.
 ---
 
 ### 10. Logout
-**POST** `/logout/`
+**POST** `/logout`
 
 Logout user and blacklist refresh token.
 
@@ -364,7 +364,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 11. Delete Account
-**DELETE** `/delete-account/`
+**DELETE** `/delete-account`
 
 Permanently delete user account and all associated data.
 
@@ -383,7 +383,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 12. Token Refresh
-**POST** `/token/refresh/`
+**POST** `/token/refresh`
 
 Refresh access token using refresh token.
 
@@ -410,11 +410,11 @@ Refresh access token using refresh token.
 // services/authService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/auth';
+const API_BASE_URL = 'https://youdoc.onrender.com/auth';
 
 class AuthService {
   async register(userData) {
-    const response = await fetch(`${API_BASE_URL}/register/`, {
+    const response = await fetch(`${API_BASE_URL}/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -425,7 +425,7 @@ class AuthService {
   }
 
   async login(email, password) {
-    const response = await fetch(`${API_BASE_URL}/login/`, {
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -436,7 +436,7 @@ class AuthService {
   }
 
   async verifyOTP(email, otp) {
-    const response = await fetch(`${API_BASE_URL}/verify-otp/`, {
+    const response = await fetch(`${API_BASE_URL}/verify-otp`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -448,7 +448,7 @@ class AuthService {
 
   async getProfile() {
     const token = await AsyncStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/profile/`, {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -458,7 +458,7 @@ class AuthService {
 
   async updateProfile(profileData) {
     const token = await AsyncStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/profile/`, {
+    const response = await fetch(`${API_BASE_URL}/profile`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -471,7 +471,7 @@ class AuthService {
 
   async changePassword(oldPassword, newPassword) {
     const token = await AsyncStorage.getItem('accessToken');
-    const response = await fetch(`${API_BASE_URL}/change-password/`, {
+    const response = await fetch(`${API_BASE_URL}/change-password`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -488,7 +488,7 @@ class AuthService {
 
   async logout() {
     const refreshToken = await AsyncStorage.getItem('refreshToken');
-    const response = await fetch(`${API_BASE_URL}/logout/`, {
+    const response = await fetch(`${API_BASE_URL}/logout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

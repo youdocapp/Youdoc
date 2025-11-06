@@ -5,7 +5,7 @@ The Health Records API provides comprehensive functionality for managing persona
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/health-records/
+https://youdoc.onrender.com/health-records
 ```
 
 ## Authentication
@@ -34,7 +34,7 @@ Get all health records for the authenticated user with optional filtering and se
 
 #### Example Request
 ```
-GET /api/health-records/?type=lab_result&date_from=2024-01-01&has_file=true&search=blood
+GET /health-records?type=lab_result&date_from=2024-01-01&has_file=true&search=blood
 ```
 
 #### Success Response (200)
@@ -106,7 +106,7 @@ notes: "All values within normal range"
 ---
 
 ### 3. Get Health Record Details
-**GET** `/{record_id}/`
+**GET** `/{record_id}`
 
 Get detailed information about a specific health record.
 
@@ -129,7 +129,7 @@ Get detailed information about a specific health record.
 ---
 
 ### 4. Update Health Record
-**PUT/PATCH** `/{record_id}/`
+**PUT/PATCH** `/{record_id}`
 
 Update health record information and optionally replace the file.
 
@@ -160,7 +160,7 @@ notes: "Updated notes"
 ---
 
 ### 5. Delete Health Record
-**DELETE** `/{record_id}/`
+**DELETE** `/{record_id}`
 
 Permanently delete a health record and its associated file.
 
@@ -207,7 +207,7 @@ No Content
 // services/healthRecordsService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/health-records';
+const API_BASE_URL = 'https://youdoc.onrender.com/health-records';
 
 class HealthRecordsService {
   async getAuthHeaders() {
@@ -219,7 +219,7 @@ class HealthRecordsService {
 
   async getHealthRecords(filters = {}) {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE_URL}/?${params}`, {
+    const response = await fetch(`${API_BASE_URL}?${params}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
@@ -244,7 +244,7 @@ class HealthRecordsService {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/`, {
+    const response = await fetch(`${API_BASE_URL}`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: formData,
@@ -271,7 +271,7 @@ class HealthRecordsService {
       });
     }
 
-    const response = await fetch(`${API_BASE_URL}/${recordId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${recordId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: formData,
@@ -280,7 +280,7 @@ class HealthRecordsService {
   }
 
   async deleteHealthRecord(recordId) {
-    const response = await fetch(`${API_BASE_URL}/${recordId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${recordId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -288,7 +288,7 @@ class HealthRecordsService {
   }
 
   async getHealthRecordDetails(recordId) {
-    const response = await fetch(`${API_BASE_URL}/${recordId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${recordId}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();

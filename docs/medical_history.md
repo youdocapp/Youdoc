@@ -5,7 +5,7 @@ The Medical History API provides comprehensive functionality for managing person
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/medical-history/
+https://youdoc.onrender.com/medical-history
 ```
 
 ## Authentication
@@ -22,7 +22,7 @@ Authorization: Bearer <access_token>
 ### Medical Conditions
 
 #### 1. List Medical Conditions
-**GET** `/conditions/`
+**GET** `/conditions`
 
 Get all medical conditions for the authenticated user.
 
@@ -46,7 +46,7 @@ Get all medical conditions for the authenticated user.
 ```
 
 #### 2. Create Medical Condition
-**POST** `/conditions/`
+**POST** `/conditions`
 
 Add a new medical condition to the user's history.
 
@@ -86,7 +86,7 @@ Add a new medical condition to the user's history.
 ```
 
 #### 3. Get Medical Condition Details
-**GET** `/conditions/{condition_id}/`
+**GET** `/conditions/{condition_id}`
 
 Get detailed information about a specific medical condition.
 
@@ -107,7 +107,7 @@ Get detailed information about a specific medical condition.
 ```
 
 #### 4. Update Medical Condition
-**PUT/PATCH** `/conditions/{condition_id}/`
+**PUT/PATCH** `/conditions/{condition_id}`
 
 Update an existing medical condition.
 
@@ -137,7 +137,7 @@ Update an existing medical condition.
 ```
 
 #### 5. Delete Medical Condition
-**DELETE** `/conditions/{condition_id}/`
+**DELETE** `/conditions/{condition_id}`
 
 Permanently delete a medical condition.
 
@@ -154,7 +154,7 @@ Permanently delete a medical condition.
 ### Surgeries
 
 #### 1. List Surgeries
-**GET** `/surgeries/`
+**GET** `/surgeries`
 
 Get all surgical procedures for the authenticated user.
 
@@ -179,7 +179,7 @@ Get all surgical procedures for the authenticated user.
 ```
 
 #### 2. Create Surgery
-**POST** `/surgeries/`
+**POST** `/surgeries`
 
 Add a new surgical procedure to the user's history.
 
@@ -222,7 +222,7 @@ Add a new surgical procedure to the user's history.
 ```
 
 #### 3. Get Surgery Details
-**GET** `/surgeries/{surgery_id}/`
+**GET** `/surgeries/{surgery_id}`
 
 Get detailed information about a specific surgery.
 
@@ -244,7 +244,7 @@ Get detailed information about a specific surgery.
 ```
 
 #### 4. Update Surgery
-**PUT/PATCH** `/surgeries/{surgery_id}/`
+**PUT/PATCH** `/surgeries/{surgery_id}`
 
 Update an existing surgical procedure.
 
@@ -274,7 +274,7 @@ Update an existing surgical procedure.
 ```
 
 #### 5. Delete Surgery
-**DELETE** `/surgeries/{surgery_id}/`
+**DELETE** `/surgeries/{surgery_id}`
 
 Permanently delete a surgical procedure.
 
@@ -291,7 +291,7 @@ Permanently delete a surgical procedure.
 ### Allergies
 
 #### 1. List Allergies
-**GET** `/allergies/`
+**GET** `/allergies`
 
 Get all allergies for the authenticated user.
 
@@ -315,7 +315,7 @@ Get all allergies for the authenticated user.
 ```
 
 #### 2. Create Allergy
-**POST** `/allergies/`
+**POST** `/allergies`
 
 Add a new allergy to the user's history.
 
@@ -355,7 +355,7 @@ Add a new allergy to the user's history.
 ```
 
 #### 3. Get Allergy Details
-**GET** `/allergies/{allergy_id}/`
+**GET** `/allergies/{allergy_id}`
 
 Get detailed information about a specific allergy.
 
@@ -376,7 +376,7 @@ Get detailed information about a specific allergy.
 ```
 
 #### 4. Update Allergy
-**PUT/PATCH** `/allergies/{allergy_id}/`
+**PUT/PATCH** `/allergies/{allergy_id}`
 
 Update an existing allergy.
 
@@ -406,7 +406,7 @@ Update an existing allergy.
 ```
 
 #### 5. Delete Allergy
-**DELETE** `/allergies/{allergy_id}/`
+**DELETE** `/allergies/{allergy_id}`
 
 Permanently delete an allergy.
 
@@ -441,7 +441,7 @@ Permanently delete an allergy.
 // services/medicalHistoryService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/medical-history';
+const API_BASE_URL = 'https://youdoc.onrender.com/medical-history';
 
 class MedicalHistoryService {
   async getAuthHeaders() {
@@ -454,14 +454,14 @@ class MedicalHistoryService {
 
   // Medical Conditions
   async getMedicalConditions() {
-    const response = await fetch(`${API_BASE_URL}/conditions/`, {
+    const response = await fetch(`${API_BASE_URL}/conditions`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createMedicalCondition(conditionData) {
-    const response = await fetch(`${API_BASE_URL}/conditions/`, {
+    const response = await fetch(`${API_BASE_URL}/conditions`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(conditionData),
@@ -470,7 +470,7 @@ class MedicalHistoryService {
   }
 
   async updateMedicalCondition(conditionId, conditionData) {
-    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}/`, {
+    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(conditionData),
@@ -479,7 +479,7 @@ class MedicalHistoryService {
   }
 
   async deleteMedicalCondition(conditionId) {
-    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}/`, {
+    const response = await fetch(`${API_BASE_URL}/conditions/${conditionId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -488,14 +488,14 @@ class MedicalHistoryService {
 
   // Surgeries
   async getSurgeries() {
-    const response = await fetch(`${API_BASE_URL}/surgeries/`, {
+    const response = await fetch(`${API_BASE_URL}/surgeries`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createSurgery(surgeryData) {
-    const response = await fetch(`${API_BASE_URL}/surgeries/`, {
+    const response = await fetch(`${API_BASE_URL}/surgeries`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(surgeryData),
@@ -504,7 +504,7 @@ class MedicalHistoryService {
   }
 
   async updateSurgery(surgeryId, surgeryData) {
-    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}/`, {
+    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(surgeryData),
@@ -513,7 +513,7 @@ class MedicalHistoryService {
   }
 
   async deleteSurgery(surgeryId) {
-    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}/`, {
+    const response = await fetch(`${API_BASE_URL}/surgeries/${surgeryId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -522,14 +522,14 @@ class MedicalHistoryService {
 
   // Allergies
   async getAllergies() {
-    const response = await fetch(`${API_BASE_URL}/allergies/`, {
+    const response = await fetch(`${API_BASE_URL}/allergies`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createAllergy(allergyData) {
-    const response = await fetch(`${API_BASE_URL}/allergies/`, {
+    const response = await fetch(`${API_BASE_URL}/allergies`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(allergyData),
@@ -538,7 +538,7 @@ class MedicalHistoryService {
   }
 
   async updateAllergy(allergyId, allergyData) {
-    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}/`, {
+    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(allergyData),
@@ -547,7 +547,7 @@ class MedicalHistoryService {
   }
 
   async deleteAllergy(allergyId) {
-    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}/`, {
+    const response = await fetch(`${API_BASE_URL}/allergies/${allergyId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });

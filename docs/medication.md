@@ -5,7 +5,7 @@ The Medication Management API provides comprehensive functionality for managing 
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/medications/
+https://youdoc.onrender.com/medications
 ```
 
 ## Authentication
@@ -32,7 +32,7 @@ Get all medications for the authenticated user with optional filtering.
 
 #### Example Request
 ```
-GET /api/medications/?date=2024-01-15&is_active=true
+GET /medications?date=2024-01-15&is_active=true
 ```
 
 #### Success Response (200)
@@ -134,7 +134,7 @@ Create a new medication with optional reminder times.
 ---
 
 ### 3. Get Medication Details
-**GET** `/{medication_id}/`
+**GET** `/{medication_id}`
 
 Get detailed information about a specific medication.
 
@@ -191,7 +191,7 @@ Get detailed information about a specific medication.
 ---
 
 ### 4. Update Medication
-**PUT/PATCH** `/{medication_id}/`
+**PUT/PATCH** `/{medication_id}`
 
 Update medication information and reminder times.
 
@@ -230,7 +230,7 @@ Update medication information and reminder times.
 ---
 
 ### 5. Delete Medication
-**DELETE** `/{medication_id}/`
+**DELETE** `/{medication_id}`
 
 Permanently delete a medication and all associated records.
 
@@ -242,7 +242,7 @@ No Content
 ---
 
 ### 6. Toggle Medication Taken
-**POST** `/{medication_id}/toggle/`
+**POST** `/{medication_id}/toggle`
 
 Toggle medication taken status for today. This is the main endpoint for marking medications as taken/not taken.
 
@@ -260,7 +260,7 @@ Toggle medication taken status for today. This is the main endpoint for marking 
 ---
 
 ### 7. Get Today's Medications
-**GET** `/today/`
+**GET** `/today`
 
 Get all medications scheduled for today with their taken status.
 
@@ -291,7 +291,7 @@ Get all medications scheduled for today with their taken status.
 ---
 
 ### 8. Get Medication Calendar
-**GET** `/calendar/`
+**GET** `/calendar`
 
 Get medication data for calendar view with taken status for each day.
 
@@ -301,7 +301,7 @@ Get medication data for calendar view with taken status for each day.
 
 #### Example Request
 ```
-GET /api/medications/calendar/?month=1&year=2024
+GET /medications/calendar?month=1&year=2024
 ```
 
 #### Success Response (200)
@@ -333,7 +333,7 @@ GET /api/medications/calendar/?month=1&year=2024
 ---
 
 ### 9. List Medication Taken Records
-**GET** `/taken/`
+**GET** `/taken`
 
 Get medication taken records with optional filtering.
 
@@ -358,7 +358,7 @@ Get medication taken records with optional filtering.
 ---
 
 ### 10. Create Medication Taken Record
-**POST** `/taken/`
+**POST** `/taken`
 
 Manually create a medication taken record.
 
@@ -391,7 +391,7 @@ Manually create a medication taken record.
 // services/medicationService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/medications';
+const API_BASE_URL = 'https://youdoc.onrender.com/medications';
 
 class MedicationService {
   async getAuthHeaders() {
@@ -404,14 +404,14 @@ class MedicationService {
 
   async getMedications(filters = {}) {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE_URL}/?${params}`, {
+    const response = await fetch(`${API_BASE_URL}?${params}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createMedication(medicationData) {
-    const response = await fetch(`${API_BASE_URL}/`, {
+    const response = await fetch(`${API_BASE_URL}`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(medicationData),
@@ -420,7 +420,7 @@ class MedicationService {
   }
 
   async updateMedication(medicationId, medicationData) {
-    const response = await fetch(`${API_BASE_URL}/${medicationId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${medicationId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(medicationData),
@@ -429,7 +429,7 @@ class MedicationService {
   }
 
   async deleteMedication(medicationId) {
-    const response = await fetch(`${API_BASE_URL}/${medicationId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${medicationId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -437,7 +437,7 @@ class MedicationService {
   }
 
   async toggleMedicationTaken(medicationId) {
-    const response = await fetch(`${API_BASE_URL}/${medicationId}/toggle/`, {
+    const response = await fetch(`${API_BASE_URL}/${medicationId}/toggle`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -445,21 +445,21 @@ class MedicationService {
   }
 
   async getTodayMedications() {
-    const response = await fetch(`${API_BASE_URL}/today/`, {
+    const response = await fetch(`${API_BASE_URL}/today`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async getMedicationCalendar(month, year) {
-    const response = await fetch(`${API_BASE_URL}/calendar/?month=${month}&year=${year}`, {
+    const response = await fetch(`${API_BASE_URL}/calendar?month=${month}&year=${year}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async getMedicationDetails(medicationId) {
-    const response = await fetch(`${API_BASE_URL}/${medicationId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${medicationId}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();

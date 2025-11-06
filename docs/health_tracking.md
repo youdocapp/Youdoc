@@ -5,7 +5,7 @@ The Health Tracking API provides comprehensive functionality for managing health
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/health-tracking/
+https://youdoc.onrender.com/health-tracking
 ```
 
 ## Authentication
@@ -20,7 +20,7 @@ Authorization: Bearer <access_token>
 ## Endpoints
 
 ### 1. Get Current Health Data
-**GET** `/data/`
+**GET** `/data`
 
 Get today's health data snapshot with all current metrics.
 
@@ -49,7 +49,7 @@ Get today's health data snapshot with all current metrics.
 ---
 
 ### 2. Update Health Data
-**POST** `/data/update/`
+**POST** `/data/update`
 
 Update health data for today. Supports partial updates.
 
@@ -105,7 +105,7 @@ Update health data for today. Supports partial updates.
 ---
 
 ### 3. List Connected Devices
-**GET** `/devices/`
+**GET** `/devices`
 
 Get all connected health devices for the user.
 
@@ -136,7 +136,7 @@ Get all connected health devices for the user.
 ---
 
 ### 4. Add Connected Device
-**POST** `/devices/`
+**POST** `/devices`
 
 Add a new health device connection.
 
@@ -176,7 +176,7 @@ Add a new health device connection.
 ---
 
 ### 5. Update Connected Device
-**PUT/PATCH** `/devices/{device_id}/`
+**PUT/PATCH** `/devices/{device_id}`
 
 Update device information.
 
@@ -204,7 +204,7 @@ Update device information.
 ---
 
 ### 6. Delete Connected Device
-**DELETE** `/devices/{device_id}/`
+**DELETE** `/devices/{device_id}`
 
 Remove a connected device.
 
@@ -216,7 +216,7 @@ No Content
 ---
 
 ### 7. Toggle Device Connection
-**POST/DELETE** `/devices/{device_id}/connect/`
+**POST/DELETE** `/devices/{device_id}/connect`
 
 Connect or disconnect a device.
 
@@ -237,7 +237,7 @@ Connect or disconnect a device.
 ---
 
 ### 8. Sync Health Data
-**POST** `/devices/{device_id}/sync/`
+**POST** `/devices/{device_id}/sync`
 
 Trigger health data synchronization for a device.
 
@@ -260,7 +260,7 @@ Trigger health data synchronization for a device.
 ---
 
 ### 9. List Health Goals
-**GET** `/goals/`
+**GET** `/goals`
 
 Get all active health goals for the user.
 
@@ -295,7 +295,7 @@ Get all active health goals for the user.
 ---
 
 ### 10. Create Health Goal
-**POST** `/goals/`
+**POST** `/goals`
 
 Create a new health goal.
 
@@ -337,7 +337,7 @@ Create a new health goal.
 ---
 
 ### 11. Update Health Goal
-**PUT/PATCH** `/goals/{goal_id}/`
+**PUT/PATCH** `/goals/{goal_id}`
 
 Update an existing health goal.
 
@@ -367,7 +367,7 @@ Update an existing health goal.
 ---
 
 ### 12. Delete Health Goal
-**DELETE** `/goals/{goal_id}/`
+**DELETE** `/goals/{goal_id}`
 
 Permanently delete a health goal.
 
@@ -379,7 +379,7 @@ No Content
 ---
 
 ### 13. Get Health Trends
-**GET** `/trends/`
+**GET** `/trends`
 
 Get health trends over time for a specific metric.
 
@@ -389,7 +389,7 @@ Get health trends over time for a specific metric.
 
 #### Example Request
 ```
-GET /api/health-tracking/trends/?metric=steps&days=7
+GET /health-tracking/trends?metric=steps&days=7
 ```
 
 #### Success Response (200)
@@ -416,7 +416,7 @@ GET /api/health-tracking/trends/?metric=steps&days=7
 ---
 
 ### 14. Get Health Insights
-**GET** `/insights/`
+**GET** `/insights`
 
 Get health insights and recommendations.
 
@@ -453,7 +453,7 @@ Get health insights and recommendations.
 ---
 
 ### 15. Mark Insight as Read
-**POST** `/insights/{insight_id}/read/`
+**POST** `/insights/{insight_id}/read`
 
 Mark a health insight as read.
 
@@ -467,7 +467,7 @@ Mark a health insight as read.
 ---
 
 ### 16. Get Goal Progress
-**GET** `/goals/progress/`
+**GET** `/goals/progress`
 
 Get progress towards all active health goals.
 
@@ -514,7 +514,7 @@ Get progress towards all active health goals.
 ---
 
 ### 17. Get Sync History
-**GET** `/sync-history/`
+**GET** `/sync-history`
 
 Get synchronization history for connected devices.
 
@@ -583,7 +583,7 @@ Get synchronization history for connected devices.
 // services/healthTrackingService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/health-tracking';
+const API_BASE_URL = 'https://youdoc.onrender.com/health-tracking';
 
 class HealthTrackingService {
   async getAuthHeaders() {
@@ -595,14 +595,14 @@ class HealthTrackingService {
   }
 
   async getHealthData() {
-    const response = await fetch(`${API_BASE_URL}/data/`, {
+    const response = await fetch(`${API_BASE_URL}/data`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async updateHealthData(healthData) {
-    const response = await fetch(`${API_BASE_URL}/data/update/`, {
+    const response = await fetch(`${API_BASE_URL}/data/update`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(healthData),
@@ -611,14 +611,14 @@ class HealthTrackingService {
   }
 
   async getConnectedDevices() {
-    const response = await fetch(`${API_BASE_URL}/devices/`, {
+    const response = await fetch(`${API_BASE_URL}/devices`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async addConnectedDevice(deviceData) {
-    const response = await fetch(`${API_BASE_URL}/devices/`, {
+    const response = await fetch(`${API_BASE_URL}/devices`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(deviceData),
@@ -627,7 +627,7 @@ class HealthTrackingService {
   }
 
   async updateConnectedDevice(deviceId, deviceData) {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/`, {
+    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(deviceData),
@@ -636,7 +636,7 @@ class HealthTrackingService {
   }
 
   async deleteConnectedDevice(deviceId) {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/`, {
+    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -644,7 +644,7 @@ class HealthTrackingService {
   }
 
   async toggleDeviceConnection(deviceId) {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/connect/`, {
+    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/connect`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -652,7 +652,7 @@ class HealthTrackingService {
   }
 
   async disconnectDevice(deviceId) {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/connect/`, {
+    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/connect`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -660,7 +660,7 @@ class HealthTrackingService {
   }
 
   async syncHealthData(deviceId) {
-    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/sync/`, {
+    const response = await fetch(`${API_BASE_URL}/devices/${deviceId}/sync`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -668,14 +668,14 @@ class HealthTrackingService {
   }
 
   async getHealthGoals() {
-    const response = await fetch(`${API_BASE_URL}/goals/`, {
+    const response = await fetch(`${API_BASE_URL}/goals`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async createHealthGoal(goalData) {
-    const response = await fetch(`${API_BASE_URL}/goals/`, {
+    const response = await fetch(`${API_BASE_URL}/goals`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(goalData),
@@ -684,7 +684,7 @@ class HealthTrackingService {
   }
 
   async updateHealthGoal(goalId, goalData) {
-    const response = await fetch(`${API_BASE_URL}/goals/${goalId}/`, {
+    const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify(goalData),
@@ -693,7 +693,7 @@ class HealthTrackingService {
   }
 
   async deleteHealthGoal(goalId) {
-    const response = await fetch(`${API_BASE_URL}/goals/${goalId}/`, {
+    const response = await fetch(`${API_BASE_URL}/goals/${goalId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -701,21 +701,21 @@ class HealthTrackingService {
   }
 
   async getHealthTrends(metric, days = 30) {
-    const response = await fetch(`${API_BASE_URL}/trends/?metric=${metric}&days=${days}`, {
+    const response = await fetch(`${API_BASE_URL}/trends?metric=${metric}&days=${days}`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async getHealthInsights() {
-    const response = await fetch(`${API_BASE_URL}/insights/`, {
+    const response = await fetch(`${API_BASE_URL}/insights`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async markInsightRead(insightId) {
-    const response = await fetch(`${API_BASE_URL}/insights/${insightId}/read/`, {
+    const response = await fetch(`${API_BASE_URL}/insights/${insightId}/read`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -723,7 +723,7 @@ class HealthTrackingService {
   }
 
   async getGoalProgress() {
-    const response = await fetch(`${API_BASE_URL}/goals/progress/`, {
+    const response = await fetch(`${API_BASE_URL}/goals/progress`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();

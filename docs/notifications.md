@@ -5,7 +5,7 @@ The Notifications app provides a comprehensive notification system for the Youdo
 
 ## Base URL
 ```
-/api/notifications/
+https://youdoc.onrender.com/notifications
 ```
 
 ## Authentication
@@ -61,7 +61,7 @@ Store device tokens for push notifications.
 ## API Endpoints
 
 ### 1. List Notifications
-**GET** `/api/notifications/`
+**GET** `/notifications`
 
 Get a paginated list of user's notifications with filtering options.
 
@@ -77,7 +77,7 @@ Get a paginated list of user's notifications with filtering options.
 ```json
 {
   "count": 25,
-  "next": "http://api.example.com/notifications/?page=2",
+  "next": "http://api.example.com/notifications?page=2",
   "previous": null,
   "results": [
     {
@@ -104,7 +104,7 @@ Get a paginated list of user's notifications with filtering options.
 ```
 
 ### 2. Create Notification
-**POST** `/api/notifications/create/`
+**POST** `/notifications/create`
 
 Create a new notification (admin/system use).
 
@@ -144,7 +144,7 @@ Create a new notification (admin/system use).
 ```
 
 ### 3. Get Notification Details
-**GET** `/api/notifications/{id}/`
+**GET** `/notifications{id}/`
 
 Get details of a specific notification.
 
@@ -172,7 +172,7 @@ Get details of a specific notification.
 ```
 
 ### 4. Update Notification
-**PUT/PATCH** `/api/notifications/{id}/`
+**PUT/PATCH** `/notifications{id}/`
 
 Update a notification (mainly for marking as read).
 
@@ -207,7 +207,7 @@ Update a notification (mainly for marking as read).
 ```
 
 ### 5. Delete Notification
-**DELETE** `/api/notifications/{id}/`
+**DELETE** `/notifications{id}/`
 
 Delete a specific notification.
 
@@ -219,7 +219,7 @@ Delete a specific notification.
 ```
 
 ### 6. Get Notification Statistics
-**GET** `/api/notifications/stats/`
+**GET** `/notificationsstats/`
 
 Get notification statistics for the user.
 
@@ -258,7 +258,7 @@ Get notification statistics for the user.
 ```
 
 ### 7. Mark Notification as Read
-**POST** `/api/notifications/{notification_id}/read/`
+**POST** `/notifications{notification_id}/read/`
 
 Mark a specific notification as read.
 
@@ -270,7 +270,7 @@ Mark a specific notification as read.
 ```
 
 ### 8. Mark All Notifications as Read
-**POST** `/api/notifications/mark-all-read/`
+**POST** `/notificationsmark-all-read/`
 
 Mark all notifications as read for the user.
 
@@ -282,7 +282,7 @@ Mark all notifications as read for the user.
 ```
 
 ### 9. Bulk Notification Actions
-**POST** `/api/notifications/bulk-action/`
+**POST** `/notificationsbulk-action/`
 
 Perform bulk actions on notifications.
 
@@ -310,7 +310,7 @@ Perform bulk actions on notifications.
 ```
 
 ### 10. List Notification Preferences
-**GET** `/api/notifications/preferences/`
+**GET** `/notificationspreferences/`
 
 Get user's notification preferences.
 
@@ -341,7 +341,7 @@ Get user's notification preferences.
 ```
 
 ### 11. Create Notification Preference
-**POST** `/api/notifications/preferences/`
+**POST** `/notificationspreferences/`
 
 Create a new notification preference.
 
@@ -370,7 +370,7 @@ Create a new notification preference.
 ```
 
 ### 12. Update Notification Preferences (Bulk)
-**PUT** `/api/notifications/preferences/update/`
+**PUT** `/notificationspreferences/update/`
 
 Bulk update notification preferences.
 
@@ -402,7 +402,7 @@ Bulk update notification preferences.
 ```
 
 ### 13. Get Notification Preference Details
-**GET** `/api/notifications/preferences/{id}/`
+**GET** `/notificationspreferences/{id}/`
 
 Get details of a specific notification preference.
 
@@ -421,7 +421,7 @@ Get details of a specific notification preference.
 ```
 
 ### 14. Update Notification Preference
-**PUT/PATCH** `/api/notifications/preferences/{id}/`
+**PUT/PATCH** `/notificationspreferences/{id}/`
 
 Update a specific notification preference.
 
@@ -449,7 +449,7 @@ Update a specific notification preference.
 ```
 
 ### 15. Delete Notification Preference
-**DELETE** `/api/notifications/preferences/{id}/`
+**DELETE** `/notificationspreferences/{id}/`
 
 Delete a specific notification preference.
 
@@ -461,7 +461,7 @@ Delete a specific notification preference.
 ```
 
 ### 16. List Device Tokens
-**GET** `/api/notifications/device-tokens/`
+**GET** `/notificationsdevice-tokens/`
 
 Get user's registered device tokens.
 
@@ -482,7 +482,7 @@ Get user's registered device tokens.
 ```
 
 ### 17. Register Device Token
-**POST** `/api/notifications/register-device/`
+**POST** `/notificationsregister-device/`
 
 Register a device token for push notifications.
 
@@ -502,7 +502,7 @@ Register a device token for push notifications.
 ```
 
 ### 18. Get Device Token Details
-**GET** `/api/notifications/device-tokens/{id}/`
+**GET** `/notificationsdevice-tokens/{id}/`
 
 Get details of a specific device token.
 
@@ -521,7 +521,7 @@ Get details of a specific device token.
 ```
 
 ### 19. Update Device Token
-**PUT/PATCH** `/api/notifications/device-tokens/{id}/`
+**PUT/PATCH** `/notificationsdevice-tokens/{id}/`
 
 Update a device token.
 
@@ -547,7 +547,7 @@ Update a device token.
 ```
 
 ### 20. Delete Device Token
-**DELETE** `/api/notifications/device-tokens/{id}/`
+**DELETE** `/notificationsdevice-tokens/{id}/`
 
 Delete a device token.
 
@@ -559,7 +559,7 @@ Delete a device token.
 ```
 
 ### 21. List Notification Templates
-**GET** `/api/notifications/templates/`
+**GET** `/notificationstemplates/`
 
 Get available notification templates (admin/system use).
 
@@ -583,7 +583,7 @@ Get available notification templates (admin/system use).
 ## Test Endpoints (Development Only)
 
 ### 22. Test Medication Reminder
-**POST** `/api/notifications/test/medication-reminder/`
+**POST** `/notificationstest/medication-reminder/`
 
 Send a test medication reminder notification.
 
@@ -596,7 +596,7 @@ Send a test medication reminder notification.
 ```
 
 ### 23. Test Health Tip
-**POST** `/api/notifications/test/health-tip/`
+**POST** `/notificationstest/health-tip/`
 
 Send a test health tip notification.
 
@@ -609,7 +609,7 @@ Send a test health tip notification.
 ```
 
 ### 24. Test Sync Notification
-**POST** `/api/notifications/test/sync-notification/`
+**POST** `/notificationstest/sync-notification/`
 
 Send a test sync notification.
 
@@ -654,7 +654,7 @@ PushNotification.configure({
 ```javascript
 const registerDeviceToken = async (token) => {
   try {
-    const response = await fetch('/api/notifications/register-device/', {
+    const response = await fetch('https://youdoc.onrender.com/notifications/register-device', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -681,7 +681,7 @@ const registerDeviceToken = async (token) => {
 const fetchNotifications = async (filters = {}) => {
   try {
     const queryParams = new URLSearchParams(filters);
-    const response = await fetch(`/api/notifications/?${queryParams}`, {
+    const response = await fetch(`https://youdoc.onrender.com/notifications?${queryParams}`, {
       headers: {
         'Authorization': `Bearer ${userToken}`,
       },
@@ -706,7 +706,7 @@ const medicationNotifications = await fetchNotifications({ type: 'medication' })
 ```javascript
 const markNotificationAsRead = async (notificationId) => {
   try {
-    const response = await fetch(`/api/notifications/${notificationId}/read/`, {
+    const response = await fetch(`https://youdoc.onrender.com/notifications/${notificationId}/read`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${userToken}`,
@@ -727,7 +727,7 @@ const markNotificationAsRead = async (notificationId) => {
 ```javascript
 const updateNotificationPreferences = async (preferences) => {
   try {
-    const response = await fetch('/api/notifications/preferences/update/', {
+    const response = await fetch('https://youdoc.onrender.com/notifications/preferences/update', {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -783,7 +783,7 @@ const handleNotificationReceived = (notification) => {
 ```javascript
 const fetchNotificationStats = async () => {
   try {
-    const response = await fetch('/api/notifications/stats/', {
+    const response = await fetch('https://youdoc.onrender.com/notifications/stats', {
       headers: {
         'Authorization': `Bearer ${userToken}`,
       },
@@ -891,19 +891,19 @@ Use the test endpoints to verify notification functionality:
 
 ```javascript
 // Test medication reminder
-await fetch('/api/notifications/test/medication-reminder/', {
+await fetch('https://youdoc.onrender.com/notifications/test/medication-reminder', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${userToken}` },
 });
 
 // Test health tip
-await fetch('/api/notifications/test/health-tip/', {
+await fetch('https://youdoc.onrender.com/notifications/test/health-tip', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${userToken}` },
 });
 
 // Test sync notification
-await fetch('/api/notifications/test/sync-notification/', {
+await fetch('https://youdoc.onrender.com/notifications/test/sync-notification', {
   method: 'POST',
   headers: { 'Authorization': `Bearer ${userToken}` },
 });

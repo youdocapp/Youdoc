@@ -5,7 +5,7 @@ The Articles API provides comprehensive functionality for managing health articl
 
 ## Base URL
 ```
-https://youdoc.onrender.com/api/articles/
+https://youdoc.onrender.com/articles
 ```
 
 ## Authentication
@@ -20,7 +20,7 @@ Authorization: Bearer <access_token>
 ## Endpoints
 
 ### 1. List Articles
-**GET** `/`
+**GET** ``
 
 Get all articles with optional filtering, searching, and ordering.
 
@@ -35,7 +35,7 @@ Get all articles with optional filtering, searching, and ordering.
 
 #### Example Request
 ```
-GET /api/articles/?category=nutrition&featured=true&search=diabetes
+GET /articles?category=nutrition&featured=true&search=diabetes
 ```
 
 #### Success Response (200)
@@ -74,7 +74,7 @@ GET /api/articles/?category=nutrition&featured=true&search=diabetes
 ---
 
 ### 2. Get Article Details
-**GET** `/{article_id}/`
+**GET** `/{article_id}`
 
 Get detailed information about a specific article. This endpoint automatically tracks article views.
 
@@ -117,7 +117,7 @@ Get detailed information about a specific article. This endpoint automatically t
 ---
 
 ### 3. Create Article
-**POST** `/`
+**POST** ``
 
 Create a new article (admin/author access required).
 
@@ -179,7 +179,7 @@ read_time: "5 min read"
 ---
 
 ### 4. Update Article
-**PUT/PATCH** `/{article_id}/`
+**PUT/PATCH** `/{article_id}`
 
 Update an existing article.
 
@@ -226,7 +226,7 @@ Update an existing article.
 ---
 
 ### 5. Delete Article
-**DELETE** `/{article_id}/`
+**DELETE** `/{article_id}`
 
 Permanently delete an article.
 
@@ -238,7 +238,7 @@ No Content
 ---
 
 ### 6. Get Featured Articles
-**GET** `/featured/`
+**GET** `/featured`
 
 Get all featured articles.
 
@@ -278,7 +278,7 @@ Get all featured articles.
 ---
 
 ### 7. Get Article Categories
-**GET** `/categories/`
+**GET** `/categories`
 
 Get all article categories.
 
@@ -305,7 +305,7 @@ Get all article categories.
 ---
 
 ### 8. Get Authors
-**GET** `/authors/`
+**GET** `/authors`
 
 Get all article authors.
 
@@ -332,7 +332,7 @@ Get all article authors.
 ---
 
 ### 9. Toggle Article Bookmark
-**POST/DELETE** `/{article_id}/bookmark/`
+**POST/DELETE** `/{article_id}/bookmark`
 
 Bookmark or remove bookmark for an article.
 
@@ -358,7 +358,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 10. Toggle Article Like
-**POST/DELETE** `/{article_id}/like/`
+**POST/DELETE** `/{article_id}/like`
 
 Like or unlike an article.
 
@@ -386,7 +386,7 @@ Authorization: Bearer <access_token>
 ---
 
 ### 11. Search Articles
-**GET** `/search/`
+**GET** `/search`
 
 Advanced article search with multiple filters.
 
@@ -401,7 +401,7 @@ Advanced article search with multiple filters.
 
 #### Example Request
 ```
-GET /api/articles/search/?query=diabetes&category=nutrition&featured=true&ordering=-published_date
+GET /articles/search?query=diabetes&category=nutrition&featured=true&ordering=-published_date
 ```
 
 #### Success Response (200)
@@ -440,7 +440,7 @@ GET /api/articles/search/?query=diabetes&category=nutrition&featured=true&orderi
 ---
 
 ### 12. Get User's Bookmarked Articles
-**GET** `/bookmarked/`
+**GET** `/bookmarked`
 
 Get articles bookmarked by the authenticated user.
 
@@ -487,7 +487,7 @@ Authorization: Bearer <access_token>
 ### 13. Article Comments
 
 #### List Article Comments
-**GET** `/{article_id}/comments/`
+**GET** `/{article_id}/comments`
 
 Get all comments for an article.
 
@@ -512,7 +512,7 @@ Get all comments for an article.
 ```
 
 #### Create Comment
-**POST** `/{article_id}/comments/`
+**POST** `/{article_id}/comments`
 
 Add a comment to an article.
 
@@ -547,7 +547,7 @@ Authorization: Bearer <access_token>
 ```
 
 #### Update Comment
-**PUT/PATCH** `/{article_id}/comments/{comment_id}/`
+**PUT/PATCH** `/{article_id}/comments/{comment_id}`
 
 Update a comment (only by the comment author).
 
@@ -582,7 +582,7 @@ Authorization: Bearer <access_token>
 ```
 
 #### Delete Comment
-**DELETE** `/{article_id}/comments/{comment_id}/`
+**DELETE** `/{article_id}/comments/{comment_id}`
 
 Delete a comment (only by the comment author).
 
@@ -597,7 +597,7 @@ No Content
 ```
 
 #### Toggle Comment Like
-**POST/DELETE** `/{article_id}/comments/{comment_id}/like/`
+**POST/DELETE** `/{article_id}/comments/{comment_id}/like`
 
 Like or unlike a comment.
 
@@ -623,7 +623,7 @@ Authorization: Bearer <access_token>
 // services/articlesService.js
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const API_BASE_URL = 'https://youdoc.onrender.com/api/articles';
+const API_BASE_URL = 'https://youdoc.onrender.com/articles';
 
 class ArticlesService {
   async getAuthHeaders() {
@@ -636,38 +636,38 @@ class ArticlesService {
 
   async getArticles(filters = {}) {
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${API_BASE_URL}/?${params}`);
+    const response = await fetch(`${API_BASE_URL}?${params}`);
     return response.json();
   }
 
   async getArticleDetails(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/`);
+    const response = await fetch(`${API_BASE_URL}/${articleId}`);
     return response.json();
   }
 
   async getFeaturedArticles() {
-    const response = await fetch(`${API_BASE_URL}/featured/`);
+    const response = await fetch(`${API_BASE_URL}/featured`);
     return response.json();
   }
 
   async getCategories() {
-    const response = await fetch(`${API_BASE_URL}/categories/`);
+    const response = await fetch(`${API_BASE_URL}/categories`);
     return response.json();
   }
 
   async getAuthors() {
-    const response = await fetch(`${API_BASE_URL}/authors/`);
+    const response = await fetch(`${API_BASE_URL}/authors`);
     return response.json();
   }
 
   async searchArticles(searchParams) {
     const params = new URLSearchParams(searchParams);
-    const response = await fetch(`${API_BASE_URL}/search/?${params}`);
+    const response = await fetch(`${API_BASE_URL}/search?${params}`);
     return response.json();
   }
 
   async toggleBookmark(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/bookmark/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/bookmark`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -675,7 +675,7 @@ class ArticlesService {
   }
 
   async removeBookmark(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/bookmark/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/bookmark`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -683,7 +683,7 @@ class ArticlesService {
   }
 
   async toggleLike(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/like/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/like`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });
@@ -691,7 +691,7 @@ class ArticlesService {
   }
 
   async removeLike(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/like/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/like`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -699,19 +699,19 @@ class ArticlesService {
   }
 
   async getBookmarkedArticles() {
-    const response = await fetch(`${API_BASE_URL}/bookmarked/`, {
+    const response = await fetch(`${API_BASE_URL}/bookmarked`, {
       headers: await this.getAuthHeaders(),
     });
     return response.json();
   }
 
   async getArticleComments(articleId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/`);
+    const response = await fetch(`${API_BASE_URL}/${articleId}/comments`);
     return response.json();
   }
 
   async createComment(articleId, text) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/comments`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify({ text }),
@@ -720,7 +720,7 @@ class ArticlesService {
   }
 
   async updateComment(articleId, commentId, text) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}`, {
       method: 'PATCH',
       headers: await this.getAuthHeaders(),
       body: JSON.stringify({ text }),
@@ -729,7 +729,7 @@ class ArticlesService {
   }
 
   async deleteComment(articleId, commentId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}`, {
       method: 'DELETE',
       headers: await this.getAuthHeaders(),
     });
@@ -737,7 +737,7 @@ class ArticlesService {
   }
 
   async toggleCommentLike(articleId, commentId) {
-    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}/like/`, {
+    const response = await fetch(`${API_BASE_URL}/${articleId}/comments/${commentId}/like`, {
       method: 'POST',
       headers: await this.getAuthHeaders(),
     });

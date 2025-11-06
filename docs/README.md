@@ -83,40 +83,40 @@ backend/
 ### Authentication Endpoints
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/auth/register/` | POST | User registration |
-| `/api/auth/verify-otp/` | POST | Email verification |
-| `/api/auth/login/` | POST | User login |
-| `/api/auth/logout/` | POST | User logout |
-| `/api/auth/profile/` | GET/PUT/PATCH | Profile management |
-| `/api/auth/change-password/` | POST | Change password |
-| `/api/auth/password-reset-request/` | POST | Request password reset |
-| `/api/auth/password-reset-confirm/` | POST | Confirm password reset |
+| `/auth/register` | POST | User registration |
+| `/auth/verify-otp` | POST | Email verification |
+| `/auth/login` | POST | User login |
+| `/auth/logout` | POST | User logout |
+| `/auth/profile` | GET/PUT/PATCH | Profile management |
+| `/auth/change-password` | POST | Change password |
+| `/auth/password-reset-request` | POST | Request password reset |
+| `/auth/password-reset-confirm` | POST | Confirm password reset |
 
 ### Medication Endpoints
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/medication/` | GET/POST | List/Create medications |
-| `/api/medication/{id}/` | GET/PUT/PATCH/DELETE | Medication details |
-| `/api/medication/taken/` | GET/POST | List/Create taken records |
-| `/api/medication/{id}/toggle/` | POST | Toggle taken status |
-| `/api/medication/calendar/` | GET | Calendar view |
-| `/api/medication/today/` | GET | Today's medications |
+| `/medications` | GET/POST | List/Create medications |
+| `/medications/{id}` | GET/PUT/PATCH/DELETE | Medication details |
+| `/medications/taken` | GET/POST | List/Create taken records |
+| `/medications/{id}/toggle` | POST | Toggle taken status |
+| `/medications/calendar` | GET | Calendar view |
+| `/medications/today` | GET | Today's medications |
 
 ### Health Records Endpoints
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/health-records/` | GET/POST | List/Create health records |
-| `/api/health-records/{id}/` | GET/PUT/PATCH/DELETE | Health record details |
+| `/health-records` | GET/POST | List/Create health records |
+| `/health-records/{id}` | GET/PUT/PATCH/DELETE | Health record details |
 
 ### Medical History Endpoints
 | Endpoint | Method | Purpose |
 |----------|--------|---------|
-| `/api/medical-history/conditions/` | GET/POST | List/Create conditions |
-| `/api/medical-history/conditions/{id}/` | GET/PUT/PATCH/DELETE | Condition details |
-| `/api/medical-history/surgeries/` | GET/POST | List/Create surgeries |
-| `/api/medical-history/surgeries/{id}/` | GET/PUT/PATCH/DELETE | Surgery details |
-| `/api/medical-history/allergies/` | GET/POST | List/Create allergies |
-| `/api/medical-history/allergies/{id}/` | GET/PUT/PATCH/DELETE | Allergy details |
+| `/medical-history/conditions` | GET/POST | List/Create conditions |
+| `/medical-history/conditions/{id}` | GET/PUT/PATCH/DELETE | Condition details |
+| `/medical-history/surgeries` | GET/POST | List/Create surgeries |
+| `/medical-history/surgeries/{id}` | GET/PUT/PATCH/DELETE | Surgery details |
+| `/medical-history/allergies` | GET/POST | List/Create allergies |
+| `/medical-history/allergies/{id}` | GET/PUT/PATCH/DELETE | Allergy details |
 
 ## Authentication Flow
 
@@ -260,7 +260,7 @@ python manage.py test_email --otp --email test@example.com
 
 ### Registration
 ```bash
-curl -X POST http://localhost:8000/api/auth/register/ \
+curl -X POST http://localhost:8000/auth/register \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -273,7 +273,7 @@ curl -X POST http://localhost:8000/api/auth/register/ \
 
 ### Email Verification
 ```bash
-curl -X POST http://localhost:8000/api/auth/verify-otp/ \
+curl -X POST http://localhost:8000/auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -283,7 +283,7 @@ curl -X POST http://localhost:8000/api/auth/verify-otp/ \
 
 ### Login
 ```bash
-curl -X POST http://localhost:8000/api/auth/login/ \
+curl -X POST http://localhost:8000/auth/login \
   -H "Content-Type: application/json" \
   -d '{
     "email": "user@example.com",
@@ -293,7 +293,7 @@ curl -X POST http://localhost:8000/api/auth/login/ \
 
 ### Create Medication
 ```bash
-curl -X POST http://localhost:8000/api/medication/ \
+curl -X POST http://localhost:8000/medications \
   -H "Authorization: Bearer your-jwt-token" \
   -H "Content-Type: application/json" \
   -d '{
