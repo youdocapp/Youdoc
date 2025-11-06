@@ -35,3 +35,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 .vercel
+credentials.json
+gmail_token.json
+render_credentials.json
