@@ -224,6 +224,24 @@ CORS_ALLOW_CREDENTIALS = config('CORS_ALLOW_CREDENTIALS', default='True', cast=b
 
 CORS_ALLOW_ALL_ORIGINS = config('CORS_ALLOW_ALL_ORIGINS', default='True', cast=bool)  # True for mobile apps
 
+# Explicitly allow Authorization header (important for JWT authentication)
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]
+
+# Expose Authorization header in CORS response (for debugging)
+CORS_EXPOSE_HEADERS = [
+    'authorization',
+]
+
 # JWT Configuration
 from datetime import timedelta
 
