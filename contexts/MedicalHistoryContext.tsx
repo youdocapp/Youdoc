@@ -1,163 +1,274 @@
-import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { medicalHistoryService, type MedicalCondition, type Surgery, type Allergy, type CreateConditionRequest, type CreateSurgeryRequest, type CreateAllergyRequest, type ApiError } from '@/lib/api'
+import createContextHook from '@nkzw/create-context-hook'
+import { useAuth } from './AuthContext'
 
-export interface MedicalCondition {
-  id: string;
-  name: string;
-  diagnosedDate: string;
-  status: 'active' | 'resolved' | 'chronic';
-  notes?: string;
+export interface MedicalHistoryContextType {
+  conditions: MedicalCondition[]
+  surgeries: Surgery[]
+  allergies: Allergy[]
+  isLoading: boolean
+  error: Error | null
+  
+  // Conditions
+  addCondition: (condition: Omit<MedicalCondition, 'id' | 'createdAt' | 'updatedAt'>) => Promise<{ success: boolean; condition?: MedicalCondition; error?: string }>
+  updateCondition: (id: string, updates: Partial<MedicalCondition>) => Promise<{ success: boolean; condition?: MedicalCondition; error?: string }>
+  deleteCondition: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Surgeries
+  addSurgery: (surgery: Omit<Surgery, 'id' | 'createdAt' | 'updatedAt'>) => Promise<{ success: boolean; surgery?: Surgery; error?: string }>
+  updateSurgery: (id: string, updates: Partial<Surgery>) => Promise<{ success: boolean; surgery?: Surgery; error?: string }>
+  deleteSurgery: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Allergies
+  addAllergy: (allergy: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>) => Promise<{ success: boolean; allergy?: Allergy; error?: string }>
+  updateAllergy: (id: string, updates: Partial<Allergy>) => Promise<{ success: boolean; allergy?: Allergy; error?: string }>
+  deleteAllergy: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Refetch
+  refetch: () => Promise<void>
 }
-
-export interface Surgery {
-  id: string;
-  name: string;
-  date: string;
-  hospital?: string;
-  surgeon?: string;
-  notes?: string;
-}
-
-export interface Allergy {
-  id: string;
-  allergen: string;
-  reaction: string;
-  severity: 'mild' | 'moderate' | 'severe';
-  notes?: string;
-}
-
-interface MedicalHistoryData {
-  conditions: MedicalCondition[];
-  surgeries: Surgery[];
-  allergies: Allergy[];
-}
-
-const STORAGE_KEY = '@medical_history';
 
 export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() => {
-  const [data, setData] = useState<MedicalHistoryData>({
-    conditions: [],
-    surgeries: [],
-    allergies: []
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient()
+  const { isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Fetch medical conditions - only when authenticated
+  const {
+    data: conditionsData,
+    isLoading: isLoadingConditions,
+    error: conditionsError,
+  } = useQuery({
+    queryKey: ['medical-history', 'conditions'],
+    queryFn: async () => {
+      const response = await medicalHistoryService.getMedicalConditions()
+      return response.data || []
+    },
+    staleTime: 30000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
 
-  const loadData = async () => {
+  // Fetch surgeries - only when authenticated
+  const {
+    data: surgeriesData,
+    isLoading: isLoadingSurgeries,
+    error: surgeriesError,
+  } = useQuery({
+    queryKey: ['medical-history', 'surgeries'],
+    queryFn: async () => {
+      const response = await medicalHistoryService.getSurgeries()
+      return response.data || []
+    },
+    staleTime: 30000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  // Fetch allergies - only when authenticated
+  const {
+    data: allergiesData,
+    isLoading: isLoadingAllergies,
+    error: allergiesError,
+  } = useQuery({
+    queryKey: ['medical-history', 'allergies'],
+    queryFn: async () => {
+      const response = await medicalHistoryService.getAllergies()
+      return response.data || []
+    },
+    staleTime: 30000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  const conditions = conditionsData || []
+  const surgeries = surgeriesData || []
+  const allergies = allergiesData || []
+  const isLoading = isLoadingConditions || isLoadingSurgeries || isLoadingAllergies
+  const error = (conditionsError || surgeriesError || allergiesError) as Error | null
+
+  // Condition mutations
+  const createConditionMutation = useMutation({
+    mutationFn: (data: CreateConditionRequest) => medicalHistoryService.createMedicalCondition(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'conditions'] })
+    },
+  })
+
+  const updateConditionMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateConditionRequest> }) =>
+      medicalHistoryService.updateMedicalCondition(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'conditions'] })
+    },
+  })
+
+  const deleteConditionMutation = useMutation({
+    mutationFn: (id: string) => medicalHistoryService.deleteMedicalCondition(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'conditions'] })
+    },
+  })
+
+  // Surgery mutations
+  const createSurgeryMutation = useMutation({
+    mutationFn: (data: CreateSurgeryRequest) => medicalHistoryService.createSurgery(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'surgeries'] })
+    },
+  })
+
+  const updateSurgeryMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateSurgeryRequest> }) =>
+      medicalHistoryService.updateSurgery(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'surgeries'] })
+    },
+  })
+
+  const deleteSurgeryMutation = useMutation({
+    mutationFn: (id: string) => medicalHistoryService.deleteSurgery(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'surgeries'] })
+    },
+  })
+
+  // Allergy mutations
+  const createAllergyMutation = useMutation({
+    mutationFn: (data: CreateAllergyRequest) => medicalHistoryService.createAllergy(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'allergies'] })
+    },
+  })
+
+  const updateAllergyMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateAllergyRequest> }) =>
+      medicalHistoryService.updateAllergy(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'allergies'] })
+    },
+  })
+
+  const deleteAllergyMutation = useMutation({
+    mutationFn: (id: string) => medicalHistoryService.deleteAllergy(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'allergies'] })
+    },
+  })
+
+  const addCondition = async (condition: Omit<MedicalCondition, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setData(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error('Error loading medical history:', error);
-    } finally {
-      setIsLoading(false);
+      const { name, diagnosedDate, status, notes } = condition
+      const data: CreateConditionRequest = { name, diagnosedDate, status, notes }
+      const response = await createConditionMutation.mutateAsync(data)
+      return { success: true, condition: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to add condition' }
     }
-  };
+  }
 
-  const saveData = async (newData: MedicalHistoryData) => {
+  const updateCondition = async (id: string, updates: Partial<MedicalCondition>) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newData));
-      setData(newData);
-    } catch (error) {
-      console.error('Error saving medical history:', error);
+      const { name, diagnosedDate, status, notes } = updates
+      const data: Partial<CreateConditionRequest> = { name, diagnosedDate, status, notes }
+      const response = await updateConditionMutation.mutateAsync({ id, data })
+      return { success: true, condition: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to update condition' }
     }
-  };
+  }
 
-  const addCondition = useCallback(async (condition: Omit<MedicalCondition, 'id'>) => {
-    const newCondition: MedicalCondition = {
-      ...condition,
-      id: Date.now().toString()
-    };
-    const updatedData = {
-      ...data,
-      conditions: [...data.conditions, newCondition]
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const deleteCondition = async (id: string) => {
+    try {
+      await deleteConditionMutation.mutateAsync(id)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to delete condition' }
+    }
+  }
 
-  const updateCondition = useCallback(async (id: string, updates: Partial<MedicalCondition>) => {
-    const updatedData = {
-      ...data,
-      conditions: data.conditions.map(c => c.id === id ? { ...c, ...updates } : c)
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const addSurgery = async (surgery: Omit<Surgery, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const { name, date, hospital, surgeon, notes } = surgery
+      const data: CreateSurgeryRequest = { name, date, hospital, surgeon, notes }
+      const response = await createSurgeryMutation.mutateAsync(data)
+      return { success: true, surgery: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to add surgery' }
+    }
+  }
 
-  const deleteCondition = useCallback(async (id: string) => {
-    const updatedData = {
-      ...data,
-      conditions: data.conditions.filter(c => c.id !== id)
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const updateSurgery = async (id: string, updates: Partial<Surgery>) => {
+    try {
+      const { name, date, hospital, surgeon, notes } = updates
+      const data: Partial<CreateSurgeryRequest> = { name, date, hospital, surgeon, notes }
+      const response = await updateSurgeryMutation.mutateAsync({ id, data })
+      return { success: true, surgery: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to update surgery' }
+    }
+  }
 
-  const addSurgery = useCallback(async (surgery: Omit<Surgery, 'id'>) => {
-    const newSurgery: Surgery = {
-      ...surgery,
-      id: Date.now().toString()
-    };
-    const updatedData = {
-      ...data,
-      surgeries: [...data.surgeries, newSurgery]
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const deleteSurgery = async (id: string) => {
+    try {
+      await deleteSurgeryMutation.mutateAsync(id)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to delete surgery' }
+    }
+  }
 
-  const updateSurgery = useCallback(async (id: string, updates: Partial<Surgery>) => {
-    const updatedData = {
-      ...data,
-      surgeries: data.surgeries.map(s => s.id === id ? { ...s, ...updates } : s)
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const addAllergy = async (allergy: Omit<Allergy, 'id' | 'createdAt' | 'updatedAt'>) => {
+    try {
+      const { allergen, reaction, severity, notes } = allergy
+      const data: CreateAllergyRequest = { allergen, reaction, severity, notes }
+      const response = await createAllergyMutation.mutateAsync(data)
+      return { success: true, allergy: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to add allergy' }
+    }
+  }
 
-  const deleteSurgery = useCallback(async (id: string) => {
-    const updatedData = {
-      ...data,
-      surgeries: data.surgeries.filter(s => s.id !== id)
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const updateAllergy = async (id: string, updates: Partial<Allergy>) => {
+    try {
+      const { allergen, reaction, severity, notes } = updates
+      const data: Partial<CreateAllergyRequest> = { allergen, reaction, severity, notes }
+      const response = await updateAllergyMutation.mutateAsync({ id, data })
+      return { success: true, allergy: response.data }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to update allergy' }
+    }
+  }
 
-  const addAllergy = useCallback(async (allergy: Omit<Allergy, 'id'>) => {
-    const newAllergy: Allergy = {
-      ...allergy,
-      id: Date.now().toString()
-    };
-    const updatedData = {
-      ...data,
-      allergies: [...data.allergies, newAllergy]
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const deleteAllergy = async (id: string) => {
+    try {
+      await deleteAllergyMutation.mutateAsync(id)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { success: false, error: apiError.message || 'Failed to delete allergy' }
+    }
+  }
 
-  const updateAllergy = useCallback(async (id: string, updates: Partial<Allergy>) => {
-    const updatedData = {
-      ...data,
-      allergies: data.allergies.map(a => a.id === id ? { ...a, ...updates } : a)
-    };
-    await saveData(updatedData);
-  }, [data]);
+  const refetch = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'conditions'] }),
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'surgeries'] }),
+      queryClient.invalidateQueries({ queryKey: ['medical-history', 'allergies'] }),
+    ])
+  }
 
-  const deleteAllergy = useCallback(async (id: string) => {
-    const updatedData = {
-      ...data,
-      allergies: data.allergies.filter(a => a.id !== id)
-    };
-    await saveData(updatedData);
-  }, [data]);
-
-  return useMemo(() => ({
-    conditions: data.conditions,
-    surgeries: data.surgeries,
-    allergies: data.allergies,
+  return {
+    conditions,
+    surgeries,
+    allergies,
     isLoading,
+    error,
     addCondition,
     updateCondition,
     deleteCondition,
@@ -166,18 +277,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
     deleteSurgery,
     addAllergy,
     updateAllergy,
-    deleteAllergy
-  }), [
-    data,
-    isLoading,
-    addCondition,
-    updateCondition,
-    deleteCondition,
-    addSurgery,
-    updateSurgery,
-    deleteSurgery,
-    addAllergy,
-    updateAllergy,
-    deleteAllergy
-  ]);
-});
+    deleteAllergy,
+    refetch,
+  }
+})

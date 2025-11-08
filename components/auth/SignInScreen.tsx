@@ -12,7 +12,7 @@ interface SignInScreenProps {
 }
 
 const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp, onBack }) => {
-  const { signIn, user } = useAuth();
+  const { login, user } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -40,28 +40,104 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
     setLoading(true);
     try {
       console.log('🔑 Attempting sign in...');
-      const { error } = await signIn(email, password);
+      const result = await login({
+        email,
+        password,
+      });
       
-      if (error) {
+      if (!result.success) {
         setLoading(false);
-        console.error('❌ Sign in failed:', error.message);
-        if (error.message.includes('Invalid login credentials')) {
-          Alert.alert('Login Failed', 'Invalid email or password. Please try again.');
-        } else if (error.message.includes('Email not confirmed')) {
-          Alert.alert('Email Not Verified', 'Please verify your email before signing in.');
-        } else if (error.message.includes('fetch')) {
-          Alert.alert('Connection Error', 'Unable to connect to authentication server. Please check your Supabase configuration.');
-        } else {
-          Alert.alert('Login Error', error.message || 'Failed to sign in. Please try again.');
+        const errorMessage = result.error || result.message || 'Failed to sign in. Please try again.';
+        const errorDetails = result.details || {};
+        console.error('❌ Sign in failed:', errorMessage);
+        console.error('❌ Sign in error details:', errorDetails);
+        
+        // Check for invalid credentials
+        if (errorMessage.toLowerCase().includes('invalid') || 
+            errorMessage.toLowerCase().includes('credentials') ||
+            errorMessage.toLowerCase().includes('incorrect')) {
+          Alert.alert(
+            'Invalid Credentials',
+            'The email or password you entered is incorrect. Please try again.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
         }
+        
+        // Check for email not verified
+        if (errorMessage.toLowerCase().includes('verify') || 
+            errorMessage.toLowerCase().includes('verification') ||
+            errorMessage.toLowerCase().includes('not verified')) {
+          Alert.alert(
+            'Email Not Verified',
+            'Please verify your email address before signing in. Check your inbox for the verification email.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Check for account not found
+        if (errorMessage.toLowerCase().includes('not found') ||
+            errorMessage.toLowerCase().includes('does not exist') ||
+            errorMessage.toLowerCase().includes('no user')) {
+          Alert.alert(
+            'Account Not Found',
+            'No account found with this email address. Please sign up first.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Check for network errors
+        if (errorMessage.toLowerCase().includes('network') || 
+            errorMessage.toLowerCase().includes('fetch') || 
+            errorMessage.toLowerCase().includes('timeout') ||
+            errorMessage.toLowerCase().includes('connection')) {
+          Alert.alert(
+            'Connection Error',
+            'Unable to connect to the server. Please check your internet connection and try again.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Check for account locked or disabled
+        if (errorMessage.toLowerCase().includes('locked') ||
+            errorMessage.toLowerCase().includes('disabled') ||
+            errorMessage.toLowerCase().includes('suspended')) {
+          Alert.alert(
+            'Account Unavailable',
+            'Your account has been locked or disabled. Please contact support for assistance.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Generic error with refined message
+        let refinedMessage = errorMessage;
+        if (errorMessage.toLowerCase().includes('login failed')) {
+          refinedMessage = 'Login failed. Please check your credentials and try again.';
+        } else if (errorMessage.toLowerCase().includes('server error')) {
+          refinedMessage = 'Server error. Please try again in a moment.';
+        }
+        
+        Alert.alert(
+          'Sign In Failed',
+          refinedMessage,
+          [{ text: 'OK', style: 'default' }]
+        );
         return;
       }
 
       console.log('✅ Sign in successful, waiting for auth state update...');
     } catch (error) {
       setLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('❌ Sign in error:', error);
+      Alert.alert(
+        'Unexpected Error',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK', style: 'default' }]
+      );
     }
   };
 

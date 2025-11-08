@@ -1,91 +1,210 @@
-import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { emergencyContactsService, type EmergencyContact, type CreateEmergencyContactRequest, type UpdateEmergencyContactRequest, type ApiError } from '@/lib/api'
+import createContextHook from '@nkzw/create-context-hook'
+import { useAuth } from './AuthContext'
 
-export interface EmergencyContact {
-  id: string;
-  name: string;
-  relationship: string;
-  phoneNumber: string;
-  email?: string;
-  isPrimary: boolean;
+export interface EmergencyContactContextType {
+  contacts: EmergencyContact[]
+  primaryContact: EmergencyContact | null
+  stats: {
+    total_contacts: number
+    max_contacts: number
+    remaining_slots: number
+    can_add_more: boolean
+  } | null
+  isLoading: boolean
+  error: Error | null
+  
+  addContact: (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'>) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
+  updateContact: (id: number, updates: Partial<EmergencyContact>) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
+  deleteContact: (id: number) => Promise<{ success: boolean; error?: string }>
+  setPrimaryContact: (id: number) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
+  bulkDeleteContacts: (ids: number[]) => Promise<{ success: boolean; deletedCount?: number; error?: string }>
+  refetch: () => Promise<void>
 }
 
-const STORAGE_KEY = '@emergency_contacts';
-const MAX_CONTACTS = 28;
-
 export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHook(() => {
-  const [contacts, setContacts] = useState<EmergencyContact[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient()
+  const { isAuthenticated } = useAuth()
 
-  useEffect(() => {
-    loadContacts();
-  }, []);
+  // Fetch emergency contacts - only when authenticated
+  const {
+    data: contactsData,
+    isLoading: isLoadingContacts,
+    error: contactsError,
+  } = useQuery({
+    queryKey: ['emergency-contacts'],
+    queryFn: async () => {
+      const response = await emergencyContactsService.getEmergencyContacts()
+      return response
+    },
+    staleTime: 30000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
 
-  const loadContacts = async () => {
+  // Fetch primary contact - only when authenticated
+  const {
+    data: primaryContact,
+    isLoading: isLoadingPrimary,
+  } = useQuery({
+    queryKey: ['emergency-contacts', 'primary'],
+    queryFn: () => emergencyContactsService.getPrimaryContact(),
+    staleTime: 30000,
+    retry: false, // Don't retry if no primary contact exists
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  const contacts = contactsData?.contacts || []
+  const stats = contactsData?.metadata || null
+  const isLoading = isLoadingContacts || isLoadingPrimary
+  const error = contactsError as Error | null
+
+  // Create mutation
+  const createMutation = useMutation({
+    mutationFn: (data: CreateEmergencyContactRequest) =>
+      emergencyContactsService.createEmergencyContact(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
+    },
+  })
+
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: UpdateEmergencyContactRequest }) =>
+      emergencyContactsService.updateEmergencyContact(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
+    },
+  })
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: (id: number) => emergencyContactsService.deleteEmergencyContact(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
+    },
+  })
+
+  // Set primary mutation
+  const setPrimaryMutation = useMutation({
+    mutationFn: (id: number) => emergencyContactsService.setPrimaryContact({ contact_id: id }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
+    },
+  })
+
+  // Bulk delete mutation
+  const bulkDeleteMutation = useMutation({
+    mutationFn: (ids: number[]) => emergencyContactsService.bulkDeleteContacts({ contact_ids: ids }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
+    },
+  })
+
+  const addContact = async (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'>) => {
     try {
-      const stored = await AsyncStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setContacts(JSON.parse(stored));
+      const { name, phone_number, relationship, email, is_primary } = contact
+      const data: CreateEmergencyContactRequest = {
+        name,
+        phone_number,
+        relationship,
+        email,
+        is_primary,
       }
-    } catch (error) {
-      console.error('Error loading emergency contacts:', error);
-    } finally {
-      setIsLoading(false);
+      const newContact = await createMutation.mutateAsync(data)
+      return { success: true, contact: newContact }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to add emergency contact',
+      }
     }
-  };
+  }
 
-  const saveContacts = async (newContacts: EmergencyContact[]) => {
+  const updateContact = async (id: number, updates: Partial<EmergencyContact>) => {
     try {
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(newContacts));
-      setContacts(newContacts);
-    } catch (error) {
-      console.error('Error saving emergency contacts:', error);
+      const { name, phone_number, relationship, email, is_primary } = updates
+      const data: UpdateEmergencyContactRequest = {
+        name,
+        phone_number,
+        relationship,
+        email,
+        is_primary,
+      }
+      const updatedContact = await updateMutation.mutateAsync({ id, data })
+      return { success: true, contact: updatedContact }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to update emergency contact',
+      }
     }
-  };
+  }
 
-  const addContact = useCallback(async (contact: Omit<EmergencyContact, 'id'>) => {
-    if (contacts.length >= MAX_CONTACTS) {
-      throw new Error(`Maximum of ${MAX_CONTACTS} contacts allowed`);
+  const deleteContact = async (id: number) => {
+    try {
+      await deleteMutation.mutateAsync(id)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to delete emergency contact',
+      }
     }
+  }
 
-    const newContact: EmergencyContact = {
-      ...contact,
-      id: Date.now().toString()
-    };
+  const setPrimaryContact = async (id: number) => {
+    try {
+      const response = await setPrimaryMutation.mutateAsync(id)
+      return { success: true, contact: response.contact }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to set primary contact',
+      }
+    }
+  }
 
-    const updatedContacts = [...contacts, newContact];
-    await saveContacts(updatedContacts);
-  }, [contacts]);
+  const bulkDeleteContacts = async (ids: number[]) => {
+    try {
+      const response = await bulkDeleteMutation.mutateAsync(ids)
+      return { success: true, deletedCount: response.deleted_count }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to delete contacts',
+      }
+    }
+  }
 
-  const updateContact = useCallback(async (id: string, updates: Partial<EmergencyContact>) => {
-    const updatedContacts = contacts.map(contact =>
-      contact.id === id ? { ...contact, ...updates } : contact
-    );
-    await saveContacts(updatedContacts);
-  }, [contacts]);
+  const refetch = async () => {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] }),
+      queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] }),
+    ])
+  }
 
-  const deleteContact = useCallback(async (id: string) => {
-    const updatedContacts = contacts.filter(contact => contact.id !== id);
-    await saveContacts(updatedContacts);
-  }, [contacts]);
-
-  const setPrimaryContact = useCallback(async (id: string) => {
-    const updatedContacts = contacts.map(contact => ({
-      ...contact,
-      isPrimary: contact.id === id
-    }));
-    await saveContacts(updatedContacts);
-  }, [contacts]);
-
-  return useMemo(() => ({
+  return {
     contacts,
+    primaryContact: primaryContact || null,
+    stats,
     isLoading,
+    error,
     addContact,
     updateContact,
     deleteContact,
     setPrimaryContact,
-    canAddMore: contacts.length < MAX_CONTACTS,
-    remainingSlots: MAX_CONTACTS - contacts.length
-  }), [contacts, isLoading, addContact, updateContact, deleteContact, setPrimaryContact]);
-});
+    bulkDeleteContacts,
+    refetch,
+  }
+})

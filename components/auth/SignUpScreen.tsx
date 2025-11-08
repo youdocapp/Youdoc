@@ -20,7 +20,7 @@ interface FormData {
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const { colors } = useAuthTheme();
-  const { signUp } = useAuth();
+  const { register } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -66,37 +66,138 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
     try {
       console.log('🚀 Starting signup process for:', formData.email);
       
-      const { error } = await signUp(
-        formData.email,
-        formData.password,
-        {
-          first_name: formData.firstName,
-          last_name: formData.lastName,
-          mobile: formData.mobile,
-        }
-      );
+      const result = await register({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        password: formData.password,
+        passwordConfirm: formData.repeatPassword,
+        mobile: formData.mobile || undefined,
+      });
 
-      if (error) {
-        console.error('❌ Signup failed with error:', error);
+      if (!result.success) {
+        console.error('❌ Signup failed with error:', result.error || result.message);
+        console.error('❌ Signup error details:', result.details || 'No details');
+        console.error('❌ Full result:', result);
         
-        if (error.message.includes('already registered')) {
-          Alert.alert('Account Exists', 'This email is already registered. Please sign in instead.');
-        } else if (error.message.includes('Network') || error.message.includes('fetch') || error.message.includes('network')) {
+        const errorMessage = result.error || result.message || 'Failed to create account. Please try again.';
+        const errorDetails = result.details || {};
+        
+        // Helper function to get user-friendly field names
+        const getFieldName = (field: string): string => {
+          const fieldMap: Record<string, string> = {
+            'email': 'Email',
+            'first_name': 'First Name',
+            'last_name': 'Last Name',
+            'password': 'Password',
+            'password_confirm': 'Confirm Password',
+            'mobile': 'Mobile Number',
+          };
+          return fieldMap[field] || field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        };
+        
+        // Check for email already exists
+        if (errorMessage.toLowerCase().includes('already exists') || 
+            errorMessage.toLowerCase().includes('already registered') ||
+            (errorDetails.email && Array.isArray(errorDetails.email) && errorDetails.email.some((e: string) => e.toLowerCase().includes('exists')))) {
           Alert.alert(
-            'Connection Error', 
-            'Cannot connect to the server. Please check:\n\n1. Your internet connection\n2. Supabase URL is correct in .env\n3. Development server was restarted after adding .env'
+            'Email Already Exists',
+            'This email address is already registered. Please sign in instead or use a different email address.',
+            [{ text: 'OK', style: 'default' }]
           );
-        } else {
-          Alert.alert('Signup Error', error.message || 'Failed to create account. Please try again.');
+          return;
         }
+        
+        // Check for validation errors
+        if (errorDetails && Object.keys(errorDetails).length > 0) {
+          const validationMessages: string[] = [];
+          
+          Object.entries(errorDetails).forEach(([field, errors]) => {
+            const fieldName = getFieldName(field);
+            const errorArray = Array.isArray(errors) ? errors : [errors];
+            
+            errorArray.forEach((error: string) => {
+              // Refine error messages
+              let refinedError = error;
+              
+              if (error.toLowerCase().includes('required')) {
+                refinedError = `${fieldName} is required.`;
+              } else if (error.toLowerCase().includes('too short')) {
+                refinedError = `${fieldName} is too short.`;
+              } else if (error.toLowerCase().includes('too common')) {
+                refinedError = 'Password is too common. Please choose a stronger password.';
+              } else if (error.toLowerCase().includes('invalid')) {
+                refinedError = `${fieldName} is invalid.`;
+              } else if (error.toLowerCase().includes('does not match')) {
+                refinedError = 'Passwords do not match.';
+              } else if (error.toLowerCase().includes('already exists')) {
+                refinedError = `${fieldName} already exists.`;
+              } else {
+                refinedError = `${fieldName}: ${error}`;
+              }
+              
+              validationMessages.push(refinedError);
+            });
+          });
+          
+          if (validationMessages.length > 0) {
+            Alert.alert(
+              'Validation Error',
+              validationMessages.join('\n\n'),
+              [{ text: 'OK', style: 'default' }]
+            );
+            return;
+          }
+        }
+        
+        // Check for network errors
+        if (errorMessage.toLowerCase().includes('network') || 
+            errorMessage.toLowerCase().includes('fetch') || 
+            errorMessage.toLowerCase().includes('timeout') ||
+            errorMessage.toLowerCase().includes('connection')) {
+          Alert.alert(
+            'Connection Error',
+            'Unable to connect to the server. Please check your internet connection and try again.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Check for password errors
+        if (errorMessage.toLowerCase().includes('password')) {
+          Alert.alert(
+            'Password Error',
+            'Please check your password. It must be at least 8 characters long and not too common.',
+            [{ text: 'OK', style: 'default' }]
+          );
+          return;
+        }
+        
+        // Generic error with refined message
+        let refinedMessage = errorMessage;
+        if (errorMessage.toLowerCase().includes('registration failed')) {
+          refinedMessage = 'Registration failed. Please check your information and try again.';
+        } else if (errorMessage.toLowerCase().includes('server error')) {
+          refinedMessage = 'Server error. Please try again in a moment.';
+        }
+        
+        Alert.alert(
+          'Sign Up Failed',
+          refinedMessage,
+          [{ text: 'OK', style: 'default' }]
+        );
         return;
       }
 
       console.log('✅ Signup completed, proceeding to verification');
       onNext(formData);
     } catch (error) {
-      Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Sign up error:', error);
+      Alert.alert(
+        'Unexpected Error',
+        'An unexpected error occurred. Please try again.',
+        [{ text: 'OK', style: 'default' }]
+      );
     } finally {
       setLoading(false);
     }
@@ -231,10 +332,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           <View style={{ position: 'relative', marginBottom: 20 }}>
             <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
-              placeholder="••••••••"
+              placeholder="Enter your password"
               value={formData.password}
               onChangeText={(value) => handleInputChange('password', value)}
               secureTextEntry={!passwordVisible}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
+              autoComplete="password-new"
               style={{
                 width: '100%',
                 paddingLeft: 48,
@@ -272,10 +377,14 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           <View style={{ position: 'relative', marginBottom: 16 }}>
             <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
-              placeholder="••••••••"
+              placeholder="Repeat your password"
               value={formData.repeatPassword}
               onChangeText={(value) => handleInputChange('repeatPassword', value)}
               secureTextEntry={!repeatPasswordVisible}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="newPassword"
+              autoComplete="password-new"
               style={{
                 width: '100%',
                 paddingLeft: 48,

@@ -59,14 +59,19 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
 
     setLoading(true);
     try {
-      const { error } = await verifyOTP(email, verificationCode);
-      if (error) {
-        Alert.alert('Verification Failed', error.message || 'Invalid verification code.');
+      const result = await verifyOTP({
+        email,
+        otp: verificationCode,
+      });
+      
+      if (!result.success) {
+        const errorMessage = result.error || result.message || 'Invalid verification code.';
+        Alert.alert('Verification Failed', errorMessage);
       } else {
         console.log('✅ Email verified successfully, redirecting to dashboard');
-        router.replace('/dashboard');
+        onVerified();
       }
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert('Error', 'An unexpected error occurred. Please try again.');
       console.error('Verification error:', error);
     } finally {
@@ -77,14 +82,15 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = ({ email
   const handleResend = async () => {
     setResending(true);
     try {
-      const { error } = await resendOTP(email);
-      if (error) {
-        Alert.alert('Resend Failed', error.message || 'Failed to resend code.');
+      const result = await resendOTP(email);
+      if (!result.success) {
+        const errorMessage = result.error || result.message || 'Failed to resend code.';
+        Alert.alert('Resend Failed', errorMessage);
       } else {
         setTimer(60);
-        Alert.alert('Code Sent', 'A new verification code has been sent to your email.');
+        Alert.alert('Code Sent', result.message || 'A new verification code has been sent to your email.');
       }
-    } catch (error) {
+    } catch (error: any) {
       Alert.alert('Error', 'Failed to resend code. Please try again.');
       console.error('Resend error:', error);
     } finally {

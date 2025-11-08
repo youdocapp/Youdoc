@@ -1,228 +1,352 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  mobile?: string;
-}
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { authService, type User, type RegisterRequest, type LoginRequest, type VerifyOTPRequest, type UpdateProfileRequest, type ChangePasswordRequest, type PasswordResetRequest, type PasswordResetConfirmRequest, type GoogleAuthRequest, type ApiError } from '@/lib/api'
 
 interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  signUp: (email: string, password: string, metadata?: { first_name?: string; last_name?: string; mobile?: string }) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signOut: () => Promise<void>;
-  verifyOTP: (email: string, token: string) => Promise<{ error: Error | null }>;
-  resendOTP: (email: string) => Promise<{ error: Error | null }>;
-  resetPassword: (email: string) => Promise<{ error: Error | null }>;
-  updatePassword: (newPassword: string) => Promise<{ error: Error | null }>;
-  deleteAccount: () => Promise<{ error: Error | null }>;
+  user: User | null
+  loading: boolean
+  isAuthenticated: boolean
+  
+  // Auth actions
+  register: (data: RegisterRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  login: (data: LoginRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  logout: () => Promise<void>
+  verifyOTP: (data: VerifyOTPRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  resendOTP: (email: string) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  
+  // Profile actions
+  updateProfile: (data: UpdateProfileRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  changePassword: (data: ChangePasswordRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  
+  // Password reset
+  passwordResetRequest: (data: PasswordResetRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  passwordResetConfirm: (data: PasswordResetConfirmRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  
+  // OAuth
+  googleAuth: (data: GoogleAuthRequest) => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  
+  // Account management
+  deleteAccount: () => Promise<{ success: boolean; message?: string; error?: string; details?: Record<string, any> }>
+  
+  // Token management
+  refreshToken: () => Promise<boolean>
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+const ACCESS_TOKEN_KEY = 'accessToken'
+const REFRESH_TOKEN_KEY = 'refreshToken'
+const USER_KEY = 'user'
 
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
+
+  // Check if user is authenticated on mount
   useEffect(() => {
+    initializeAuth()
+  }, [])
+
     const initializeAuth = async () => {
       try {
-        console.log('🔍 Initializing auth...');
-        const storedUser = await AsyncStorage.getItem('user');
-        
-        if (storedUser) {
-          console.log('🔍 Found stored user');
-          setUser(JSON.parse(storedUser));
+      const [storedUser, accessToken] = await Promise.all([
+        AsyncStorage.getItem(USER_KEY),
+        AsyncStorage.getItem(ACCESS_TOKEN_KEY),
+      ])
+
+      if (storedUser && accessToken) {
+        const parsedUser = JSON.parse(storedUser)
+        setUser(parsedUser)
+        // Optionally validate token by fetching profile
+        try {
+          const profile = await authService.getProfile()
+          setUser(profile)
+          await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile))
+        } catch (error) {
+          // Token might be expired, try to refresh
+          const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY)
+          if (refreshToken) {
+            try {
+              const response = await authService.refreshToken({ refresh: refreshToken })
+              await AsyncStorage.setItem(ACCESS_TOKEN_KEY, response.access)
+              const profile = await authService.getProfile()
+              setUser(profile)
+              await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile))
+            } catch (refreshError) {
+              // Refresh failed, clear auth
+              await clearAuth()
+            }
         } else {
-          console.log('🔍 No stored user found');
-          setUser(null);
+            await clearAuth()
+          }
+        }
         }
       } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-        setUser(null);
+      console.error('❌ Error initializing auth:', error)
+      await clearAuth()
       } finally {
-        setLoading(false);
-        console.log('✅ Auth initialization complete');
-      }
-    };
+      setLoading(false)
+    }
+  }
 
-    initializeAuth();
-  }, []);
+  const clearAuth = async () => {
+    await Promise.all([
+      AsyncStorage.removeItem(ACCESS_TOKEN_KEY),
+      AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
+      AsyncStorage.removeItem(USER_KEY),
+    ])
+    setUser(null)
+    queryClient.clear()
+  }
 
-  const signUp = async (
-    email: string,
-    password: string,
-    metadata?: { first_name?: string; last_name?: string; mobile?: string }
-  ) => {
+  const storeAuth = async (accessToken: string, refreshToken: string, userData: User) => {
+    await Promise.all([
+      AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken),
+      AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken),
+      AsyncStorage.setItem(USER_KEY, JSON.stringify(userData)),
+    ])
+    setUser(userData)
+  }
+
+  const register = useCallback(async (data: RegisterRequest) => {
     try {
-      console.log('🚀 Starting signup for:', email);
-      
-      await AsyncStorage.setItem('pending_verification_email', email);
-      
-      console.log('✅ Signup successful (any credentials accepted)');
-      return { error: null };
+      console.log('📤 Register request:', { email: data.email, firstName: data.firstName, lastName: data.lastName })
+      const response = await authService.register(data)
+      console.log('📥 Register response:', response)
+      if (response.success) {
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'Registration failed' }
     } catch (error: any) {
-      console.error('❌ Unexpected signup error:', error);
+      console.error('❌ Register error:', error)
+      const apiError = error as ApiError
+      // Log full error details
+      console.error('❌ Register error details:', {
+        message: apiError.message,
+        details: apiError.details,
+        fullError: error,
+      })
       return { 
-        error: new Error(error?.message || 'An unexpected error occurred')
-      };
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      console.log('🚀 Starting sign in for:', email);
-      
-      const userToStore: User = {
-        id: Date.now().toString(),
-        email: email,
-        firstName: 'User',
-        lastName: 'Demo',
-        mobile: '1234567890',
-      };
-      
-      await AsyncStorage.setItem('user', JSON.stringify(userToStore));
-      setUser(userToStore);
-      
-      console.log('✅ Sign in successful (any credentials accepted)');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Unexpected sign in error:', error);
-      return { error: error as Error };
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      console.log('🚀 Signing out...');
-      await AsyncStorage.removeItem('user');
-      await AsyncStorage.removeItem('pending_verification_email');
-      setUser(null);
-      console.log('✅ Sign out successful');
-    } catch (error) {
-      console.error('❌ Unexpected sign out error:', error);
-      throw error;
-    }
-  };
-
-  const verifyOTP = async (email: string, token: string) => {
-    try {
-      console.log('🚀 Verifying OTP for:', email);
-      
-      await AsyncStorage.removeItem('pending_verification_email');
-      
-      console.log('✅ OTP verification successful (any code accepted)');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Unexpected OTP verification error:', error);
-      return { error: error as Error };
-    }
-  };
-
-  const resendOTP = async (email: string) => {
-    try {
-      console.log('🚀 Resending OTP to:', email);
-      console.log('✅ OTP resent successfully');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Unexpected resend OTP error:', error);
-      return { error: error as Error };
-    }
-  };
-
-  const resetPassword = async (email: string) => {
-    try {
-      console.log('🚀 Sending password reset email to:', email);
-      
-      await AsyncStorage.setItem('password_reset_email', email);
-      
-      console.log('✅ Password reset email sent (any email accepted)');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Unexpected password reset error:', error);
-      return { error: error as Error };
-    }
-  };
-
-  const updatePassword = async (newPassword: string) => {
-    try {
-      console.log('🚀 Updating password...');
-      
-      if (!user) {
-        return { error: new Error('No user logged in') };
+        success: false, 
+        error: apiError.message || 'Registration failed',
+        message: apiError.message,
+        details: apiError.details,
       }
-      
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const userIndex = users.findIndex((u: any) => u.id === user.id);
-      
-      if (userIndex === -1) {
-        return { error: new Error('User not found') };
-      }
-      
-      users[userIndex].password = newPassword;
-      await AsyncStorage.setItem('users', JSON.stringify(users));
-      
-      console.log('✅ Password updated successfully');
-      return { error: null };
-    } catch (error) {
-      console.error('❌ Unexpected password update error:', error);
-      return { error: error as Error };
     }
-  };
+  }, [])
 
-  const deleteAccount = async () => {
+  const login = useCallback(async (data: LoginRequest) => {
     try {
-      console.log('🚀 Deleting account...');
-      
-      if (!user) {
-        return { error: new Error('No user logged in') };
+      const response = await authService.login(data)
+      if (response.success) {
+        await storeAuth(response.access, response.refresh, response.user)
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'Login failed' }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Login failed',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const logout = useCallback(async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem(REFRESH_TOKEN_KEY)
+      if (refreshToken) {
+        try {
+          await authService.logout({ refresh: refreshToken })
+        } catch (error) {
+          console.error('Logout API call failed:', error)
+        }
+      }
+    } catch (error) {
+      console.error('Error during logout:', error)
+    } finally {
+      await clearAuth()
+    }
+  }, [])
+
+  const verifyOTP = useCallback(async (data: VerifyOTPRequest) => {
+    try {
+      const response = await authService.verifyOTP(data)
+      if (response.success) {
+        await storeAuth(response.access, response.refresh, response.user)
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'OTP verification failed' }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'OTP verification failed',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const resendOTP = useCallback(async (email: string) => {
+    try {
+      const response = await authService.resendVerification({ email })
+      if (response.success) {
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'Failed to resend OTP' }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to resend OTP',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const updateProfile = useCallback(async (data: UpdateProfileRequest) => {
+    try {
+      const response = await authService.updateProfile(data)
+      setUser(response.user)
+      await AsyncStorage.setItem(USER_KEY, JSON.stringify(response.user))
+      return { success: true, message: response.message }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to update profile',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const changePassword = useCallback(async (data: ChangePasswordRequest) => {
+    try {
+      const response = await authService.changePassword(data)
+      return { success: true, message: response.message }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to change password',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const passwordResetRequest = useCallback(async (data: PasswordResetRequest) => {
+    try {
+      const response = await authService.passwordResetRequest(data)
+      if (response.success) {
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'Failed to send password reset email' }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to send password reset email',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const passwordResetConfirm = useCallback(async (data: PasswordResetConfirmRequest) => {
+    try {
+      const response = await authService.passwordResetConfirm(data)
+      return { success: true, message: response.message }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to reset password',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const googleAuth = useCallback(async (data: GoogleAuthRequest) => {
+    try {
+      const response = await authService.googleAuth(data)
+      if (response.success) {
+        await storeAuth(response.access, response.refresh, response.user)
+        return { success: true, message: response.message }
+      }
+      return { success: false, message: response.message || 'Google authentication failed' }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Google authentication failed',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const deleteAccount = useCallback(async () => {
+    try {
+      const response = await authService.deleteAccount()
+      await clearAuth()
+      return { success: true, message: response.message }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return { 
+        success: false, 
+        error: apiError.message || 'Failed to delete account',
+        message: apiError.message,
+      }
+    }
+  }, [])
+
+  const refreshToken = useCallback(async (): Promise<boolean> => {
+    try {
+      const refreshTokenValue = await AsyncStorage.getItem(REFRESH_TOKEN_KEY)
+      if (!refreshTokenValue) {
+        return false
       }
 
-      const existingUsers = await AsyncStorage.getItem('users');
-      const users = existingUsers ? JSON.parse(existingUsers) : [];
-      
-      const filteredUsers = users.filter((u: any) => u.id !== user.id);
-      await AsyncStorage.setItem('users', JSON.stringify(filteredUsers));
-      
-      await signOut();
-      console.log('✅ Account deleted successfully');
-      return { error: null };
+      const response = await authService.refreshToken({ refresh: refreshTokenValue })
+      await AsyncStorage.setItem(ACCESS_TOKEN_KEY, response.access)
+      return true
     } catch (error) {
-      console.error('❌ Unexpected account deletion error:', error);
-      return { error: error as Error };
+      console.error('Token refresh failed:', error)
+      await clearAuth()
+      return false
     }
-  };
+  }, [])
 
-  return (
-    <AuthContext.Provider
-      value={{
+  const value: AuthContextType = {
         user,
         loading,
-        signUp,
-        signIn,
-        signOut,
+    isAuthenticated: !!user,
+    register,
+    login,
+    logout,
         verifyOTP,
         resendOTP,
-        resetPassword,
-        updatePassword,
+    updateProfile,
+    changePassword,
+    passwordResetRequest,
+    passwordResetConfirm,
+    googleAuth,
         deleteAccount,
-      }}
-    >
+    refreshToken,
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
-  );
-};
+  )
+}
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
+  const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error('useAuth must be used within AuthProvider')
   }
-  return context;
-};
+  return context
+}

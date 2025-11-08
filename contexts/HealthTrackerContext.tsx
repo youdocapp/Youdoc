@@ -1,262 +1,379 @@
-import createContextHook from '@nkzw/create-context-hook';
-import { useState, useEffect } from 'react';
-import { Platform } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Pedometer } from 'expo-sensors';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { healthTrackingService, type HealthData, type ConnectedDevice, type HealthGoal, type HealthInsight, type GoalProgress, type UpdateHealthDataRequest, type CreateDeviceRequest, type CreateGoalRequest, type ApiError } from '@/lib/api'
+import { googleFitService } from '@/lib/health/google-fit'
+import { appleHealthService } from '@/lib/health/apple-health'
+import { Platform } from 'react-native'
+import createContextHook from '@nkzw/create-context-hook'
+import { useAuth } from './AuthContext'
 
-export interface HealthData {
-  heartRate: number;
-  steps: number;
-  distance: number;
-  sleep: number;
-  calories: number;
-  bloodPressure: { systolic: number; diastolic: number };
-  weight: number;
-  lastSync: Date | null;
+export interface HealthTrackerContextType {
+  healthData: HealthData | null
+  connectedDevices: ConnectedDevice[]
+  healthGoals: HealthGoal[]
+  healthInsights: {
+    total_insights: number
+    unread_insights: number
+    recent_insights: HealthInsight[]
+  } | null
+  goalProgress: GoalProgress[]
+  isLoading: boolean
+  error: Error | null
+  
+  // Health data
+  updateHealthData: (data: UpdateHealthDataRequest) => Promise<{ success: boolean; data?: HealthData; error?: string }>
+  refetchHealthData: () => Promise<void>
+  
+  // Devices
+  connectDevice: (deviceId: string) => Promise<{ success: boolean; error?: string }>
+  disconnectDevice: (deviceId: string) => Promise<{ success: boolean; error?: string }>
+  syncHealthData: (deviceId: string) => Promise<{ success: boolean; error?: string }>
+  addCustomDevice: (deviceName: string) => Promise<{ success: boolean; device?: ConnectedDevice; error?: string }>
+  
+  // Goals
+  createGoal: (data: CreateGoalRequest) => Promise<{ success: boolean; goal?: HealthGoal; error?: string }>
+  updateGoal: (id: string, data: Partial<CreateGoalRequest>) => Promise<{ success: boolean; goal?: HealthGoal; error?: string }>
+  deleteGoal: (id: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Insights
+  markInsightRead: (insightId: string) => Promise<{ success: boolean; error?: string }>
+  
+  // Platform-specific health sync
+  syncWithPlatform: () => Promise<{ success: boolean; error?: string }>
 }
-
-export interface ConnectedDevice {
-  id: string;
-  name: string;
-  type: 'apple_health' | 'google_fit' | 'fitbit' | 'garmin' | 'samsung_health' | 'custom';
-  connected: boolean;
-  lastSync: Date | null;
-}
-
-const HEALTH_DATA_KEY = '@health_data';
-const CONNECTED_DEVICES_KEY = '@connected_devices';
 
 export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() => {
-  const [healthData, setHealthData] = useState<HealthData>({
-    heartRate: 72,
-    steps: 0,
-    distance: 0,
-    sleep: 7.5,
-    calories: 0,
-    bloodPressure: { systolic: 120, diastolic: 80 },
-    weight: 70,
-    lastSync: null,
-  });
+  const queryClient = useQueryClient()
+  const { isAuthenticated } = useAuth()
 
-  const [connectedDevices, setConnectedDevices] = useState<ConnectedDevice[]>([
-    {
-      id: '1',
-      name: Platform.OS === 'ios' ? 'Apple Health' : 'Google Fit',
-      type: Platform.OS === 'ios' ? 'apple_health' : 'google_fit',
-      connected: false,
-      lastSync: null,
+  // Fetch health data - only when authenticated
+  const {
+    data: healthData,
+    isLoading: isLoadingHealthData,
+    error: healthDataError,
+    refetch: refetchHealthData,
+  } = useQuery({
+    queryKey: ['health-tracking', 'data'],
+    queryFn: () => healthTrackingService.getHealthData(),
+    staleTime: 60000, // 1 minute
+    refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  // Fetch connected devices - only when authenticated
+  const {
+    data: connectedDevices = [],
+    isLoading: isLoadingDevices,
+    error: devicesError,
+  } = useQuery({
+    queryKey: ['health-tracking', 'devices'],
+    queryFn: () => healthTrackingService.getConnectedDevices(),
+    staleTime: 60000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  // Fetch health goals - only when authenticated
+  const {
+    data: healthGoals = [],
+    isLoading: isLoadingGoals,
+    error: goalsError,
+  } = useQuery({
+    queryKey: ['health-tracking', 'goals'],
+    queryFn: () => healthTrackingService.getHealthGoals(),
+    staleTime: 60000,
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  // Fetch health insights - only when authenticated
+  const {
+    data: healthInsights,
+    isLoading: isLoadingInsights,
+    error: insightsError,
+  } = useQuery({
+    queryKey: ['health-tracking', 'insights'],
+    queryFn: () => healthTrackingService.getHealthInsights(),
+    staleTime: 300000, // 5 minutes
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  // Fetch goal progress - only when authenticated
+  const {
+    data: goalProgress = [],
+    isLoading: isLoadingProgress,
+    error: progressError,
+  } = useQuery({
+    queryKey: ['health-tracking', 'goals', 'progress'],
+    queryFn: () => healthTrackingService.getGoalProgress(),
+    staleTime: 60000,
+    refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
+    enabled: isAuthenticated, // Only fetch when authenticated
+  })
+
+  const isLoading = isLoadingHealthData || isLoadingDevices || isLoadingGoals || isLoadingInsights || isLoadingProgress
+  const error = (healthDataError || devicesError || goalsError || insightsError || progressError) as Error | null
+
+  // Update health data mutation
+  const updateHealthDataMutation = useMutation({
+    mutationFn: (data: UpdateHealthDataRequest) => healthTrackingService.updateHealthData(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'data'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals', 'progress'] })
     },
-    {
-      id: '2',
-      name: 'Fitbit',
-      type: 'fitbit',
-      connected: false,
-      lastSync: null,
+  })
+
+  // Connect device mutation
+  const connectDeviceMutation = useMutation({
+    mutationFn: (deviceId: string) => healthTrackingService.toggleDeviceConnection(deviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'devices'] })
     },
-    {
-      id: '3',
-      name: 'Garmin',
-      type: 'garmin',
-      connected: false,
-      lastSync: null,
+  })
+
+  // Disconnect device mutation
+  const disconnectDeviceMutation = useMutation({
+    mutationFn: (deviceId: string) => healthTrackingService.toggleDeviceConnection(deviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'devices'] })
     },
-    {
-      id: '4',
-      name: 'Samsung Health',
-      type: 'samsung_health',
-      connected: false,
-      lastSync: null,
+  })
+
+  // Sync health data mutation
+  const syncHealthDataMutation = useMutation({
+    mutationFn: (deviceId: string) => healthTrackingService.syncHealthData(deviceId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'data'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'devices'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals', 'progress'] })
     },
-  ]);
+  })
 
-  const [isLoading, setIsLoading] = useState(true);
+  // Create device mutation
+  const createDeviceMutation = useMutation({
+    mutationFn: (data: CreateDeviceRequest) => healthTrackingService.createConnectedDevice(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'devices'] })
+    },
+  })
 
-  useEffect(() => {
-    loadHealthData();
-    loadConnectedDevices();
-    setupPedometer();
-  }, []);
+  // Create goal mutation
+  const createGoalMutation = useMutation({
+    mutationFn: (data: CreateGoalRequest) => healthTrackingService.createHealthGoal(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals', 'progress'] })
+    },
+  })
 
-  const setupPedometer = async () => {
-    const isAvailable = await Pedometer.isAvailableAsync();
-    if (isAvailable && Platform.OS !== 'web') {
-      const end = new Date();
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
+  // Update goal mutation
+  const updateGoalMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateGoalRequest> }) =>
+      healthTrackingService.updateHealthGoal(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals', 'progress'] })
+    },
+  })
 
-      try {
-        const result = await Pedometer.getStepCountAsync(start, end);
-        if (result) {
-          updateHealthData({ 
-            steps: result.steps,
-            distance: (result.steps * 0.762) / 1000,
-            calories: Math.round(result.steps * 0.04),
-          });
-        }
-      } catch (error) {
-        console.log('Pedometer error:', error);
-      }
+  // Delete goal mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: (id: string) => healthTrackingService.deleteHealthGoal(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals'] })
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'goals', 'progress'] })
+    },
+  })
 
-      const subscription = Pedometer.watchStepCount((result) => {
-        updateHealthData({ 
-          steps: result.steps,
-          distance: (result.steps * 0.762) / 1000,
-          calories: Math.round(result.steps * 0.04),
-        });
-      });
+  // Mark insight read mutation
+  const markInsightReadMutation = useMutation({
+    mutationFn: (insightId: string) => healthTrackingService.markInsightRead(insightId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['health-tracking', 'insights'] })
+    },
+  })
 
-      return () => subscription && subscription.remove();
-    }
-  };
-
-  const loadHealthData = async () => {
+  const updateHealthData = async (data: UpdateHealthDataRequest) => {
     try {
-      const stored = await AsyncStorage.getItem(HEALTH_DATA_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setHealthData({
-          ...parsed,
-          lastSync: parsed.lastSync ? new Date(parsed.lastSync) : null,
-        });
+      const updated = await updateHealthDataMutation.mutateAsync(data)
+      return { success: true, data: updated }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to update health data',
       }
-    } catch (error) {
-      console.error('Error loading health data:', error);
-    } finally {
-      setIsLoading(false);
     }
-  };
-
-  const loadConnectedDevices = async () => {
-    try {
-      const stored = await AsyncStorage.getItem(CONNECTED_DEVICES_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setConnectedDevices(
-          parsed.map((device: ConnectedDevice) => ({
-            ...device,
-            lastSync: device.lastSync ? new Date(device.lastSync) : null,
-          }))
-        );
-      }
-    } catch (error) {
-      console.error('Error loading connected devices:', error);
-    }
-  };
-
-  const updateHealthData = async (data: Partial<HealthData>) => {
-    const updated = { ...healthData, ...data, lastSync: new Date() };
-    setHealthData(updated);
-    try {
-      await AsyncStorage.setItem(HEALTH_DATA_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving health data:', error);
-    }
-  };
+  }
 
   const connectDevice = async (deviceId: string) => {
-    const updated = connectedDevices.map((device) =>
-      device.id === deviceId
-        ? { ...device, connected: true, lastSync: new Date() }
-        : device
-    );
-    setConnectedDevices(updated);
     try {
-      await AsyncStorage.setItem(CONNECTED_DEVICES_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving connected devices:', error);
+      await connectDeviceMutation.mutateAsync(deviceId)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to connect device',
+      }
     }
-
-    if (Platform.OS === 'ios' && deviceId === '1') {
-      simulateAppleHealthSync();
-    } else if (Platform.OS === 'android' && deviceId === '1') {
-      simulateGoogleFitSync();
-    }
-  };
+  }
 
   const disconnectDevice = async (deviceId: string) => {
-    const updated = connectedDevices.map((device) =>
-      device.id === deviceId
-        ? { ...device, connected: false, lastSync: null }
-        : device
-    );
-    setConnectedDevices(updated);
     try {
-      await AsyncStorage.setItem(CONNECTED_DEVICES_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error saving connected devices:', error);
+      await disconnectDeviceMutation.mutateAsync(deviceId)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to disconnect device',
+      }
     }
-  };
+  }
 
-  const syncHealthData = async () => {
-    const connectedDevice = connectedDevices.find((d) => d.connected);
-    if (!connectedDevice) {
-      return;
+  const syncHealthData = async (deviceId: string) => {
+    try {
+      await syncHealthDataMutation.mutateAsync(deviceId)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to sync health data',
+      }
     }
-
-    if (Platform.OS === 'ios' && connectedDevice.type === 'apple_health') {
-      await simulateAppleHealthSync();
-    } else if (Platform.OS === 'android' && connectedDevice.type === 'google_fit') {
-      await simulateGoogleFitSync();
-    }
-
-    const updated = connectedDevices.map((device) =>
-      device.id === connectedDevice.id
-        ? { ...device, lastSync: new Date() }
-        : device
-    );
-    setConnectedDevices(updated);
-    await AsyncStorage.setItem(CONNECTED_DEVICES_KEY, JSON.stringify(updated));
-  };
-
-  const simulateAppleHealthSync = async () => {
-    await updateHealthData({
-      heartRate: 68 + Math.floor(Math.random() * 20),
-      sleep: 7 + Math.random() * 2,
-      bloodPressure: {
-        systolic: 115 + Math.floor(Math.random() * 15),
-        diastolic: 75 + Math.floor(Math.random() * 15),
-      },
-      weight: 70 + Math.random() * 5,
-    });
-  };
-
-  const simulateGoogleFitSync = async () => {
-    await updateHealthData({
-      heartRate: 70 + Math.floor(Math.random() * 20),
-      sleep: 7 + Math.random() * 2,
-      bloodPressure: {
-        systolic: 115 + Math.floor(Math.random() * 15),
-        diastolic: 75 + Math.floor(Math.random() * 15),
-      },
-      weight: 70 + Math.random() * 5,
-    });
-  };
+  }
 
   const addCustomDevice = async (deviceName: string) => {
-    const newDevice: ConnectedDevice = {
-      id: Date.now().toString(),
-      name: deviceName,
-      type: 'custom',
-      connected: false,
-      lastSync: null,
-    };
-    const updated = [...connectedDevices, newDevice];
-    setConnectedDevices(updated);
     try {
-      await AsyncStorage.setItem(CONNECTED_DEVICES_KEY, JSON.stringify(updated));
-    } catch (error) {
-      console.error('Error adding custom device:', error);
+      const data: CreateDeviceRequest = {
+        name: deviceName,
+        device_type: 'custom',
+      }
+      const device = await createDeviceMutation.mutateAsync(data)
+      return { success: true, device }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to add device',
+      }
     }
-  };
+  }
+
+  const createGoal = async (data: CreateGoalRequest) => {
+    try {
+      const goal = await createGoalMutation.mutateAsync(data)
+      return { success: true, goal }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to create goal',
+      }
+    }
+  }
+
+  const updateGoal = async (id: string, data: Partial<CreateGoalRequest>) => {
+    try {
+      const goal = await updateGoalMutation.mutateAsync({ id, data })
+      return { success: true, goal }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to update goal',
+      }
+    }
+  }
+
+  const deleteGoal = async (id: string) => {
+    try {
+      await deleteGoalMutation.mutateAsync(id)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to delete goal',
+      }
+    }
+  }
+
+  const markInsightRead = async (insightId: string) => {
+    try {
+      await markInsightReadMutation.mutateAsync(insightId)
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to mark insight as read',
+      }
+    }
+  }
+
+  const syncWithPlatform = async () => {
+    try {
+      let platformData: {
+        steps?: number
+        heartRate?: number
+        distance?: number
+        sleep?: number
+        weight?: number
+        calories?: number
+      } = {}
+
+      if (Platform.OS === 'android') {
+        // Sync with Google Fit
+        const isAvailable = await googleFitService.isAvailable()
+        if (isAvailable) {
+          platformData = await googleFitService.syncHealthData()
+        }
+      } else if (Platform.OS === 'ios') {
+        // Sync with Apple Health
+        const isAvailable = await appleHealthService.isAvailable()
+        if (isAvailable) {
+          platformData = await appleHealthService.syncHealthData()
+        }
+      }
+
+      // Update health data on backend
+      if (Object.keys(platformData).length > 0) {
+        await updateHealthDataMutation.mutateAsync({
+          ...platformData,
+          device_type: Platform.OS === 'android' ? 'google_fit' : 'apple_health',
+        })
+      }
+
+      return { success: true }
+    } catch (error: any) {
+      const apiError = error as ApiError
+      return {
+        success: false,
+        error: apiError.message || 'Failed to sync with platform',
+      }
+    }
+  }
 
   return {
-    healthData,
+    healthData: healthData || null,
     connectedDevices,
+    healthGoals,
+    healthInsights: healthInsights || null,
+    goalProgress,
     isLoading,
+    error,
     updateHealthData,
+    refetchHealthData: async () => {
+      await refetchHealthData()
+    },
     connectDevice,
     disconnectDevice,
     syncHealthData,
     addCustomDevice,
-  };
-});
+    createGoal,
+    updateGoal,
+    deleteGoal,
+    markInsightRead,
+    syncWithPlatform,
+  }
+})

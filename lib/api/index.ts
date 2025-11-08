@@ -1,0 +1,20 @@
+// Central export point for all API services
+export * from './client'
+export * from './auth'
+export * from './medication'
+export * from './health-records'
+export * from './medical-history'
+export * from './emergency-contacts'
+export * from './health-tracking'
+export * from './notifications'
+export * from './articles'
+
+export { authService } from './auth'
+export { medicationService } from './medication'
+export { healthRecordsService } from './health-records'
+export { medicalHistoryService } from './medical-history'
+export { emergencyContactsService } from './emergency-contacts'
+export { healthTrackingService } from './health-tracking'
+export { notificationsService } from './notifications'
+export { articlesService } from './articles'
+

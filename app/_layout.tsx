@@ -8,7 +8,6 @@ import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { trpc, trpcClient } from '../lib/trpc';
 import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { MedicationProvider } from '../contexts/MedicationContext';
 import { UserProvider } from '../contexts/UserContext';
@@ -17,6 +16,7 @@ import { HealthTrackerProvider } from '../contexts/HealthTrackerContext';
 import { EmergencyContactsProvider } from '../contexts/EmergencyContactsContext';
 import { HealthRecordsProvider } from '../contexts/HealthRecordsContext';
 import { MedicalHistoryProvider } from '../contexts/MedicalHistoryContext';
+import { NotificationsProvider } from '../contexts/NotificationsContext';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -107,26 +107,26 @@ export default function RootLayout() {
   console.log('✅ RootLayout rendering with providers');
 
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <AuthProvider>
-            <UserProvider>
-              <MedicationProvider>
-                <HealthTrackerProvider>
-                  <EmergencyContactsProvider>
-                    <HealthRecordsProvider>
-                      <MedicalHistoryProvider>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <AuthProvider>
+          <UserProvider>
+            <MedicationProvider>
+              <HealthTrackerProvider>
+                <EmergencyContactsProvider>
+                  <HealthRecordsProvider>
+                    <MedicalHistoryProvider>
+                      <NotificationsProvider>
                         <AppContent />
-                      </MedicalHistoryProvider>
-                    </HealthRecordsProvider>
-                  </EmergencyContactsProvider>
-                </HealthTrackerProvider>
-              </MedicationProvider>
-            </UserProvider>
-          </AuthProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    </trpc.Provider>
+                      </NotificationsProvider>
+                    </MedicalHistoryProvider>
+                  </HealthRecordsProvider>
+                </EmergencyContactsProvider>
+              </HealthTrackerProvider>
+            </MedicationProvider>
+          </UserProvider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
