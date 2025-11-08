@@ -2,6 +2,7 @@ from rest_framework import generics, status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
@@ -26,6 +27,7 @@ class MedicationListCreateView(generics.ListCreateAPIView):
     """
     List all medications for the authenticated user or create a new medication
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
@@ -79,6 +81,7 @@ class MedicationDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete a medication
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
@@ -94,6 +97,7 @@ class MedicationTakenListView(generics.ListCreateAPIView):
     """
     List medication taken records or create a new one
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     
     def get_serializer_class(self):
@@ -140,6 +144,7 @@ class MedicationTakenDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete a medication taken record
     """
+    authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = MedicationTakenUpdateSerializer
     
