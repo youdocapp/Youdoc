@@ -30,6 +30,7 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
     queryFn: () => healthRecordsService.getHealthRecords(),
     staleTime: 30000, // 30 seconds
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Create mutation

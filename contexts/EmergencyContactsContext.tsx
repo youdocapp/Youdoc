@@ -40,6 +40,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     },
     staleTime: 30000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch primary contact - only when authenticated

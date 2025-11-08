@@ -54,6 +54,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     staleTime: 30000, // 30 seconds
     refetchInterval: isAuthenticated ? 60000 : false, // Only refetch when authenticated
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch notification preferences - only when authenticated
@@ -66,6 +67,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryFn: () => notificationsService.getNotificationPreferences(),
     staleTime: 300000, // 5 minutes
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch device tokens - only when authenticated
@@ -78,6 +80,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryFn: () => notificationsService.getDeviceTokens(),
     staleTime: 300000, // 5 minutes
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch notification stats - only when authenticated
@@ -90,6 +93,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryFn: () => notificationsService.getNotificationStats(),
     staleTime: 60000, // 1 minute
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   const notifications = notificationsData?.results || []

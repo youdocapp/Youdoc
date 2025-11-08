@@ -93,7 +93,7 @@ export class MedicationService {
   }
 
   async createMedication(data: CreateMedicationRequest): Promise<Medication> {
-    return apiClient.post<Medication>('/medications/', data)
+    return apiClient.post<Medication>('/medications', data)
   }
 
   async updateMedication(id: string, data: UpdateMedicationRequest): Promise<Medication> {

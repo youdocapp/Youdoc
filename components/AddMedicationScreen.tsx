@@ -4,7 +4,6 @@ import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
-import { trpc } from '@/lib/trpc';
 
 type MedicationType = 'Pill' | 'Injection' | 'Drops' | 'Inhaler' | 'Cream' | 'Spray';
 type FrequencyType = 'Daily' | 'Weekly' | 'As needed';
@@ -48,8 +47,22 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const [showMultipleDatePicker, setShowMultipleDatePicker] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  const addMedicationMutation = trpc.medications.add.useMutation();
-  const utils = trpc.useUtils();
+  const { createMedication } = useMedication();
+
+  // Convert time from "8:00 AM" format to "08:00" format
+  const convertTimeTo24Hour = (time: string): string => {
+    const [timePart, period] = time.split(' ');
+    const [hours, minutes] = timePart.split(':');
+    let hour24 = parseInt(hours, 10);
+    
+    if (period === 'PM' && hour24 !== 12) {
+      hour24 += 12;
+    } else if (period === 'AM' && hour24 === 12) {
+      hour24 = 0;
+    }
+    
+    return `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+  };
 
   const handleSave = async () => {
     if (!name || !dosage) {
@@ -60,46 +73,33 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     setIsSaving(true);
 
     try {
-      const frequencyMap: Record<FrequencyType, 'daily' | 'weekly' | 'as_needed'> = {
-        'Daily': 'daily',
-        'Weekly': 'weekly',
-        'As needed': 'as_needed'
-      };
+      // Convert reminder times from "8:00 AM" to "08:00" format
+      const reminderTimes24Hour = reminderTimes.map(convertTimeTo24Hour);
 
-      await addMedicationMutation.mutateAsync({
+      const result = await createMedication({
         name,
-        dosage: `${dosage}${unit}`,
-        frequency: frequencyMap[frequency],
-        time: reminderTimes,
+        medication_type: medicationType,
+        dosage_amount: parseFloat(dosage),
+        dosage_unit: unit,
+        frequency: frequency,
         start_date: startDate.toISOString().split('T')[0],
         end_date: endDate ? endDate.toISOString().split('T')[0] : undefined,
         notes: notes || undefined,
         reminder_enabled: true,
+        reminder_times: reminderTimes24Hour,
       });
 
-      addMedication({
-        name,
-        dosage: `${dosage}${unit}`,
-        frequency,
-        time: reminderTimes,
-        startDate: startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
-        endDate: endDate ? endDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : undefined,
-        notes,
-        reminderEnabled: true,
-        taken: false,
-        dateAdded: startDate.toISOString().split('T')[0],
-        startDateObj: startDate,
-        endDateObj: endDate || undefined
-      });
-
-      await utils.medications.getAll.invalidate();
-
-      Alert.alert('Success', 'Medication added successfully', [
-        { text: 'OK', onPress: () => onSave ? onSave() : onBack() }
-      ]);
-    } catch (error) {
+      if (result.success) {
+        Alert.alert('Success', 'Medication added successfully', [
+          { text: 'OK', onPress: () => onSave ? onSave() : onBack() }
+        ]);
+      } else {
+        Alert.alert('Error', result.error || 'Failed to save medication. Please try again.');
+      }
+    } catch (error: any) {
       console.error('Error saving medication:', error);
-      Alert.alert('Error', 'Failed to save medication. Please try again.');
+      const errorMessage = error?.message || 'Failed to save medication. Please try again.';
+      Alert.alert('Error', errorMessage);
     } finally {
       setIsSaving(false);
     }

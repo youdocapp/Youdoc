@@ -38,3 +38,5 @@ yarn-error.*
 credentials.json
 gmail_token.json
 render_credentials.json
+
+.pyc

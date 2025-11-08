@@ -112,81 +112,81 @@ export class NotificationsService {
   }
 
   async getNotification(id: string): Promise<Notification> {
-    return apiClient.get<Notification>(`/notifications/${id}/`)
+    return apiClient.get<Notification>(`/notifications/${id}`)
   }
 
   async createNotification(data: CreateNotificationRequest): Promise<Notification> {
-    return apiClient.post<Notification>('/notifications/create/', data)
+    return apiClient.post<Notification>('/notifications/create', data)
   }
 
   async updateNotification(id: string, data: UpdateNotificationRequest): Promise<Notification> {
-    return apiClient.patch<Notification>(`/notifications/${id}/`, data)
+    return apiClient.patch<Notification>(`/notifications/${id}`, data)
   }
 
   async deleteNotification(id: string): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/notifications/${id}/`)
+    return apiClient.delete<{ message: string }>(`/notifications/${id}`)
   }
 
   async getNotificationStats(): Promise<NotificationStats> {
-    return apiClient.get<NotificationStats>('/notifications/stats/')
+    return apiClient.get<NotificationStats>('/notifications/stats')
   }
 
   async markNotificationRead(id: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`/notifications/${id}/read/`)
+    return apiClient.post<{ message: string }>(`/notifications/${id}/read`)
   }
 
   async markAllNotificationsRead(): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>('/notifications/mark-all-read/')
+    return apiClient.post<{ message: string }>('/notifications/mark-all-read')
   }
 
   async bulkAction(data: BulkActionRequest): Promise<BulkActionResponse> {
-    return apiClient.post<BulkActionResponse>('/notifications/bulk-action/', data)
+    return apiClient.post<BulkActionResponse>('/notifications/bulk-action', data)
   }
 
   // Preferences
   async getNotificationPreferences(): Promise<NotificationPreference[]> {
-    return apiClient.get<NotificationPreference[]>('/notifications/preferences/')
+    return apiClient.get<NotificationPreference[]>('/notifications/preferences')
   }
 
   async createNotificationPreference(data: CreatePreferenceRequest): Promise<NotificationPreference> {
-    return apiClient.post<NotificationPreference>('/notifications/preferences/', data)
+    return apiClient.post<NotificationPreference>('/notifications/preferences', data)
   }
 
   async updateNotificationPreferences(data: BulkUpdatePreferencesRequest): Promise<{ message: string }> {
-    return apiClient.put<{ message: string }>('/notifications/preferences/update/', data)
+    return apiClient.put<{ message: string }>('/notifications/preferences/update', data)
   }
 
   async getNotificationPreference(id: string): Promise<NotificationPreference> {
-    return apiClient.get<NotificationPreference>(`/notifications/preferences/${id}/`)
+    return apiClient.get<NotificationPreference>(`/notifications/preferences/${id}`)
   }
 
   async updateNotificationPreference(id: string, data: Partial<CreatePreferenceRequest>): Promise<NotificationPreference> {
-    return apiClient.patch<NotificationPreference>(`/notifications/preferences/${id}/`, data)
+    return apiClient.patch<NotificationPreference>(`/notifications/preferences/${id}`, data)
   }
 
   async deleteNotificationPreference(id: string): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/notifications/preferences/${id}/`)
+    return apiClient.delete<{ message: string }>(`/notifications/preferences/${id}`)
   }
 
   // Device Tokens
   async getDeviceTokens(): Promise<DeviceToken[]> {
-    return apiClient.get<DeviceToken[]>('/notifications/device-tokens/')
+    return apiClient.get<DeviceToken[]>('/notifications/device-tokens')
   }
 
   async registerDeviceToken(data: RegisterDeviceTokenRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>('/notifications/register-device/', data)
+    return apiClient.post<{ message: string }>('/notifications/register-device', data)
   }
 
   async getDeviceToken(id: string): Promise<DeviceToken> {
-    return apiClient.get<DeviceToken>(`/notifications/device-tokens/${id}/`)
+    return apiClient.get<DeviceToken>(`/notifications/device-tokens/${id}`)
   }
 
   async updateDeviceToken(id: string, data: Partial<DeviceToken>): Promise<DeviceToken> {
-    return apiClient.patch<DeviceToken>(`/notifications/device-tokens/${id}/`, data)
+    return apiClient.patch<DeviceToken>(`/notifications/device-tokens/${id}`, data)
   }
 
   async deleteDeviceToken(id: string): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/notifications/device-tokens/${id}/`)
+    return apiClient.delete<{ message: string }>(`/notifications/device-tokens/${id}`)
   }
 }
 

@@ -1,14 +1,12 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image, ActivityIndicator } from 'react-native';
+import React, { useMemo } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Moon, Flame, Heart, Footprints, TrendingUp } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
 import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
-import { articles } from '@/constants/articles';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useUser } from '@/contexts/UserContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
@@ -41,42 +39,25 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { medications, toggleMedicationTaken } = useMedication();
   const { healthData } = useHealthTracker();
   const router = useRouter();
-  const { user } = useUser();
-  const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [userName, setUserName] = useState<string>('');
-  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(true);
-
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        setIsLoadingProfile(true);
-        const storedProfile = await AsyncStorage.getItem('userProfile');
-        
-        if (storedProfile) {
-          const profile = JSON.parse(storedProfile);
-          if (profile.avatar_url) {
-            setProfileImage(profile.avatar_url);
-          }
-          if (profile.full_name) {
-            setUserName(profile.full_name);
-          }
-        }
-      } catch (error) {
-        console.error('Error loading profile:', error);
-      } finally {
-        setIsLoadingProfile(false);
-      }
-    };
-    
-    loadProfile();
-  }, []);
+  const { user } = useAuth();
+  
+  // Get user's full name from auth context
+  const firstName = user?.firstName || '';
+  const lastName = user?.lastName || '';
+  const userName = `${firstName} ${lastName}`.trim() || user?.email?.split('@')[0] || 'User';
+  const userInitials = firstName?.[0] && lastName?.[0] 
+    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+    : firstName?.[0] 
+      ? firstName[0].toUpperCase()
+      : user?.email?.[0]?.toUpperCase() || '👤';
 
   const todayMedications = useMemo(() => {
+    if (!medications || !Array.isArray(medications)) {
+      return [];
+    }
     const today = new Date().toISOString().split('T')[0];
     return medications.filter(med => med.dateAdded === today);
   }, [medications]);
-
-  const featuredArticles = useMemo(() => articles.slice(0, 3), []);
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -492,20 +473,14 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           <View style={styles.headerTop}>
             <View style={styles.userSection}>
               <View style={styles.avatar}>
-                {isLoadingProfile ? (
-                  <ActivityIndicator size="small" color="#FFFFFF" />
-                ) : profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-                ) : (
                   <Text style={styles.avatarText}>
-                    {userName ? userName.charAt(0).toUpperCase() : (user?.firstName ? user.firstName.charAt(0).toUpperCase() : '👤')}
+                  {userInitials}
                   </Text>
-                )}
               </View>
               <View>
                 <Text style={styles.welcomeText}>Welcome Back</Text>
                 <Text style={styles.userName}>
-                  {userName || user?.firstName || 'User'}
+                  {userName || 'User'}
                 </Text>
               </View>
             </View>
@@ -551,11 +526,71 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={styles.healthTrackerContainer}>
           <View style={styles.healthTrackerHeader}>
             <Text style={styles.sectionTitle}>Health Tracker</Text>
+            {healthData && (
             <TouchableOpacity onPress={() => router.push('/connected-devices')}>
               <Text style={styles.viewAllButton}>View All</Text>
             </TouchableOpacity>
+            )}
           </View>
 
+          {!healthData ? (
+            <View style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 16,
+              padding: 24,
+              alignItems: 'center',
+              marginTop: 16,
+              borderWidth: 1,
+              borderColor: '#E5E7EB',
+            }}>
+              <View style={{
+                width: 64,
+                height: 64,
+                borderRadius: 32,
+                backgroundColor: '#F3F4F6',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: 16,
+              }}>
+                <Heart size={32} color="#9CA3AF" />
+              </View>
+              <Text style={{
+                fontSize: 18,
+                fontWeight: '600',
+                color: '#111827',
+                marginBottom: 8,
+                textAlign: 'center',
+              }}>
+                Connect Health Device
+              </Text>
+              <Text style={{
+                fontSize: 14,
+                color: '#6B7280',
+                textAlign: 'center',
+                marginBottom: 20,
+                lineHeight: 20,
+              }}>
+                Connect Google Fit or Apple Health to track your heart rate, steps, sleep, and calories.
+              </Text>
+              <TouchableOpacity
+                onPress={() => router.push('/connected-devices')}
+                style={{
+                  backgroundColor: '#3B82F6',
+                  paddingHorizontal: 24,
+                  paddingVertical: 12,
+                  borderRadius: 8,
+                }}
+              >
+                <Text style={{
+                  color: '#FFFFFF',
+                  fontSize: 16,
+                  fontWeight: '600',
+                }}>
+                  Connect Device
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
           <View style={styles.healthTrackerGrid}>
             <View style={styles.trackerRow}>
               <View style={styles.trackerCardLarge}>
@@ -571,12 +606,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 <Text style={styles.trackerLabel}>Heart Rate</Text>
                 <View style={styles.trackerValueContainer}>
                   <Text style={styles.trackerValue}>
-                    {healthData.heartRate}
+                      {healthData?.heartRate ?? '--'}
                     <Text style={styles.trackerUnit}> bpm</Text>
                   </Text>
                 </View>
                 <View style={styles.trackerProgress}>
-                  <View style={[styles.trackerProgressFill, { width: `${(healthData.heartRate / 120) * 100}%`, backgroundColor: '#EF4444' }]} />
+                    <View style={[styles.trackerProgressFill, { width: `${((healthData?.heartRate ?? 0) / 120) * 100}%`, backgroundColor: '#EF4444' }]} />
                 </View>
                 <Text style={styles.trackerSubtext}>Resting: 60-100 bpm</Text>
               </View>
@@ -587,10 +622,10 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </View>
                 <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Steps</Text>
                 <Text style={[styles.trackerValue, { fontSize: 28 }]}>
-                  {healthData.steps.toLocaleString()}
+                    {(healthData?.steps ?? 0).toLocaleString()}
                 </Text>
                 <View style={[styles.trackerProgress, { marginTop: 12 }]}>
-                  <View style={[styles.trackerProgressFill, { width: `${(healthData.steps / 10000) * 100}%`, backgroundColor: '#3B82F6' }]} />
+                    <View style={[styles.trackerProgressFill, { width: `${((healthData?.steps ?? 0) / 10000) * 100}%`, backgroundColor: '#3B82F6' }]} />
                 </View>
                 <Text style={styles.trackerSubtext}>Goal: 10,000</Text>
               </View>
@@ -603,11 +638,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </View>
                 <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Sleep</Text>
                 <Text style={[styles.trackerValue, { fontSize: 28 }]}>
-                  {healthData.sleep.toFixed(1)}
+                    {(healthData?.sleep ?? 0).toFixed(1)}
                   <Text style={[styles.trackerUnit, { fontSize: 16 }]}> hrs</Text>
                 </Text>
                 <View style={[styles.trackerProgress, { marginTop: 12 }]}>
-                  <View style={[styles.trackerProgressFill, { width: `${(healthData.sleep / 8) * 100}%`, backgroundColor: '#6366F1' }]} />
+                    <View style={[styles.trackerProgressFill, { width: `${((healthData?.sleep ?? 0) / 8) * 100}%`, backgroundColor: '#6366F1' }]} />
                 </View>
                 <Text style={styles.trackerSubtext}>Goal: 8 hrs</Text>
               </View>
@@ -618,21 +653,22 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </View>
                 <Text style={[styles.trackerLabel, { marginTop: 12 }]}>Calories</Text>
                 <Text style={[styles.trackerValue, { fontSize: 28 }]}>
-                  {healthData.calories}
+                    {healthData?.calories ?? '--'}
                 </Text>
                 <View style={[styles.trackerProgress, { marginTop: 12 }]}>
-                  <View style={[styles.trackerProgressFill, { width: `${(healthData.calories / 2000) * 100}%`, backgroundColor: '#F97316' }]} />
+                    <View style={[styles.trackerProgressFill, { width: `${((healthData?.calories ?? 0) / 2000) * 100}%`, backgroundColor: '#F97316' }]} />
                 </View>
                 <Text style={styles.trackerSubtext}>Goal: 2,000</Text>
               </View>
             </View>
           </View>
+          )}
         </View>
 
         <View style={styles.medicationSection}>
           <Text style={styles.sectionTitle}>Daily Medication</Text>
           
-          {todayMedications.length === 0 ? (
+          {!todayMedications || todayMedications.length === 0 ? (
             <Text style={styles.emptyMedicationText}>No medications scheduled for today</Text>
           ) : (
             todayMedications.map((med) => (
@@ -644,7 +680,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                       {med.name}
                     </Text>
                     <Text style={med.taken ? styles.medicationDoseTaken : styles.medicationDose}>
-                      {med.dosage}
+                      {med.dosage_display || `${med.dosage_amount} ${med.dosage_unit}`}
                     </Text>
                     <Text style={med.taken ? styles.medicationTimeTaken : styles.medicationTime}>
                       Scheduled: {med.time.join(', ')}
@@ -664,50 +700,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
           )}
         </View>
 
-        <View style={styles.articlesSection}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Health Tips & Articles</Text>
-            <TouchableOpacity onPress={onHealthArticles}>
-              <Text style={styles.seeAllButton}>See All</Text>
-            </TouchableOpacity>
-          </View>
-
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {featuredArticles.map((article) => (
-              <TouchableOpacity
-                key={article.id}
-                style={styles.articleCard}
-                onPress={() => router.push(`/article-detail?articleId=${article.id}`)}
-              >
-                {article.image ? (
-                  <Image
-                    source={{ uri: article.image }}
-                    style={styles.articleImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.articleImage} />
-                )}
-                <View style={styles.articleContent}>
-                  <View style={styles.articleTag}>
-                    <View style={styles.categoryIcon} />
-                    <Text style={styles.articleTagText}>{article.category}</Text>
-                  </View>
-                  <Text style={styles.articleTitle} numberOfLines={2}>
-                    {article.title}
-                  </Text>
-                  <Text style={styles.articleDescription} numberOfLines={2}>
-                    {article.description}
-                  </Text>
-                  <View style={styles.articleFooter}>
-                    <Text style={styles.articleAuthor}>By {article.author}</Text>
-                    <Text style={styles.articleReadTime}>{article.readTime}</Text>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
 
       </ScrollView>
 

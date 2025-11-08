@@ -147,15 +147,80 @@ export interface TokenRefreshResponse {
 
 export class AuthService {
   async register(data: RegisterRequest): Promise<RegisterResponse> {
-    return apiClient.post<RegisterResponse>('/auth/register', data, false)
+    // Transform camelCase to snake_case for backend
+    const transformedData: any = {
+      first_name: data.firstName,
+      last_name: data.lastName,
+      email: data.email,
+      password: data.password,
+      password_confirm: data.passwordConfirm,
+      mobile: data.mobile,
+      date_of_birth: data.dateOfBirth,
+      gender: data.gender,
+      blood_type: data.bloodType,
+      height: data.height,
+      weight: data.weight,
+    }
+    
+    // Remove undefined fields
+    Object.keys(transformedData).forEach(key => {
+      if (transformedData[key] === undefined) {
+        delete transformedData[key]
+      }
+    })
+    
+    console.log('📤 Register data transformed:', {
+      original: { firstName: data.firstName, lastName: data.lastName, email: data.email },
+      transformed: { first_name: transformedData.first_name, last_name: transformedData.last_name, email: transformedData.email }
+    })
+    
+    return apiClient.post<RegisterResponse>('/auth/register', transformedData, false)
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    return apiClient.post<LoginResponse>('/auth/login', data, false)
+    const response = await apiClient.post<any>('/auth/login', data, false)
+    // Transform snake_case to camelCase for user object
+    if (response.user) {
+      response.user = {
+        publicId: response.user.public_id || response.user.publicId,
+        email: response.user.email,
+        firstName: response.user.first_name || response.user.firstName,
+        lastName: response.user.last_name || response.user.lastName,
+        mobile: response.user.mobile,
+        dateOfBirth: response.user.date_of_birth || response.user.dateOfBirth,
+        gender: response.user.gender,
+        bloodType: response.user.blood_type || response.user.bloodType,
+        height: response.user.height,
+        weight: response.user.weight,
+        isEmailVerified: response.user.is_email_verified || response.user.isEmailVerified,
+        createdAt: response.user.created_at || response.user.createdAt,
+        updatedAt: response.user.updated_at || response.user.updatedAt,
+      } as User
+    }
+    return response as LoginResponse
   }
 
   async verifyOTP(data: VerifyOTPRequest): Promise<VerifyOTPResponse> {
-    return apiClient.post<VerifyOTPResponse>('/auth/verify-otp', data, false)
+    const response = await apiClient.post<any>('/auth/verify-otp', data, false)
+    // Transform snake_case to camelCase for user object
+    if (response.user) {
+      response.user = {
+        publicId: response.user.public_id || response.user.publicId,
+        email: response.user.email,
+        firstName: response.user.first_name || response.user.firstName,
+        lastName: response.user.last_name || response.user.lastName,
+        mobile: response.user.mobile,
+        dateOfBirth: response.user.date_of_birth || response.user.dateOfBirth,
+        gender: response.user.gender,
+        bloodType: response.user.blood_type || response.user.bloodType,
+        height: response.user.height,
+        weight: response.user.weight,
+        isEmailVerified: response.user.is_email_verified || response.user.isEmailVerified,
+        createdAt: response.user.created_at || response.user.createdAt,
+        updatedAt: response.user.updated_at || response.user.updatedAt,
+      } as User
+    }
+    return response as VerifyOTPResponse
   }
 
   async resendVerification(data: ResendVerificationRequest): Promise<ResendVerificationResponse> {
@@ -163,11 +228,46 @@ export class AuthService {
   }
 
   async getProfile(): Promise<User> {
-    return apiClient.get<User>('/auth/profile')
+    const response = await apiClient.get<any>('/auth/profile')
+    // Transform snake_case to camelCase
+    return {
+      publicId: response.public_id || response.publicId,
+      email: response.email,
+      firstName: response.first_name || response.firstName,
+      lastName: response.last_name || response.lastName,
+      mobile: response.mobile,
+      dateOfBirth: response.date_of_birth || response.dateOfBirth,
+      gender: response.gender,
+      bloodType: response.blood_type || response.bloodType,
+      height: response.height,
+      weight: response.weight,
+      isEmailVerified: response.is_email_verified || response.isEmailVerified,
+      createdAt: response.created_at || response.createdAt,
+      updatedAt: response.updated_at || response.updatedAt,
+    } as User
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-    return apiClient.patch<UpdateProfileResponse>('/auth/profile', data)
+    const response = await apiClient.patch<any>('/auth/profile', data)
+    // Transform snake_case to camelCase for user object
+    if (response.user) {
+      response.user = {
+        publicId: response.user.public_id || response.user.publicId,
+        email: response.user.email,
+        firstName: response.user.first_name || response.user.firstName,
+        lastName: response.user.last_name || response.user.lastName,
+        mobile: response.user.mobile,
+        dateOfBirth: response.user.date_of_birth || response.user.dateOfBirth,
+        gender: response.user.gender,
+        bloodType: response.user.blood_type || response.user.bloodType,
+        height: response.user.height,
+        weight: response.user.weight,
+        isEmailVerified: response.user.is_email_verified || response.user.isEmailVerified,
+        createdAt: response.user.created_at || response.user.createdAt,
+        updatedAt: response.user.updated_at || response.user.updatedAt,
+      } as User
+    }
+    return response as UpdateProfileResponse
   }
 
   async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
@@ -191,7 +291,26 @@ export class AuthService {
   }
 
   async googleAuth(data: GoogleAuthRequest): Promise<GoogleAuthResponse> {
-    return apiClient.post<GoogleAuthResponse>('/auth/google', data, false)
+    const response = await apiClient.post<any>('/auth/google', data, false)
+    // Transform snake_case to camelCase for user object
+    if (response.user) {
+      response.user = {
+        publicId: response.user.public_id || response.user.publicId,
+        email: response.user.email,
+        firstName: response.user.first_name || response.user.firstName,
+        lastName: response.user.last_name || response.user.lastName,
+        mobile: response.user.mobile,
+        dateOfBirth: response.user.date_of_birth || response.user.dateOfBirth,
+        gender: response.user.gender,
+        bloodType: response.user.blood_type || response.user.bloodType,
+        height: response.user.height,
+        weight: response.user.weight,
+        isEmailVerified: response.user.is_email_verified || response.user.isEmailVerified,
+        createdAt: response.user.created_at || response.user.createdAt,
+        updatedAt: response.user.updated_at || response.user.updatedAt,
+      } as User
+    }
+    return response as GoogleAuthResponse
   }
 
   async refreshToken(data: TokenRefreshRequest): Promise<TokenRefreshResponse> {

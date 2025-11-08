@@ -156,7 +156,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             errorMessage.toLowerCase().includes('timeout') ||
             errorMessage.toLowerCase().includes('connection')) {
           Alert.alert(
-            'Connection Error',
+            'Connection Error', 
             'Unable to connect to the server. Please check your internet connection and try again.',
             [{ text: 'OK', style: 'default' }]
           );

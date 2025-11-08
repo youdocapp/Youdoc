@@ -121,70 +121,70 @@ export interface SyncResponse {
 
 export class HealthTrackingService {
   async getHealthData(): Promise<HealthData> {
-    return apiClient.get<HealthData>('/health-tracking/data/')
+    return apiClient.get<HealthData>('/health-tracking/data')
   }
 
   async updateHealthData(data: UpdateHealthDataRequest): Promise<HealthData> {
-    return apiClient.post<HealthData>('/health-tracking/data/update/', data)
+    return apiClient.post<HealthData>('/health-tracking/data/update', data)
   }
 
   async getConnectedDevices(): Promise<ConnectedDevice[]> {
-    return apiClient.get<ConnectedDevice[]>('/health-tracking/devices/')
+    return apiClient.get<ConnectedDevice[]>('/health-tracking/devices')
   }
 
   async createConnectedDevice(data: CreateDeviceRequest): Promise<ConnectedDevice> {
-    return apiClient.post<ConnectedDevice>('/health-tracking/devices/', data)
+    return apiClient.post<ConnectedDevice>('/health-tracking/devices', data)
   }
 
   async updateConnectedDevice(id: string, data: Partial<CreateDeviceRequest>): Promise<ConnectedDevice> {
-    return apiClient.patch<ConnectedDevice>(`/health-tracking/devices/${id}/`, data)
+    return apiClient.patch<ConnectedDevice>(`/health-tracking/devices/${id}`, data)
   }
 
   async deleteConnectedDevice(id: string): Promise<void> {
-    return apiClient.delete<void>(`/health-tracking/devices/${id}/`)
+    return apiClient.delete<void>(`/health-tracking/devices/${id}`)
   }
 
   async toggleDeviceConnection(deviceId: string): Promise<{ connected: boolean }> {
-    return apiClient.post<{ connected: boolean }>(`/health-tracking/devices/${deviceId}/toggle/`)
+    return apiClient.post<{ connected: boolean }>(`/health-tracking/devices/${deviceId}/toggle`)
   }
 
   async syncHealthData(deviceId: string): Promise<SyncResponse> {
-    return apiClient.post<SyncResponse>(`/health-tracking/devices/${deviceId}/sync/`)
+    return apiClient.post<SyncResponse>(`/health-tracking/devices/${deviceId}/sync`)
   }
 
   async getHealthGoals(): Promise<HealthGoal[]> {
-    return apiClient.get<HealthGoal[]>('/health-tracking/goals/')
+    return apiClient.get<HealthGoal[]>('/health-tracking/goals')
   }
 
   async createHealthGoal(data: CreateGoalRequest): Promise<HealthGoal> {
-    return apiClient.post<HealthGoal>('/health-tracking/goals/', data)
+    return apiClient.post<HealthGoal>('/health-tracking/goals', data)
   }
 
   async updateHealthGoal(id: string, data: Partial<CreateGoalRequest>): Promise<HealthGoal> {
-    return apiClient.patch<HealthGoal>(`/health-tracking/goals/${id}/`, data)
+    return apiClient.patch<HealthGoal>(`/health-tracking/goals/${id}`, data)
   }
 
   async deleteHealthGoal(id: string): Promise<void> {
-    return apiClient.delete<void>(`/health-tracking/goals/${id}/`)
+    return apiClient.delete<void>(`/health-tracking/goals/${id}`)
   }
 
   async getHealthTrends(metric: string, days: number = 30): Promise<HealthTrend[]> {
     const params = new URLSearchParams()
     params.append('metric', metric)
     params.append('days', String(days))
-    return apiClient.get<HealthTrend[]>(`/health-tracking/trends/?${params.toString()}`)
+    return apiClient.get<HealthTrend[]>(`/health-tracking/trends?${params.toString()}`)
   }
 
   async getHealthInsights(): Promise<HealthInsightsResponse> {
-    return apiClient.get<HealthInsightsResponse>('/health-tracking/insights/')
+    return apiClient.get<HealthInsightsResponse>('/health-tracking/insights')
   }
 
   async markInsightRead(insightId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`/health-tracking/insights/${insightId}/read/`)
+    return apiClient.post<{ message: string }>(`/health-tracking/insights/${insightId}/read`)
   }
 
   async getGoalProgress(): Promise<GoalProgress[]> {
-    return apiClient.get<GoalProgress[]>('/health-tracking/goals/progress/')
+    return apiClient.get<GoalProgress[]>('/health-tracking/goals/progress')
   }
 
   async getSyncHistory(deviceId?: string): Promise<SyncHistory[]> {

@@ -37,5 +37,5 @@
     "dist",
     "web-build"
   ],
-  "extends": "expo/tsconfig.base"
+  "extends": "expo/tsconfig.base.json"
 }

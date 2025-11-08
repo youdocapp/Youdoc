@@ -53,6 +53,11 @@ export class ApiClient {
     return headers
   }
 
+  private async hasToken(): Promise<boolean> {
+    const token = await AsyncStorage.getItem('accessToken')
+    return !!token
+  }
+
   private async refreshAccessToken(): Promise<string | null> {
     if (this.isRefreshing && this.refreshPromise) {
       return this.refreshPromise
@@ -107,13 +112,33 @@ export class ApiClient {
     }
 
     if (!response.ok) {
-      // Log full error details for debugging
-      console.error('❌ API Error Response:', {
-        status: response.status,
-        statusText: response.statusText,
-        url: response.url,
-        data: data,
-      })
+      // Handle 404 errors more gracefully - don't log as errors for optional endpoints
+      if (response.status === 404) {
+        // For 404s, return empty data instead of throwing error
+        // This allows optional endpoints to fail silently
+        return {} as T
+      }
+      
+      // Handle 401 errors more gracefully when not authenticated
+      // This prevents console spam when user is not logged in
+      if (response.status === 401) {
+        const hasToken = await this.hasToken()
+        if (!hasToken) {
+          // No token available, return empty data (user is not authenticated)
+          // This allows queries to fail silently when disabled by isAuthenticated
+          return {} as T
+        }
+      }
+      
+      // Log full error details for debugging (only for non-404/401 errors, or 401 with token)
+      if (response.status !== 404 && response.status !== 401) {
+        console.error('❌ API Error Response:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          data: data,
+        })
+      }
       
       const error: ApiError = {
         error: true,
@@ -187,28 +212,34 @@ export class ApiClient {
 
     // Handle 401 Unauthorized - try to refresh token once
     if (response.status === 401 && requiresAuth && retryCount === 0) {
-      const newAccessToken = await this.refreshAccessToken()
+      const hasToken = await this.hasToken()
       
-      if (newAccessToken) {
-        // Retry with new token
-        const newHeaders = { ...config.headers }
-        newHeaders['Authorization'] = `Bearer ${newAccessToken}`
+      // Only try to refresh if we have a token (might be expired)
+      if (hasToken) {
+        const newAccessToken = await this.refreshAccessToken()
         
-        const retryConfig: RequestConfig = {
-          ...config,
-          headers: newHeaders,
-        }
-        
-        try {
-          response = await fetch(url, retryConfig)
-        } catch (error) {
-          throw {
-            error: true,
-            message: 'Network error. Please check your connection.',
-            details: {},
-          } as ApiError
+        if (newAccessToken) {
+          // Retry with new token
+          const newHeaders = { ...config.headers }
+          newHeaders['Authorization'] = `Bearer ${newAccessToken}`
+          
+          const retryConfig: RequestConfig = {
+            ...config,
+            headers: newHeaders,
+          }
+          
+          try {
+            response = await fetch(url, retryConfig)
+          } catch (error) {
+            throw {
+              error: true,
+              message: 'Network error. Please check your connection.',
+              details: {},
+            } as ApiError
+          }
         }
       }
+      // If no token, let handleResponse handle it gracefully
     }
 
     return this.handleResponse<T>(response)

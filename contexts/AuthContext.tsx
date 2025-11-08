@@ -140,8 +140,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async (data: LoginRequest) => {
     try {
       const response = await authService.login(data)
+      console.log('📥 Login response:', response)
       if (response.success) {
         await storeAuth(response.access, response.refresh, response.user)
+        // Fetch fresh profile after login to ensure we have all data
+        try {
+          const profile = await authService.getProfile()
+          console.log('📥 Profile after login:', profile)
+          setUser(profile)
+          await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile))
+        } catch (profileError) {
+          console.error('⚠️ Failed to fetch profile after login, using login response user:', profileError)
+        }
         return { success: true, message: response.message }
       }
       return { success: false, message: response.message || 'Login failed' }

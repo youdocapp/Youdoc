@@ -57,6 +57,7 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     staleTime: 60000, // 1 minute
     refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch connected devices - only when authenticated
@@ -69,6 +70,7 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryFn: () => healthTrackingService.getConnectedDevices(),
     staleTime: 60000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch health goals - only when authenticated
@@ -81,6 +83,7 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryFn: () => healthTrackingService.getHealthGoals(),
     staleTime: 60000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch health insights - only when authenticated
@@ -93,6 +96,7 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryFn: () => healthTrackingService.getHealthInsights(),
     staleTime: 300000, // 5 minutes
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch goal progress - only when authenticated
@@ -106,6 +110,7 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     staleTime: 60000,
     refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   const isLoading = isLoadingHealthData || isLoadingDevices || isLoadingGoals || isLoadingInsights || isLoadingProgress

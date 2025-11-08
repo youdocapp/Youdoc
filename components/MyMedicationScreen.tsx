@@ -37,6 +37,23 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const days = [];
     
+    if (!medications || !Array.isArray(medications)) {
+      // Return days without medication data if medications is not available
+      for (let day = 1; day <= daysInMonth; day++) {
+        const date = new Date(year, month, day);
+        const dateString = date.toISOString().split('T')[0];
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+        
+        days.push({
+          day,
+          weekday,
+          dateString,
+          dots: 0
+        });
+      }
+      return days;
+    }
+    
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
       const dateString = date.toISOString().split('T')[0];
@@ -59,6 +76,9 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const dates = useMemo(() => getDaysInMonth(selectedMonth, selectedYear), [selectedMonth, selectedYear, medications]);
   
   const filteredMedications = useMemo(() => {
+    if (!medications || !Array.isArray(medications)) {
+      return [];
+    }
     return medications.filter(med => med.dateAdded === selectedDate);
   }, [medications, selectedDate]);
   

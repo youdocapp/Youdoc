@@ -46,6 +46,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
     },
     staleTime: 30000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch surgeries - only when authenticated
@@ -61,6 +62,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
     },
     staleTime: 30000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Fetch allergies - only when authenticated
@@ -76,6 +78,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
     },
     staleTime: 30000,
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   const conditions = conditionsData || []

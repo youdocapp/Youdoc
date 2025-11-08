@@ -41,6 +41,7 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     queryFn: () => medicationService.getMedications(),
     staleTime: 30000, // 30 seconds
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on error
   })
 
   // Fetch today's medications - only when authenticated
@@ -55,6 +56,7 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     staleTime: 60000, // 1 minute
     refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
     enabled: isAuthenticated, // Only fetch when authenticated
+    retry: false, // Don't retry on 404
   })
 
   // Create medication mutation

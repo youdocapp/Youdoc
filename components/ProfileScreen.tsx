@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Image, Alert, ActivityIndicator } from 'react-native';
-import { ChevronLeft, User, Camera, Mail, Phone, Calendar, Smile, Heart, Hand, Target, MapPin, FileText, Clock, Settings } from 'lucide-react-native';
-import * as ImagePicker from 'expo-image-picker';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Alert, ActivityIndicator } from 'react-native';
+import { ChevronLeft, User, Mail, Phone, Calendar, Smile, Heart, Hand, Target, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useUser } from '@/contexts/UserContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { authService } from '@/lib/api';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -31,95 +31,109 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   onProfile
 }) => {
   const { colors } = useTheme();
-  const { user, setUser } = useUser();
+  const { user, updateProfile, isAuthenticated } = useAuth();
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [name, setName] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
-  const [phone, setPhone] = useState<string>('');
-  const [dateOfBirth, setDateOfBirth] = useState<Date>(new Date(1990, 4, 15));
+  const [mobile, setMobile] = useState<string>('');
+  const [dateOfBirth, setDateOfBirth] = useState<Date | null>(null);
   const [showGenderModal, setShowGenderModal] = useState<boolean>(false);
   const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
-  const [gender, setGender] = useState<string>('Male');
-  const [bloodType, setBloodType] = useState<string>('O+');
-  const [height, setHeight] = useState<string>('5\'7"');
-  const [weight, setWeight] = useState<string>('165 lbs');
-  const [address, setAddress] = useState<string>('');
-  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [gender, setGender] = useState<string>('');
+  const [bloodType, setBloodType] = useState<string>('');
+  const [height, setHeight] = useState<number | null>(null);
+  const [weight, setWeight] = useState<number | null>(null);
   const [showBloodTypeModal, setShowBloodTypeModal] = useState<boolean>(false);
   const [showHeightModal, setShowHeightModal] = useState<boolean>(false);
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  useEffect(() => {
-    const loadProfile = async () => {
+  // Fetch profile from API
+  const { data: profile, isLoading, refetch, error: profileError } = useQuery({
+    queryKey: ['profile'],
+    queryFn: async () => {
       try {
-        setIsLoading(true);
-        const storedProfile = await AsyncStorage.getItem('userProfile');
-        
-        if (storedProfile) {
-          const profile = JSON.parse(storedProfile);
-          setName(profile.full_name || '');
-          setEmail(user?.email || '');
-          setPhone(profile.phone_number || '');
-          if (profile.date_of_birth) {
-            setDateOfBirth(new Date(profile.date_of_birth));
-          }
-          setGender(profile.gender || 'Male');
-          setBloodType(profile.blood_type || 'O+');
-          setHeight(profile.height || '5\'7"');
-          setWeight(profile.weight || '165 lbs');
-          setAddress(profile.address || '');
-          if (profile.avatar_url) {
-            setProfileImage(profile.avatar_url);
-          }
-        } else {
-          setEmail(user?.email || '');
-        }
+        const data = await authService.getProfile();
+        console.log('📥 Profile data loaded from API:', data);
+        return data;
       } catch (error) {
-        console.error('Error loading profile:', error);
-      } finally {
-        setIsLoading(false);
+        console.error('❌ Error fetching profile:', error);
+        throw error;
       }
-    };
-    
-    loadProfile();
-  }, [user]);
+    },
+    enabled: isAuthenticated,
+    retry: false,
+  });
+
+  // Update local state when profile data is loaded
+  useEffect(() => {
+    if (profile) {
+      console.log('📥 Setting profile data:', {
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        mobile: profile.mobile,
+      });
+      // Profile is already transformed to camelCase by authService.getProfile()
+      setFirstName(profile.firstName || '');
+      setLastName(profile.lastName || '');
+      setEmail(profile.email || '');
+      setMobile(profile.mobile || '');
+      if (profile.dateOfBirth) {
+        setDateOfBirth(new Date(profile.dateOfBirth));
+      }
+      setGender(profile.gender || '');
+      setBloodType(profile.bloodType || '');
+      setHeight(profile.height || null);
+      setWeight(profile.weight || null);
+    } else if (user) {
+      // Fallback to user from context if profile not yet loaded
+      console.log('📥 Using user from context:', {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        mobile: user.mobile,
+      });
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+      setEmail(user.email || '');
+      setMobile(user.mobile || '');
+      if (user.dateOfBirth) {
+        setDateOfBirth(new Date(user.dateOfBirth));
+      }
+      setGender(user.gender || '');
+      setBloodType(user.bloodType || '');
+      setHeight(user.height || null);
+      setWeight(user.weight || null);
+    }
+  }, [profile, user]);
 
   const handleSave = async () => {
     try {
       setIsSaving(true);
       console.log('💾 Starting profile save...');
       
-      const profileData = {
-        full_name: name,
-        date_of_birth: dateOfBirth.toISOString().split('T')[0],
-        gender: gender,
-        phone_number: phone,
-        address: address,
-        height: height,
-        weight: weight,
-        blood_type: bloodType,
-        avatar_url: profileImage || undefined,
-      };
+      const profileData: any = {};
+      if (firstName) profileData.firstName = firstName;
+      if (lastName) profileData.lastName = lastName;
+      if (mobile) profileData.mobile = mobile;
+      if (dateOfBirth) profileData.dateOfBirth = dateOfBirth.toISOString().split('T')[0];
+      if (gender) profileData.gender = gender.toLowerCase();
+      if (bloodType) profileData.bloodType = bloodType;
+      if (height !== null) profileData.height = height;
+      if (weight !== null) profileData.weight = weight;
       
-      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
+      const result = await updateProfile(profileData);
       
-      if (user) {
-        setUser({
-          ...user,
-          firstName: name.split(' ')[0] || '',
-          lastName: name.split(' ').slice(1).join(' ') || '',
-          dateOfBirth: dateOfBirth.toISOString().split('T')[0],
-          gender: gender,
-          bloodType: bloodType,
-          height: height,
-          weight: weight,
-        });
-      }
-      
-      Alert.alert('Success', 'Profile updated successfully');
+      if (result.success) {
+        Alert.alert('Success', result.message || 'Profile updated successfully');
       setIsEditing(false);
+        // Refetch profile to get updated data
+        await refetch();
+      } else {
+        Alert.alert('Error', result.error || result.message || 'Failed to update profile. Please try again.');
+      }
     } catch (error: any) {
       console.error('❌ Error saving profile:', error);
       const errorMessage = error?.message || 'Failed to update profile. Please try again.';
@@ -129,35 +143,15 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     }
   };
 
-  const pickImage = async () => {
-    if (!isEditing) return;
-    
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (permissionResult.granted === false) {
-      Alert.alert('Permission Required', 'Permission to access camera roll is required!');
-      return;
-    }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
-
-    if (!result.canceled && result.assets[0]) {
-      setProfileImage(result.assets[0].uri);
-    }
-  };
-
-  const DatePickerModal = ({ visible, onClose, onSelect, currentDate }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date }) => {
+  const DatePickerModal = ({ visible, onClose, onSelect, currentDate }: { visible: boolean; onClose: () => void; onSelect: (date: Date) => void; currentDate: Date | null }) => {
     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const currentYear = new Date().getFullYear();
+    const defaultDate = currentDate || new Date(1990, 0, 1);
     
-    const [selectedDay, setSelectedDay] = useState<number>(currentDate.getDate());
-    const [selectedMonth, setSelectedMonth] = useState<string>(currentDate.toLocaleDateString('en-US', { month: 'long' }));
-    const [selectedYear, setSelectedYear] = useState<number>(currentDate.getFullYear());
+    const [selectedDay, setSelectedDay] = useState<number>(defaultDate.getDate());
+    const [selectedMonth, setSelectedMonth] = useState<string>(defaultDate.toLocaleDateString('en-US', { month: 'long' }));
+    const [selectedYear, setSelectedYear] = useState<number>(defaultDate.getFullYear());
 
     const dayScrollRef = React.useRef<ScrollView>(null);
     const monthScrollRef = React.useRef<ScrollView>(null);
@@ -172,15 +166,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
     React.useEffect(() => {
       if (visible) {
-        setSelectedDay(currentDate.getDate());
-        setSelectedMonth(currentDate.toLocaleDateString('en-US', { month: 'long' }));
-        setSelectedYear(currentDate.getFullYear());
+        const date = currentDate || new Date(1990, 0, 1);
+        setSelectedDay(date.getDate());
+        setSelectedMonth(date.toLocaleDateString('en-US', { month: 'long' }));
+        setSelectedYear(date.getFullYear());
         
         setTimeout(() => {
-          const monthIdx = months.indexOf(currentDate.toLocaleDateString('en-US', { month: 'long' }));
-          const yearIdx = years.indexOf(currentDate.getFullYear());
+          const monthIdx = months.indexOf(date.toLocaleDateString('en-US', { month: 'long' }));
+          const yearIdx = years.indexOf(date.getFullYear());
           
-          dayScrollRef.current?.scrollTo({ y: (currentDate.getDate() - 1) * ITEM_HEIGHT, animated: false });
+          dayScrollRef.current?.scrollTo({ y: (date.getDate() - 1) * ITEM_HEIGHT, animated: false });
           monthScrollRef.current?.scrollTo({ y: monthIdx * ITEM_HEIGHT, animated: false });
           yearScrollRef.current?.scrollTo({ y: yearIdx * ITEM_HEIGHT, animated: false });
         }, 100);
@@ -1030,23 +1025,20 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <TouchableOpacity onPress={pickImage} disabled={!isEditing}>
-              <View style={styles.avatar}>
-                {profileImage ? (
-                  <Image source={{ uri: profileImage }} style={styles.avatarImage} />
-                ) : (
-                  <Text style={styles.avatarText}>JD</Text>
-                )}
-              </View>
-              {isEditing && (
-                <View style={styles.cameraButton}>
-                  <Camera size={16} color="#FFFFFF" />
-                </View>
-              )}
-            </TouchableOpacity>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {firstName?.[0] && lastName?.[0] 
+                  ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+                  : firstName?.[0] 
+                    ? firstName[0].toUpperCase()
+                    : email?.[0]?.toUpperCase() || '👤'}
+              </Text>
+            </View>
           </View>
-          <Text style={styles.name}>{name}</Text>
-          <Text style={styles.email}>{email}</Text>
+          <Text style={styles.name}>
+            {`${firstName} ${lastName}`.trim() || email?.split('@')[0] || 'User'}
+          </Text>
+          <Text style={styles.email}>{email || ''}</Text>
         </View>
 
         <View style={styles.section}>
@@ -1056,17 +1048,37 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <View style={[styles.infoIcon, { backgroundColor: '#DBEAFE' }]}>
                 <User size={20} color="#4F7FFF" />
               </View>
-              <Text style={styles.infoLabel}>Name</Text>
+              <Text style={styles.infoLabel}>First Name</Text>
               {isEditing ? (
                 <TextInput
                   style={styles.infoInput}
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter name"
+                  value={firstName}
+                  onChangeText={setFirstName}
+                  placeholder="Enter first name"
                   placeholderTextColor={colors.textSecondary}
                 />
               ) : (
-                <Text style={styles.infoValue}>{name}</Text>
+                <Text style={styles.infoValue}>{firstName || 'Not set'}</Text>
+              )}
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.infoRow}>
+              <View style={[styles.infoIcon, { backgroundColor: '#DBEAFE' }]}>
+                <User size={20} color="#4F7FFF" />
+              </View>
+              <Text style={styles.infoLabel}>Last Name</Text>
+              {isEditing ? (
+                <TextInput
+                  style={styles.infoInput}
+                  value={lastName}
+                  onChangeText={setLastName}
+                  placeholder="Enter last name"
+                  placeholderTextColor={colors.textSecondary}
+                />
+              ) : (
+                <Text style={styles.infoValue}>{lastName || 'Not set'}</Text>
               )}
             </View>
 
@@ -1097,18 +1109,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
               <View style={[styles.infoIcon, { backgroundColor: '#FEF3C7' }]}>
                 <Phone size={20} color="#F59E0B" />
               </View>
-              <Text style={styles.infoLabel}>Phone</Text>
+              <Text style={styles.infoLabel}>Mobile</Text>
               {isEditing ? (
                 <TextInput
                   style={styles.infoInput}
-                  value={phone}
-                  onChangeText={setPhone}
-                  placeholder="Enter phone"
+                  value={mobile}
+                  onChangeText={setMobile}
+                  placeholder="Enter mobile number"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="phone-pad"
                 />
               ) : (
-                <Text style={styles.infoValue}>{phone}</Text>
+                <Text style={styles.infoValue}>{mobile || 'Not set'}</Text>
               )}
             </View>
 
@@ -1123,7 +1135,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <Calendar size={20} color="#6366F1" />
               </View>
               <Text style={styles.infoLabel}>Date of Birth</Text>
-              <Text style={styles.infoValue}>{dateOfBirth.toLocaleDateString('en-US')}</Text>
+              <Text style={styles.infoValue}>{dateOfBirth ? dateOfBirth.toLocaleDateString('en-US') : 'Not set'}</Text>
               {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
 
@@ -1171,7 +1183,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <Hand size={20} color="#3B82F6" />
               </View>
               <Text style={styles.infoLabel}>Height</Text>
-              <Text style={styles.infoValue}>{height}</Text>
+              <Text style={styles.infoValue}>{height ? `${height} cm` : 'Not set'}</Text>
               {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
 
@@ -1186,32 +1198,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
                 <Target size={20} color="#10B981" />
               </View>
               <Text style={styles.infoLabel}>Weight</Text>
-              <Text style={styles.infoValue}>{weight}</Text>
+              <Text style={styles.infoValue}>{weight ? `${weight} kg` : 'Not set'}</Text>
               {isEditing && <ChevronLeft size={20} color="#9CA3AF" style={{ transform: [{ rotate: '180deg' }] }} />}
             </TouchableOpacity>
 
-            <View style={styles.divider} />
-
-            <View style={styles.infoRow}>
-              <View style={[styles.infoIcon, { backgroundColor: '#F3F4F6' }]}>
-                <MapPin size={20} color="#6B7280" />
-              </View>
-              <Text style={styles.infoLabel}>Address</Text>
-              {isEditing ? (
-                <TextInput
-                  style={[styles.infoInput, { flex: 1 }]}
-                  value={address}
-                  onChangeText={setAddress}
-                  placeholder="Enter address"
-                  placeholderTextColor={colors.textSecondary}
-                  multiline
-                />
-              ) : (
-                <Text style={[styles.infoValue, { flex: 1, textAlign: 'right' }]} numberOfLines={1}>
-                  {address}
-                </Text>
-              )}
-            </View>
           </View>
         </View>
 
@@ -1320,7 +1310,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
             setDateOfBirth(date);
             setShowDatePicker(false);
           }}
-          currentDate={dateOfBirth}
+          currentDate={dateOfBirth || new Date(1990, 0, 1)}
         />
       )}
 
@@ -1329,10 +1319,18 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           visible={true}
           onClose={() => setShowHeightModal(false)}
           onSelect={(newHeight) => {
-            setHeight(newHeight);
+            // Convert from "5'7"" format to cm
+            const match = newHeight.match(/(\d+)'(\d+)"/);
+            if (match) {
+              const feet = parseInt(match[1]);
+              const inches = parseInt(match[2]);
+              const totalInches = feet * 12 + inches;
+              const cm = Math.round(totalInches * 2.54);
+              setHeight(cm);
+            }
             setShowHeightModal(false);
           }}
-          currentHeight={height}
+          currentHeight={height ? `${Math.floor(height / 30.48)}'${Math.round((height % 30.48) / 2.54)}"` : "5'7\""}
         />
       )}
 
@@ -1341,10 +1339,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
           visible={true}
           onClose={() => setShowWeightModal(false)}
           onSelect={(newWeight) => {
-            setWeight(newWeight);
+            // Convert from "165 lbs" format to kg
+            const match = newWeight.match(/(\d+)/);
+            if (match) {
+              const lbs = parseInt(match[1]);
+              const kg = Math.round(lbs * 0.453592);
+              setWeight(kg);
+            }
             setShowWeightModal(false);
           }}
-          currentWeight={weight}
+          currentWeight={weight ? `${Math.round(weight / 0.453592)} lbs` : '165 lbs'}
         />
       )}
 
