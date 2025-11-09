@@ -61,7 +61,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('rest_framework.urls')),
     path('auth/', include('authentication.urls')),
-    path('medications', include('medication.urls')),
+    path('medications/', include('medication.urls')),
     path('health-records/', include('health_records.urls')),
     path('medical-history/', include('medical_history.urls')),
     path('emergency-contacts/', include('emergency_contacts.urls')),
