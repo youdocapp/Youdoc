@@ -20,6 +20,16 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['date', 'created_at', 'title']
     ordering = ['-date', '-created_at']
     
+    def dispatch(self, request, *args, **kwargs):
+        """Debug logging for request headers"""
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'🔍 Health Records {request.method} Request Headers:')
+        logger.info(f'  Authorization: {request.headers.get("Authorization", "NOT FOUND")}')
+        logger.info(f'  HTTP_AUTHORIZATION: {request.META.get("HTTP_AUTHORIZATION", "NOT FOUND")}')
+        logger.info(f'  All headers: {dict(request.headers)}')
+        return super().dispatch(request, *args, **kwargs)
+    
     def get_queryset(self):
         """Return health records for the authenticated user"""
         queryset = HealthRecord.objects.filter(user=self.request.user).select_related('user')
