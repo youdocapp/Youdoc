@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && gunicorn youdoc_backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --threads 2
+web: python manage.py reset_database --confirm && python manage.py migrate && python manage.py collectstatic --noinput && gunicorn youdoc_backend.wsgi:application --bind 0.0.0.0:$PORT --timeout 120 --workers 2 --threads 2
