@@ -47,19 +47,20 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     
     def create(self, request, *args, **kwargs):
         """Override create to return proper response"""
-        # Ensure we're handling POST requests
-        if request.method != 'POST':
-            return super().list(request, *args, **kwargs)
-        
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
-    def post(self, request, *args, **kwargs):
-        """Explicitly handle POST requests"""
-        return self.create(request, *args, **kwargs)
+        try:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            headers = self.get_success_headers(serializer.data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            traceback.print_exc()
+            return Response(
+                {'error': str(e), 'detail': 'Failed to create health record'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class HealthRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
