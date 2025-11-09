@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
+from datetime import datetime
 from .models import (
     Medication, 
     MedicationReminder, 
@@ -8,6 +9,42 @@ from .models import (
     FrequencyType,
     DosageUnit
 )
+
+
+class FlexibleTimeField(serializers.TimeField):
+    """
+    Custom time field that accepts multiple time formats
+    Handles: 'HH:MM', 'HH:MM:SS', 'HH:MM AM/PM', etc.
+    """
+    def to_internal_value(self, data):
+        """Parse time string in various formats"""
+        if isinstance(data, str):
+            # Try different time formats
+            time_formats = [
+                '%H:%M:%S',      # 08:00:00
+                '%H:%M',         # 08:00
+                '%I:%M:%S %p',   # 08:00:00 AM
+                '%I:%M %p',      # 08:00 AM
+                '%H:%M:%S.%f',   # 08:00:00.000000
+            ]
+            
+            for fmt in time_formats:
+                try:
+                    # Use a dummy date to parse time-only strings
+                    dt = datetime.strptime(f"2000-01-01 {data}", f"%Y-%m-%d {fmt}")
+                    return dt.time()
+                except ValueError:
+                    continue
+            
+            # If all formats fail, try default TimeField parsing
+            try:
+                return super().to_internal_value(data)
+            except ValueError:
+                raise serializers.ValidationError(
+                    f"Time must be in format 'HH:MM' or 'HH:MM:SS'. Got: {data}"
+                )
+        
+        return super().to_internal_value(data)
 
 
 class MedicationReminderSerializer(serializers.ModelSerializer):
@@ -141,10 +178,10 @@ class MedicationCreateSerializer(serializers.ModelSerializer):
     Serializer for creating medications with reminder times
     """
     reminder_times = serializers.ListField(
-        child=serializers.TimeField(),
+        child=FlexibleTimeField(),
         write_only=True,
         required=False,
-        help_text="List of reminder times (e.g., ['08:00', '12:00'])"
+        help_text="List of reminder times (e.g., ['08:00', '12:00', '08:00 AM'])"
     )
     
     class Meta:
@@ -177,10 +214,10 @@ class MedicationUpdateSerializer(serializers.ModelSerializer):
     Serializer for updating medications
     """
     reminder_times = serializers.ListField(
-        child=serializers.TimeField(),
+        child=FlexibleTimeField(),
         write_only=True,
         required=False,
-        help_text="List of reminder times (e.g., ['08:00', '12:00'])"
+        help_text="List of reminder times (e.g., ['08:00', '12:00', '08:00 AM'])"
     )
     
     class Meta:

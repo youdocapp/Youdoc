@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.core.validators import MinValueValidator
+from decimal import Decimal
 import uuid
 import secrets
 import string
@@ -89,7 +90,7 @@ class Medication(models.Model):
     dosage_amount = models.DecimalField(
         max_digits=10,
         decimal_places=3,
-        validators=[MinValueValidator(0.001)],
+        validators=[MinValueValidator(Decimal('0.001'))],
         help_text="Dosage amount (numeric value)"
     )
     
