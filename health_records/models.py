@@ -1,10 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-from django.core.validators import FileExtensionValidator
 import secrets
 import string
-import os
 
 User = get_user_model()
 
@@ -18,12 +16,8 @@ def generate_health_record_id():
 
 
 def health_record_file_upload_path(instance, filename):
-    """Generate upload path for health record files"""
-    # Create a path like: health_records/user_id/record_id/filename
-    # Use a temporary ID if instance.id is not set yet
-    record_id = instance.id if instance.id else 'temp'
-    user_id = instance.user.id if instance.user else 'temp'
-    return f'health_records/{user_id}/{record_id}/{filename}'
+    """Dummy function for migration compatibility - no longer used"""
+    return f'health_records/temp/{filename}'
 
 
 class HealthRecordType(models.TextChoices):
@@ -77,24 +71,6 @@ class HealthRecord(models.Model):
         help_text="Description of the health record"
     )
     
-    file = models.FileField(
-        upload_to=health_record_file_upload_path,
-        blank=True,
-        null=True,
-        validators=[
-            FileExtensionValidator(
-                allowed_extensions=['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'txt']
-            )
-        ],
-        help_text="Uploaded file for the health record"
-    )
-    
-    file_name = models.CharField(
-        max_length=255,
-        blank=True,
-        help_text="Original name of the uploaded file"
-    )
-    
     notes = models.TextField(
         blank=True,
         help_text="Additional notes for the health record"
@@ -117,24 +93,13 @@ class HealthRecord(models.Model):
     def __str__(self):
         return f"{self.title} ({self.get_type_display()}) - {self.user.email}"
     
-    @property
-    def file_uri(self):
-        """Return the file URL if file exists"""
-        if self.file:
-            return self.file.url
-        return None
-    
     def save(self, *args, **kwargs):
-        """Override save to ensure unique ID and set file metadata"""
+        """Override save to ensure unique ID"""
         if not self.id:
             # Generate unique ID if not set
             while True:
                 self.id = generate_health_record_id()
                 if not HealthRecord.objects.filter(id=self.id).exists():
                     break
-        
-        # Set file metadata if file is uploaded
-        if self.file and not self.file_name:
-            self.file_name = os.path.basename(self.file.name)
         
         super().save(*args, **kwargs)
