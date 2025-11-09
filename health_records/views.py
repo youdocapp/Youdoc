@@ -1,7 +1,5 @@
 from rest_framework import generics, permissions, filters
-from rest_framework.parsers import MultiPartParser, FormParser
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
 
 from .models import HealthRecord
 from .serializers import HealthRecordSerializer, HealthRecordListSerializer
@@ -13,7 +11,6 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     """
     serializer_class = HealthRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['type']
     search_fields = ['title', 'description', 'notes']
@@ -32,13 +29,6 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
         date_to = self.request.query_params.get('date_to')
         if date_to:
             queryset = queryset.filter(date__lte=date_to)
-        
-        has_file = self.request.query_params.get('has_file')
-        if has_file is not None:
-            if has_file.lower() == 'true':
-                queryset = queryset.exclude(file__isnull=True).exclude(file='')
-            else:
-                queryset = queryset.filter(Q(file__isnull=True) | Q(file=''))
         
         return queryset
     
@@ -59,7 +49,6 @@ class HealthRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     serializer_class = HealthRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
-    parser_classes = [MultiPartParser, FormParser]
     
     def get_queryset(self):
         """Return health records for the authenticated user"""

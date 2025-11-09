@@ -20,7 +20,10 @@ def generate_health_record_id():
 def health_record_file_upload_path(instance, filename):
     """Generate upload path for health record files"""
     # Create a path like: health_records/user_id/record_id/filename
-    return f'health_records/{instance.user.id}/{instance.id}/{filename}'
+    # Use a temporary ID if instance.id is not set yet
+    record_id = instance.id if instance.id else 'temp'
+    user_id = instance.user.id if instance.user else 'temp'
+    return f'health_records/{user_id}/{record_id}/{filename}'
 
 
 class HealthRecordType(models.TextChoices):
