@@ -99,7 +99,7 @@ export class ApiClient {
     return this.refreshPromise
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
+  private async handleResponse<T>(response: Response, method: string = 'GET'): Promise<T> {
     const contentType = response.headers.get('content-type')
     const isJson = contentType?.includes('application/json')
     
@@ -112,22 +112,48 @@ export class ApiClient {
     }
 
     if (!response.ok) {
-      // Handle 404 errors more gracefully - don't log as errors for optional endpoints
+      // For mutations (POST, PUT, PATCH, DELETE), always throw errors
+      const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())
+      
+      // Handle 404 errors - only return empty data for GET requests
       if (response.status === 404) {
-        // For 404s, return empty data instead of throwing error
-        // This allows optional endpoints to fail silently
+        if (isMutation) {
+          // For mutations, throw error on 404
+          const error: ApiError = {
+            error: true,
+            message: data.message || data.error || 'Resource not found',
+            details: data.details || data || {},
+          }
+          throw error
+        }
+        // For GET requests, return empty data (allows optional endpoints to fail silently)
         return {} as T
       }
       
-      // Handle 401 errors more gracefully when not authenticated
-      // This prevents console spam when user is not logged in
+      // Handle 401 errors
       if (response.status === 401) {
         const hasToken = await this.hasToken()
         if (!hasToken) {
-          // No token available, return empty data (user is not authenticated)
-          // This allows queries to fail silently when disabled by isAuthenticated
+          // No token available
+          if (isMutation) {
+            // For mutations, throw error with authentication message
+            const error: ApiError = {
+              error: true,
+              message: data.message || data.error || 'Authentication required. Please log in.',
+              details: data.details || data || {},
+            }
+            throw error
+          }
+          // For GET requests, return empty data (allows queries to fail silently when disabled by isAuthenticated)
           return {} as T
         }
+        // If we have a token but still got 401, throw error (token might be invalid)
+        const error: ApiError = {
+          error: true,
+          message: data.message || data.error || 'Authentication failed. Please log in again.',
+          details: data.details || data || {},
+        }
+        throw error
       }
       
       // Log full error details for debugging (only for non-404/401 errors, or 401 with token)
@@ -202,7 +228,18 @@ export class ApiClient {
       
       // Provide more specific error messages
       let errorMessage = 'Network error. Please check your connection.'
-      if (error?.name === 'AbortError') {
+      
+      // Handle network request failures (server unreachable, sleeping, etc.)
+      if (error?.message === 'Network request failed' || error?.name === 'TypeError') {
+        // Check if this might be a cold start on Render.com
+        const isRenderCom = this.baseUrl.includes('onrender.com')
+        if (isRenderCom && retryCount === 0) {
+          // Retry once with longer timeout (cold start on Render.com can take 30-60 seconds)
+          console.log('🔄 Retrying request with longer timeout (possible cold start on Render.com)...')
+          return this.makeRequest<T>(endpoint, config, requiresAuth, retryCount + 1, 90000)
+        }
+        errorMessage = 'Unable to connect to the server. The server may be starting up. Please try again in a moment.'
+      } else if (error?.name === 'AbortError') {
         // Check if this is an auth endpoint that might be experiencing a cold start
         const isAuthEndpoint = endpoint.includes('/auth/')
         if (isAuthEndpoint && retryCount === 0) {
@@ -256,10 +293,10 @@ export class ApiClient {
           }
         }
       }
-      // If no token, let handleResponse handle it gracefully
+      // If no token, let handleResponse handle it (will throw error for mutations)
     }
 
-    return this.handleResponse<T>(response)
+    return this.handleResponse<T>(response, config.method)
   }
 
   async get<T>(endpoint: string, requiresAuth: boolean = true): Promise<T> {
