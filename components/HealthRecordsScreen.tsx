@@ -19,6 +19,8 @@ const recordTypes = [
 const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => {
   const { colors } = useTheme();
   const { records, addRecord, updateRecord, deleteRecord } = useHealthRecords();
+  // Ensure records is always an array to prevent map errors
+  const safeRecords = Array.isArray(records) ? records : [];
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HealthRecord | null>(null);
   const [formData, setFormData] = useState({
@@ -331,7 +333,7 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {records.length === 0 ? (
+        {safeRecords.length === 0 ? (
           <View style={styles.emptyState}>
             <FileText size={64} color={colors.textSecondary} style={styles.emptyIcon} />
             <Text style={styles.emptyText}>
@@ -343,7 +345,7 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
             </TouchableOpacity>
           </View>
         ) : (
-          records.map((record) => (
+          safeRecords.map((record) => (
             <View key={record.id} style={styles.recordCard}>
               <View style={styles.recordHeader}>
                 <View style={styles.recordInfo}>

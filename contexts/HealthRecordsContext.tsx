@@ -115,11 +115,15 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
   }
 
   const getRecordsByType = (type: HealthRecord['type']) => {
-    return records.filter(record => record.type === type)
+    const safeRecords = Array.isArray(records) ? records : []
+    return safeRecords.filter(record => record.type === type)
   }
 
+  // Ensure records is always an array
+  const safeRecords = Array.isArray(records) ? records : []
+
   return {
-    records,
+    records: safeRecords,
     isLoading,
     error: error as Error | null,
     addRecord,
