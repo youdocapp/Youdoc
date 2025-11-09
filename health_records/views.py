@@ -1,4 +1,5 @@
-from rest_framework import generics, permissions, filters
+from rest_framework import generics, permissions, filters, status
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import HealthRecord
@@ -41,6 +42,14 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         """Set the user when creating a new health record"""
         serializer.save(user=self.request.user)
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to return proper response"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class HealthRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
