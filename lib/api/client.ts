@@ -155,7 +155,8 @@ export class ApiClient {
     endpoint: string,
     config: RequestConfig,
     requiresAuth: boolean = true,
-    retryCount: number = 0
+    retryCount: number = 0,
+    timeout: number = 30000
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
     
@@ -165,21 +166,30 @@ export class ApiClient {
       url,
       requiresAuth,
       hasBody: !!config.body,
+      timeout,
     })
     
     let response: Response
+    let timeoutId: NodeJS.Timeout | null = null
     try {
-      // Add timeout to fetch request (30 seconds)
+      // Add timeout to fetch request (default 30 seconds, longer for auth endpoints)
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 30000)
+      timeoutId = setTimeout(() => controller.abort(), timeout)
       
       response = await fetch(url, {
         ...config,
         signal: controller.signal,
       })
       
-      clearTimeout(timeoutId)
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
     } catch (error: any) {
+      // Clear timeout if it hasn't fired yet
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      
       // Log detailed error information
       console.error('❌ Fetch error:', {
         message: error?.message,
@@ -193,7 +203,14 @@ export class ApiClient {
       // Provide more specific error messages
       let errorMessage = 'Network error. Please check your connection.'
       if (error?.name === 'AbortError') {
-        errorMessage = 'Request timeout. Please check your connection and try again.'
+        // Check if this is an auth endpoint that might be experiencing a cold start
+        const isAuthEndpoint = endpoint.includes('/auth/')
+        if (isAuthEndpoint && retryCount === 0) {
+          // Retry once with longer timeout for auth endpoints (cold start on Render.com)
+          console.log('🔄 Retrying auth request with longer timeout (possible cold start)...')
+          return this.makeRequest<T>(endpoint, config, requiresAuth, retryCount + 1, 90000)
+        }
+        errorMessage = 'Request timeout. The server may be starting up. Please try again in a moment.'
       } else if (error?.message) {
         errorMessage = error.message
       }
@@ -272,6 +289,10 @@ export class ApiClient {
 
     const body = isFormData ? data : (data ? JSON.stringify(data) : undefined)
 
+    // Use longer timeout for auth endpoints (90 seconds) to handle Render.com cold starts
+    const isAuthEndpoint = endpoint.includes('/auth/')
+    const timeout = isAuthEndpoint ? 90000 : 30000
+
     return this.makeRequest<T>(
       endpoint,
       {
@@ -279,7 +300,9 @@ export class ApiClient {
         headers,
         body,
       },
-      requiresAuth
+      requiresAuth,
+      0,
+      timeout
     )
   }
 
