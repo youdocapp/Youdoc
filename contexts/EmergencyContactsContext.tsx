@@ -1,4 +1,6 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { emergencyContactsService, type EmergencyContact, type CreateEmergencyContactRequest, type UpdateEmergencyContactRequest, type ApiError } from '@/lib/api'
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
@@ -25,9 +27,23 @@ export interface EmergencyContactContextType {
 
 export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch emergency contacts - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        setHasToken(!!token)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch emergency contacts - only when authenticated, auth initialized, and token exists
   const {
     data: contactsData,
     isLoading: isLoadingContacts,
@@ -39,11 +55,11 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
       return response
     },
     staleTime: 30000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch primary contact - only when authenticated
+  // Fetch primary contact - only when authenticated, auth initialized, and token exists
   const {
     data: primaryContact,
     isLoading: isLoadingPrimary,
@@ -52,7 +68,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     queryFn: () => emergencyContactsService.getPrimaryContact(),
     staleTime: 30000,
     retry: false, // Don't retry if no primary contact exists
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
   })
 
   const contacts = contactsData?.contacts || []

@@ -44,13 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true)
   const queryClient = useQueryClient()
 
-  // Check if user is authenticated on mount
-  useEffect(() => {
-    initializeAuth()
-  }, [])
+  const clearAuth = useCallback(async () => {
+    await Promise.all([
+      AsyncStorage.removeItem(ACCESS_TOKEN_KEY),
+      AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
+      AsyncStorage.removeItem(USER_KEY),
+    ])
+    setUser(null)
+    queryClient.clear()
+  }, [queryClient])
 
-    const initializeAuth = async () => {
-      try {
+  const initializeAuth = useCallback(async () => {
+    try {
       const [storedUser, accessToken] = await Promise.all([
         AsyncStorage.getItem(USER_KEY),
         AsyncStorage.getItem(ACCESS_TOKEN_KEY),
@@ -78,37 +83,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               // Refresh failed, clear auth
               await clearAuth()
             }
-        } else {
+          } else {
             await clearAuth()
           }
         }
-        }
-      } catch (error) {
+      }
+    } catch (error) {
       console.error('❌ Error initializing auth:', error)
       await clearAuth()
-      } finally {
+    } finally {
       setLoading(false)
     }
-  }
+  }, [clearAuth])
 
-  const clearAuth = async () => {
-    await Promise.all([
-      AsyncStorage.removeItem(ACCESS_TOKEN_KEY),
-      AsyncStorage.removeItem(REFRESH_TOKEN_KEY),
-      AsyncStorage.removeItem(USER_KEY),
-    ])
-    setUser(null)
-    queryClient.clear()
-  }
+  // Check if user is authenticated on mount
+  useEffect(() => {
+    initializeAuth()
+  }, [initializeAuth])
 
-  const storeAuth = async (accessToken: string, refreshToken: string, userData: User) => {
+  const storeAuth = useCallback(async (accessToken: string, refreshToken: string, userData: User) => {
     await Promise.all([
       AsyncStorage.setItem(ACCESS_TOKEN_KEY, accessToken),
       AsyncStorage.setItem(REFRESH_TOKEN_KEY, refreshToken),
       AsyncStorage.setItem(USER_KEY, JSON.stringify(userData)),
     ])
     setUser(userData)
-  }
+  }, [])
 
   const register = useCallback(async (data: RegisterRequest) => {
     try {
@@ -180,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       await clearAuth()
     }
-  }, [])
+  }, [clearAuth])
 
   const verifyOTP = useCallback(async (data: VerifyOTPRequest) => {
     try {
@@ -309,7 +309,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: apiError.message,
       }
     }
-  }, [])
+  }, [clearAuth])
 
   const refreshToken = useCallback(async (): Promise<boolean> => {
     try {
@@ -326,7 +326,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await clearAuth()
       return false
     }
-  }, [])
+  }, [clearAuth])
 
   const value: AuthContextType = {
         user,

@@ -1,4 +1,6 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { notificationsService, type Notification, type NotificationPreference, type DeviceToken, type NotificationStats, type CreateNotificationRequest, type UpdateNotificationRequest, type BulkActionRequest, type CreatePreferenceRequest, type RegisterDeviceTokenRequest, type ApiError } from '@/lib/api'
 import createContextHook from '@nkzw/create-context-hook'
 import { Platform } from 'react-native'
@@ -41,9 +43,23 @@ export interface NotificationsContextType {
 
 const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch notifications - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        setHasToken(!!token)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch notifications - only when authenticated, auth initialized, and token exists
   const {
     data: notificationsData,
     isLoading: isLoadingNotifications,
@@ -52,12 +68,12 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications'],
     queryFn: () => notificationsService.getNotifications({ page_size: 50 }),
     staleTime: 30000, // 30 seconds
-    refetchInterval: isAuthenticated ? 60000 : false, // Only refetch when authenticated
-    enabled: isAuthenticated, // Only fetch when authenticated
+    refetchInterval: isAuthenticated && hasToken ? 60000 : false, // Only refetch when authenticated and token exists
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch notification preferences - only when authenticated
+  // Fetch notification preferences - only when authenticated, auth initialized, and token exists
   const {
     data: preferences = [],
     isLoading: isLoadingPreferences,
@@ -66,11 +82,11 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications', 'preferences'],
     queryFn: () => notificationsService.getNotificationPreferences(),
     staleTime: 300000, // 5 minutes
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch device tokens - only when authenticated
+  // Fetch device tokens - only when authenticated, auth initialized, and token exists
   const {
     data: deviceTokens = [],
     isLoading: isLoadingTokens,
@@ -79,11 +95,11 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications', 'device-tokens'],
     queryFn: () => notificationsService.getDeviceTokens(),
     staleTime: 300000, // 5 minutes
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch notification stats - only when authenticated
+  // Fetch notification stats - only when authenticated, auth initialized, and token exists
   const {
     data: stats,
     isLoading: isLoadingStats,
@@ -92,7 +108,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications', 'stats'],
     queryFn: () => notificationsService.getNotificationStats(),
     staleTime: 60000, // 1 minute
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 

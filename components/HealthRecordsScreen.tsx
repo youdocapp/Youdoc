@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
 import { ChevronLeft, Plus, FileText, Calendar, Edit2, Trash2, X, Upload } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
-import { useHealthRecords, HealthRecord } from '../contexts/HealthRecordsContext';
+import { useHealthRecords } from '../contexts/HealthRecordsContext';
+import { type HealthRecord } from '../lib/api';
 
 interface HealthRecordsScreenProps {
   onBack: () => void;
@@ -18,9 +19,20 @@ const recordTypes = [
 
 const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => {
   const { colors } = useTheme();
-  const { records, addRecord, updateRecord, deleteRecord } = useHealthRecords();
+  const { records, isLoading, addRecord, updateRecord, deleteRecord } = useHealthRecords();
   // Ensure records is always an array to prevent map errors
   const safeRecords = Array.isArray(records) ? records : [];
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🔍 Health Records Screen State:', {
+      isLoading,
+      recordsCount: records.length,
+      records,
+      safeRecordsCount: safeRecords.length,
+      safeRecords,
+    })
+  }, [isLoading, records, safeRecords])
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingRecord, setEditingRecord] = useState<HealthRecord | null>(null);
   const [formData, setFormData] = useState({
@@ -97,15 +109,15 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
     return recordTypes.find(t => t.value === type)?.label || type;
   };
 
-  const getTypeColor = (type: HealthRecord['type']) => {
-    const colors_map = {
+  const getTypeColor = (type: HealthRecord['type']): string => {
+    const colors_map: Record<HealthRecord['type'], string> = {
       lab_result: '#3B82F6',
       prescription: '#10B981',
       imaging: '#8B5CF6',
       vaccination: '#F59E0B',
       other: '#6B7280'
     };
-    return colors_map[type];
+    return colors_map[type] || '#6B7280';
   };
 
   const styles = StyleSheet.create({
@@ -333,7 +345,12 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {safeRecords.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.emptyState}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.emptyText, { marginTop: 16 }]}>Loading health records...</Text>
+          </View>
+        ) : safeRecords.length === 0 ? (
           <View style={styles.emptyState}>
             <FileText size={64} color={colors.textSecondary} style={styles.emptyIcon} />
             <Text style={styles.emptyText}>

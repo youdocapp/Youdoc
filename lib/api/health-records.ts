@@ -24,6 +24,13 @@ export interface CreateHealthRecordRequest {
 
 export interface UpdateHealthRecordRequest extends Partial<CreateHealthRecordRequest> {}
 
+export interface PaginatedResponse<T> {
+  count: number
+  next?: string
+  previous?: string
+  results: T[]
+}
+
 export class HealthRecordsService {
   async getHealthRecords(filters?: {
     type?: string
@@ -32,7 +39,7 @@ export class HealthRecordsService {
     has_file?: boolean
     search?: string
     ordering?: string
-  }): Promise<HealthRecord[]> {
+  }): Promise<PaginatedResponse<HealthRecord>> {
     const params = new URLSearchParams()
     if (filters?.type) params.append('type', filters.type)
     if (filters?.date_from) params.append('date_from', filters.date_from)
@@ -42,7 +49,9 @@ export class HealthRecordsService {
     if (filters?.ordering) params.append('ordering', filters.ordering)
     
     const query = params.toString()
-    return apiClient.get<HealthRecord[]>(`/health-records/${query ? `?${query}` : ''}`)
+    const endpoint = `/health-records${query ? `?${query}` : ''}`
+    console.log('📋 GET Health Records - Endpoint:', endpoint)
+    return apiClient.get<PaginatedResponse<HealthRecord>>(endpoint)
   }
 
   async getHealthRecord(id: string): Promise<HealthRecord> {

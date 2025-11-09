@@ -48,6 +48,14 @@ export class ApiClient {
     
     if (token) {
       headers['Authorization'] = `Bearer ${token}`
+      console.log('🔑 Token found, adding Authorization header:', {
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 20) + '...',
+        hasAuthHeader: !!headers['Authorization']
+      })
+    } else {
+      console.warn('⚠️ No access token found in AsyncStorage')
+      console.warn('⚠️ Request will be made without Authorization header')
     }
     
     return headers
@@ -193,6 +201,8 @@ export class ApiClient {
       requiresAuth,
       hasBody: !!config.body,
       timeout,
+      hasAuthHeader: !!config.headers['Authorization'],
+      authHeaderPrefix: config.headers['Authorization']?.substring(0, 30) || 'none'
     })
     
     let response: Response
@@ -202,10 +212,23 @@ export class ApiClient {
       const controller = new AbortController()
       timeoutId = setTimeout(() => controller.abort(), timeout)
       
-      response = await fetch(url, {
-        ...config,
+      // Ensure headers are properly set
+      const requestConfig = {
+        method: config.method,
+        headers: config.headers,
+        body: config.body,
         signal: controller.signal,
+      }
+      
+      console.log('📤 Fetch request config:', {
+        method: requestConfig.method,
+        url,
+        headers: requestConfig.headers,
+        hasAuthHeader: !!requestConfig.headers['Authorization'],
+        authHeaderValue: requestConfig.headers['Authorization']?.substring(0, 50) || 'none'
       })
+      
+      response = await fetch(url, requestConfig)
       
       if (timeoutId) {
         clearTimeout(timeoutId)
@@ -300,6 +323,22 @@ export class ApiClient {
   }
 
   async get<T>(endpoint: string, requiresAuth: boolean = true): Promise<T> {
+    console.log('📥 API Client GET called:', { endpoint, requiresAuth })
+    
+    // For GET requests, always verify token exists if auth is required
+    if (requiresAuth) {
+      const token = await AsyncStorage.getItem('accessToken')
+      if (!token) {
+        console.error('❌ GET request requires auth but no token found in AsyncStorage')
+        throw {
+          error: true,
+          message: 'Authentication credentials were not provided.',
+          details: {}
+        } as ApiError
+      }
+      console.log('✅ Token verified for GET request:', token.substring(0, 20) + '...')
+    }
+    
     const headers = requiresAuth ? await this.getAuthHeaders() : { 'Content-Type': 'application/json' }
     
     return this.makeRequest<T>(

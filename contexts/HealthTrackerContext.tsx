@@ -1,4 +1,6 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { healthTrackingService, type HealthData, type ConnectedDevice, type HealthGoal, type HealthInsight, type GoalProgress, type UpdateHealthDataRequest, type CreateDeviceRequest, type CreateGoalRequest, type ApiError } from '@/lib/api'
 import { googleFitService } from '@/lib/health/google-fit'
 import { appleHealthService } from '@/lib/health/apple-health'
@@ -43,9 +45,23 @@ export interface HealthTrackerContextType {
 
 export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch health data - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        setHasToken(!!token)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch health data - only when authenticated, auth initialized, and token exists
   const {
     data: healthData,
     isLoading: isLoadingHealthData,
@@ -55,12 +71,12 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryKey: ['health-tracking', 'data'],
     queryFn: () => healthTrackingService.getHealthData(),
     staleTime: 60000, // 1 minute
-    refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
-    enabled: isAuthenticated, // Only fetch when authenticated
+    refetchInterval: isAuthenticated && hasToken ? 300000 : false, // Only refetch when authenticated and token exists
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch connected devices - only when authenticated
+  // Fetch connected devices - only when authenticated, auth initialized, and token exists
   const {
     data: connectedDevices = [],
     isLoading: isLoadingDevices,
@@ -69,11 +85,11 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryKey: ['health-tracking', 'devices'],
     queryFn: () => healthTrackingService.getConnectedDevices(),
     staleTime: 60000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch health goals - only when authenticated
+  // Fetch health goals - only when authenticated, auth initialized, and token exists
   const {
     data: healthGoals = [],
     isLoading: isLoadingGoals,
@@ -82,11 +98,11 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryKey: ['health-tracking', 'goals'],
     queryFn: () => healthTrackingService.getHealthGoals(),
     staleTime: 60000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch health insights - only when authenticated
+  // Fetch health insights - only when authenticated, auth initialized, and token exists
   const {
     data: healthInsights,
     isLoading: isLoadingInsights,
@@ -95,11 +111,11 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryKey: ['health-tracking', 'insights'],
     queryFn: () => healthTrackingService.getHealthInsights(),
     staleTime: 300000, // 5 minutes
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch goal progress - only when authenticated
+  // Fetch goal progress - only when authenticated, auth initialized, and token exists
   const {
     data: goalProgress = [],
     isLoading: isLoadingProgress,
@@ -108,8 +124,8 @@ export const [HealthTrackerProvider, useHealthTracker] = createContextHook(() =>
     queryKey: ['health-tracking', 'goals', 'progress'],
     queryFn: () => healthTrackingService.getGoalProgress(),
     staleTime: 60000,
-    refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
-    enabled: isAuthenticated, // Only fetch when authenticated
+    refetchInterval: isAuthenticated && hasToken ? 300000 : false, // Only refetch when authenticated and token exists
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 

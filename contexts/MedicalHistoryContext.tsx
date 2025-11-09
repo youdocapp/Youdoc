@@ -1,4 +1,6 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { medicalHistoryService, type MedicalCondition, type Surgery, type Allergy, type CreateConditionRequest, type CreateSurgeryRequest, type CreateAllergyRequest, type ApiError } from '@/lib/api'
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
@@ -31,9 +33,23 @@ export interface MedicalHistoryContextType {
 
 export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch medical conditions - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        setHasToken(!!token)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch medical conditions - only when authenticated, auth initialized, and token exists
   const {
     data: conditionsData,
     isLoading: isLoadingConditions,
@@ -45,11 +61,11 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch surgeries - only when authenticated
+  // Fetch surgeries - only when authenticated, auth initialized, and token exists
   const {
     data: surgeriesData,
     isLoading: isLoadingSurgeries,
@@ -61,11 +77,11 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
-  // Fetch allergies - only when authenticated
+  // Fetch allergies - only when authenticated, auth initialized, and token exists
   const {
     data: allergiesData,
     isLoading: isLoadingAllergies,
@@ -77,7 +93,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 

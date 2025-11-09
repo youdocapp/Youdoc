@@ -1,6 +1,8 @@
-import React, { createContext, useContext } from 'react'
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { medicationService, type Medication, type CreateMedicationRequest, type UpdateMedicationRequest, type TodayMedication, type MedicationCalendarResponse, type ApiError } from '@/lib/api'
+import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
 export interface MedicationContextType {
@@ -24,13 +26,25 @@ export interface MedicationContextType {
   getMedicationCalendar: (month?: number, year?: number) => Promise<MedicationCalendarResponse>
 }
 
-const MedicationContext = createContext<MedicationContextType | undefined>(undefined)
-
-export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const [MedicationProvider, useMedication] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch medications - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        setHasToken(!!token)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch medications - only when authenticated, auth initialized, and token exists
   const {
     data: medications = [],
     isLoading: isLoadingMedications,
@@ -40,11 +54,11 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     queryKey: ['medications'],
     queryFn: () => medicationService.getMedications(),
     staleTime: 30000, // 30 seconds
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on error
   })
 
-  // Fetch today's medications - only when authenticated
+  // Fetch today's medications - only when authenticated, auth initialized, and token exists
   const {
     data: todayMedications = [],
     isLoading: isLoadingToday,
@@ -54,8 +68,8 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     queryKey: ['medications', 'today'],
     queryFn: () => medicationService.getTodayMedications(),
     staleTime: 60000, // 1 minute
-    refetchInterval: isAuthenticated ? 300000 : false, // Only refetch when authenticated
-    enabled: isAuthenticated, // Only fetch when authenticated
+    refetchInterval: isAuthenticated && hasToken ? 300000 : false, // Only refetch when authenticated and token exists
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
 
@@ -162,16 +176,16 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     }
   }
 
-  const value: MedicationContextType = {
-      medications,
+  return {
+    medications,
     todayMedications,
     isLoading: isLoadingMedications || isLoadingToday,
     error: (medicationsError || todayError) as Error | null,
     createMedication,
-      updateMedication,
-      deleteMedication,
-      getMedication,
-      toggleMedicationTaken,
+    updateMedication,
+    deleteMedication,
+    getMedication,
+    toggleMedicationTaken,
     refetchMedications: async () => {
       await refetchMedications()
     },
@@ -180,18 +194,4 @@ export const MedicationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     },
     getMedicationCalendar,
   }
-
-  return (
-    <MedicationContext.Provider value={value}>
-      {children}
-    </MedicationContext.Provider>
-  )
-}
-
-export const useMedication = () => {
-  const context = useContext(MedicationContext)
-  if (!context) {
-    throw new Error('useMedication must be used within MedicationProvider')
-  }
-  return context
-}
+})

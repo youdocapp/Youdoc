@@ -1,4 +1,6 @@
+import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { healthRecordsService, type HealthRecord, type CreateHealthRecordRequest, type UpdateHealthRecordRequest, type ApiError } from '@/lib/api'
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
@@ -17,28 +19,84 @@ export interface HealthRecordContextType {
 
 export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() => {
   const queryClient = useQueryClient()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loading: authLoading } = useAuth()
+  const [hasToken, setHasToken] = React.useState(false)
 
-  // Fetch health records - only when authenticated
+  // Check if token exists in AsyncStorage
+  React.useEffect(() => {
+    const checkToken = async () => {
+      if (isAuthenticated && !authLoading) {
+        const token = await AsyncStorage.getItem('accessToken')
+        const tokenExists = !!token
+        console.log('🔍 Token check in HealthRecordsContext:', {
+          isAuthenticated,
+          authLoading,
+          tokenExists,
+          tokenLength: token?.length || 0,
+          tokenPrefix: token ? token.substring(0, 20) + '...' : 'none'
+        })
+        setHasToken(tokenExists)
+      } else {
+        setHasToken(false)
+      }
+    }
+    checkToken()
+  }, [isAuthenticated, authLoading])
+
+  // Fetch health records - only when authenticated, auth is not loading, and token exists
   const {
-    data: records = [],
+    data: recordsData,
     isLoading,
     error,
     refetch,
   } = useQuery({
     queryKey: ['health-records'],
-    queryFn: () => healthRecordsService.getHealthRecords(),
+    queryFn: async () => {
+      try {
+        // Double-check token exists before making request
+        const token = await AsyncStorage.getItem('accessToken')
+        if (!token) {
+          console.warn('⚠️ No token found when queryFn runs, skipping request')
+          throw new Error('No authentication token available')
+        }
+        console.log('🔑 Token verified before GET request:', token.substring(0, 20) + '...')
+        const response = await healthRecordsService.getHealthRecords()
+        console.log('📥 Health Records API Response:', response)
+        return response
+      } catch (err) {
+        console.error('❌ Error fetching health records:', err)
+        throw err
+      }
+    },
     staleTime: 30000, // 30 seconds
-    enabled: isAuthenticated, // Only fetch when authenticated
+    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
     retry: false, // Don't retry on 404
   })
+
+  // Extract results from response - handle both direct array and paginated response
+  const records = Array.isArray(recordsData)
+    ? recordsData
+    : (recordsData?.results || [])
+  
+  // Debug logging
+  React.useEffect(() => {
+    console.log('🔍 Health Records Context State:', {
+      isAuthenticated,
+      isLoading,
+      hasRecordsData: !!recordsData,
+      recordsData,
+      recordsCount: records.length,
+      records,
+      error: error?.message,
+    })
+  }, [isAuthenticated, isLoading, recordsData, records.length, error])
 
   // Create mutation
   const createMutation = useMutation({
     mutationFn: ({ data, file }: { data: CreateHealthRecordRequest; file?: any }) =>
       healthRecordsService.createHealthRecord(data, file),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['health-records'] })
+      queryClient.refetchQueries({ queryKey: ['health-records'] })
     },
   })
 
@@ -47,7 +105,7 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
     mutationFn: ({ id, data, file }: { id: string; data: UpdateHealthRecordRequest; file?: any }) =>
       healthRecordsService.updateHealthRecord(id, data, file),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['health-records'] })
+      queryClient.refetchQueries({ queryKey: ['health-records'] })
     },
   })
 
@@ -55,7 +113,7 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
   const deleteMutation = useMutation({
     mutationFn: (id: string) => healthRecordsService.deleteHealthRecord(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['health-records'] })
+      queryClient.refetchQueries({ queryKey: ['health-records'] })
     },
   })
 
@@ -119,11 +177,8 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
     return safeRecords.filter(record => record.type === type)
   }
 
-  // Ensure records is always an array
-  const safeRecords = Array.isArray(records) ? records : []
-
   return {
-    records: safeRecords,
+    records,
     isLoading,
     error: error as Error | null,
     addRecord,
