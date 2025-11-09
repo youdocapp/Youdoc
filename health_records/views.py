@@ -1,5 +1,6 @@
 from rest_framework import generics, permissions, filters, status
 from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .models import HealthRecord
@@ -10,6 +11,7 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     """
     List all health records for the authenticated user or create a new one
     """
+    authentication_classes = [JWTAuthentication]
     serializer_class = HealthRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
@@ -45,17 +47,26 @@ class HealthRecordListCreateView(generics.ListCreateAPIView):
     
     def create(self, request, *args, **kwargs):
         """Override create to return proper response"""
+        # Ensure we're handling POST requests
+        if request.method != 'POST':
+            return super().list(request, *args, **kwargs)
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def post(self, request, *args, **kwargs):
+        """Explicitly handle POST requests"""
+        return self.create(request, *args, **kwargs)
 
 
 class HealthRecordDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     Retrieve, update or delete a health record
     """
+    authentication_classes = [JWTAuthentication]
     serializer_class = HealthRecordSerializer
     permission_classes = [permissions.IsAuthenticated]
     
