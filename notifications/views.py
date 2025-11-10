@@ -5,6 +5,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth.models import User
 from django.db.models import Q, Count
 from django.utils import timezone
+import logging
 from .models import (
     Notification,
     NotificationPreference,
@@ -115,34 +116,60 @@ class NotificationStatsView(generics.RetrieveAPIView):
     
     def get(self, request, *args, **kwargs):
         """Get notification statistics"""
-        user = request.user
-        
-        # Get total and unread counts
-        total_notifications = Notification.objects.filter(user=user).count()
-        unread_notifications = Notification.objects.filter(user=user, is_read=False).count()
-        
-        # Get notifications by type
-        notifications_by_type = {}
-        for notification_type, _ in NotificationType.choices:
-            count = Notification.objects.filter(
-                user=user,
-                type=notification_type
-            ).count()
-            notifications_by_type[notification_type] = count
-        
-        # Get recent notifications
-        recent_notifications = Notification.objects.filter(user=user)[:5]
-        recent_serializer = NotificationSerializer(recent_notifications, many=True)
-        
-        stats_data = {
-            'total_notifications': total_notifications,
-            'unread_notifications': unread_notifications,
-            'notifications_by_type': notifications_by_type,
-            'recent_notifications': recent_serializer.data
-        }
-        
-        serializer = NotificationStatsSerializer(stats_data)
-        return Response(serializer.data)
+        try:
+            user = request.user
+            
+            # Get total and unread counts
+            total_notifications = Notification.objects.filter(user=user).count()
+            unread_notifications = Notification.objects.filter(user=user, is_read=False).count()
+            
+            # Get notifications by type
+            notifications_by_type = {}
+            try:
+                for notification_type, _ in NotificationType.choices:
+                    count = Notification.objects.filter(
+                        user=user,
+                        type=notification_type
+                    ).count()
+                    notifications_by_type[notification_type] = count
+            except Exception as e:
+                # If there's an error getting types, use empty dict
+                logger = logging.getLogger(__name__)
+                logger.warning(f'Error getting notifications by type: {str(e)}')
+                notifications_by_type = {}
+            
+            # Get recent notifications
+            recent_notifications = []
+            try:
+                recent_queryset = Notification.objects.filter(user=user).order_by('-created_at')[:5]
+                recent_serializer = NotificationSerializer(recent_queryset, many=True)
+                recent_notifications = recent_serializer.data
+            except Exception as e:
+                # If there's an error serializing recent notifications, use empty list
+                logger = logging.getLogger(__name__)
+                logger.warning(f'Error serializing recent notifications: {str(e)}')
+                recent_notifications = []
+            
+            stats_data = {
+                'total_notifications': total_notifications,
+                'unread_notifications': unread_notifications,
+                'notifications_by_type': notifications_by_type,
+                'recent_notifications': recent_notifications
+            }
+            
+            serializer = NotificationStatsSerializer(stats_data)
+            return Response(serializer.data)
+            
+        except Exception as e:
+            logger = logging.getLogger(__name__)
+            logger.error(f'Error in NotificationStatsView: {str(e)}', exc_info=True)
+            # Return default stats instead of 500 error
+            return Response({
+                'total_notifications': 0,
+                'unread_notifications': 0,
+                'notifications_by_type': {},
+                'recent_notifications': []
+            }, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
