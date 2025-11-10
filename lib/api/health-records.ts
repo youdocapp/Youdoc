@@ -85,7 +85,7 @@ export class HealthRecordsService {
       } as any)
     }
     
-    return apiClient.post<HealthRecord>('/health-records/', formData, true, true)
+    return apiClient.post<HealthRecord>('/health-records', formData, true, true)
   }
 
   async updateHealthRecord(id: string, data: UpdateHealthRecordRequest, file?: any): Promise<HealthRecord> {

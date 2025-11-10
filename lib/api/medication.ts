@@ -85,31 +85,41 @@ export class MedicationService {
     if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active))
     
     const query = params.toString()
-    return apiClient.get<Medication[]>(`/medications/${query ? `?${query}` : ''}`)
+    const url = query ? `/medications?${query}` : '/medications'
+    const response = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: Medication[] } | Medication[]>(url)
+    
+    // Handle paginated response (DRF returns {count, next, previous, results})
+    // or direct array response
+    if (Array.isArray(response)) {
+      return response
+    } else if (response && 'results' in response) {
+      return response.results
+    }
+    return []
   }
 
   async getMedication(id: string): Promise<Medication> {
-    return apiClient.get<Medication>(`/medications/${id}/`)
+    return apiClient.get<Medication>(`/medications/${id}`)
   }
 
   async createMedication(data: CreateMedicationRequest): Promise<Medication> {
-    return apiClient.post<Medication>('/medications/', data)
+    return apiClient.post<Medication>('/medications', data)
   }
 
   async updateMedication(id: string, data: UpdateMedicationRequest): Promise<Medication> {
-    return apiClient.patch<Medication>(`/medications/${id}/`, data)
+    return apiClient.patch<Medication>(`/medications/${id}`, data)
   }
 
   async deleteMedication(id: string): Promise<void> {
-    return apiClient.delete<void>(`/medications/${id}/`)
+    return apiClient.delete<void>(`/medications/${id}`)
   }
 
   async toggleMedicationTaken(medicationId: string): Promise<TakenRecord> {
-    return apiClient.post<TakenRecord>(`/medications/${medicationId}/toggle-taken/`)
+    return apiClient.post<TakenRecord>(`/medications/${medicationId}/toggle-taken`)
   }
 
   async getTodayMedications(): Promise<TodayMedication[]> {
-    return apiClient.get<TodayMedication[]>('/medications/today/')
+    return apiClient.get<TodayMedication[]>('/medications/today')
   }
 
   async getMedicationCalendar(month?: number, year?: number): Promise<MedicationCalendarResponse> {
@@ -118,7 +128,8 @@ export class MedicationService {
     if (year) params.append('year', String(year))
     
     const query = params.toString()
-    return apiClient.get<MedicationCalendarResponse>(`/medications/calendar/${query ? `?${query}` : ''}`)
+    const url = query ? `/medications/calendar?${query}` : '/medications/calendar'
+    return apiClient.get<MedicationCalendarResponse>(url)
   }
 
   async getTakenRecords(filters?: {
@@ -132,7 +143,8 @@ export class MedicationService {
     if (filters?.taken !== undefined) params.append('taken', String(filters.taken))
     
     const query = params.toString()
-    return apiClient.get<TakenRecord[]>(`/medications/taken/${query ? `?${query}` : ''}`)
+    const url = query ? `/medications/taken?${query}` : '/medications/taken'
+    return apiClient.get<TakenRecord[]>(url)
   }
 
   async createTakenRecord(data: {
@@ -140,7 +152,7 @@ export class MedicationService {
     date: string
     taken: boolean
   }): Promise<TakenRecord> {
-    return apiClient.post<TakenRecord>('/medications/taken/', data)
+    return apiClient.post<TakenRecord>('/medications/taken', data)
   }
 }
 

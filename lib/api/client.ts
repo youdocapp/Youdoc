@@ -179,9 +179,29 @@ export class ApiClient {
       data = text ? { message: text } : {}
     }
 
+    // Log successful responses for POST requests to help debug
+    if (response.ok && method.toUpperCase() === 'POST') {
+      console.log('✅ POST Success:', {
+        status: response.status,
+        url: response.url,
+        hasData: !!data
+      })
+    }
+    
     if (!response.ok) {
       // For mutations (POST, PUT, PATCH, DELETE), always throw errors
       const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method.toUpperCase())
+      
+      // Log error details for POST requests to help debug why medication creation might fail
+      if (method.toUpperCase() === 'POST') {
+        console.error('❌ POST Request Failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          responseData: data,
+          isMutation
+        })
+      }
       
       // Handle 404 errors - only return empty data for GET requests
       if (response.status === 404) {

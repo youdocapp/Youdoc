@@ -77,8 +77,13 @@ export const [MedicationProvider, useMedication] = createContextHook(() => {
   const createMutation = useMutation({
     mutationFn: (data: CreateMedicationRequest) => medicationService.createMedication(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['medications'] })
-      queryClient.invalidateQueries({ queryKey: ['medications', 'today'] })
+      // Invalidate queries to refetch, but don't throw errors if refetch fails
+      queryClient.invalidateQueries({ queryKey: ['medications'] }).catch(() => {
+        // Silently handle refetch errors - medication was already created
+      })
+      queryClient.invalidateQueries({ queryKey: ['medications', 'today'] }).catch(() => {
+        // Silently handle refetch errors - medication was already created
+      })
     },
   })
 
@@ -125,13 +130,30 @@ export const [MedicationProvider, useMedication] = createContextHook(() => {
       console.log('✅ Token verified before creating medication:', token.substring(0, 20) + '...')
       
       const medication = await createMutation.mutateAsync(data)
+      
+      // If we got here, the medication was created successfully
+      // Even if refetch fails, the creation was successful
       return { success: true, medication }
     } catch (error: any) {
       console.error('❌ Error creating medication:', error)
       const apiError = error as ApiError
+      
+      // Check if the error is about authentication on a refetch (not the POST itself)
+      // If the medication was actually created, we should still return success
+      const errorMessage = apiError.message || 'Failed to create medication'
+      const isAuthError = errorMessage.toLowerCase().includes('authentication') || 
+                         errorMessage.toLowerCase().includes('credentials')
+      
+      // If it's an auth error, it might be from a refetch, not the POST
+      // In that case, we should still check if the medication was created
+      // For now, we'll return the error but log it as potentially a refetch issue
+      if (isAuthError) {
+        console.warn('⚠️ Auth error after medication creation - might be from refetch, not POST')
+      }
+      
       return {
         success: false,
-        error: apiError.message || 'Failed to create medication',
+        error: errorMessage,
       }
     }
   }
