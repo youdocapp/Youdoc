@@ -49,7 +49,7 @@ export class HealthRecordsService {
     if (filters?.ordering) params.append('ordering', filters.ordering)
     
     const query = params.toString()
-    const endpoint = `/health-records${query ? `?${query}` : ''}`
+    const endpoint = `/health-records/${query ? `?${query}` : ''}`
     console.log('📋 GET Health Records - Endpoint:', endpoint)
     console.log('📋 GET Health Records - About to call apiClient.get with requiresAuth=true')
     try {
@@ -63,7 +63,7 @@ export class HealthRecordsService {
   }
 
   async getHealthRecord(id: string): Promise<HealthRecord> {
-    return apiClient.get<HealthRecord>(`/health-records/${id}`)
+    return apiClient.get<HealthRecord>(`/health-records/${id}/`)
   }
 
   async createHealthRecord(data: CreateHealthRecordRequest, file?: any): Promise<HealthRecord> {
@@ -85,7 +85,7 @@ export class HealthRecordsService {
       } as any)
     }
     
-    return apiClient.post<HealthRecord>('/health-records', formData, true, true)
+    return apiClient.post<HealthRecord>('/health-records/', formData, true, true)
   }
 
   async updateHealthRecord(id: string, data: UpdateHealthRecordRequest, file?: any): Promise<HealthRecord> {
@@ -107,11 +107,11 @@ export class HealthRecordsService {
       } as any)
     }
     
-    return apiClient.patch<HealthRecord>(`/health-records/${id}`, formData, true, true)
+    return apiClient.patch<HealthRecord>(`/health-records/${id}/`, formData, true, true)
   }
 
   async deleteHealthRecord(id: string): Promise<void> {
-    return apiClient.delete<void>(`/health-records/${id}`)
+    return apiClient.delete<void>(`/health-records/${id}/`)
   }
 }
 

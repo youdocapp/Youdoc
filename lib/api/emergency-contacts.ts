@@ -62,39 +62,39 @@ export interface BulkDeleteResponse {
 
 export class EmergencyContactsService {
   async getEmergencyContacts(): Promise<EmergencyContactsListResponse> {
-    return apiClient.get<EmergencyContactsListResponse>('/emergency-contacts')
+    return apiClient.get<EmergencyContactsListResponse>('/emergency-contacts/')
   }
 
   async getEmergencyContact(id: number): Promise<EmergencyContact> {
-    return apiClient.get<EmergencyContact>(`/emergency-contacts/${id}`)
+    return apiClient.get<EmergencyContact>(`/emergency-contacts/${id}/`)
   }
 
   async createEmergencyContact(data: CreateEmergencyContactRequest): Promise<EmergencyContact> {
-    return apiClient.post<EmergencyContact>('/emergency-contacts', data)
+    return apiClient.post<EmergencyContact>('/emergency-contacts/', data)
   }
 
   async updateEmergencyContact(id: number, data: UpdateEmergencyContactRequest): Promise<EmergencyContact> {
-    return apiClient.patch<EmergencyContact>(`/emergency-contacts/${id}`, data)
+    return apiClient.patch<EmergencyContact>(`/emergency-contacts/${id}/`, data)
   }
 
   async deleteEmergencyContact(id: number): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/emergency-contacts/${id}`)
+    return apiClient.delete<{ message: string }>(`/emergency-contacts/${id}/`)
   }
 
   async setPrimaryContact(data: SetPrimaryContactRequest): Promise<SetPrimaryContactResponse> {
-    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary', data)
+    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary/', data)
   }
 
   async getPrimaryContact(): Promise<EmergencyContact> {
-    return apiClient.get<EmergencyContact>('/emergency-contacts/primary')
+    return apiClient.get<EmergencyContact>('/emergency-contacts/primary/')
   }
 
   async getContactStats(): Promise<ContactStatsResponse> {
-    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats')
+    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats/')
   }
 
   async bulkDeleteContacts(data: BulkDeleteRequest): Promise<BulkDeleteResponse> {
-    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete', data)
+    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete/', data)
   }
 }
 

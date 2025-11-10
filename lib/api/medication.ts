@@ -85,41 +85,62 @@ export class MedicationService {
     if (filters?.is_active !== undefined) params.append('is_active', String(filters.is_active))
     
     const query = params.toString()
-    const url = query ? `/medications?${query}` : '/medications'
+    const url = query ? `/medications/?${query}` : '/medications/'
     const response = await apiClient.get<{ count: number; next: string | null; previous: string | null; results: Medication[] } | Medication[]>(url)
+    
+    console.log('📋 getMedications response:', {
+      isArray: Array.isArray(response),
+      hasResults: response && typeof response === 'object' && 'results' in response,
+      responseType: typeof response,
+      responseKeys: response && typeof response === 'object' ? Object.keys(response) : [],
+      count: response && typeof response === 'object' && 'count' in response ? (response as { count: number }).count : null,
+      resultsLength: response && typeof response === 'object' && 'results' in response ? (response as { results: Medication[] }).results?.length : null
+    })
     
     // Handle paginated response (DRF returns {count, next, previous, results})
     // or direct array response
     if (Array.isArray(response)) {
+      console.log('📋 Returning array response, length:', response.length)
       return response
-    } else if (response && 'results' in response) {
-      return response.results
+    } else if (response && typeof response === 'object' && 'results' in response) {
+      const results = (response as { results: Medication[] }).results || []
+      console.log('📋 Returning paginated response results, length:', results.length)
+      return results
     }
+    console.warn('📋 No valid response format, returning empty array')
     return []
   }
 
   async getMedication(id: string): Promise<Medication> {
-    return apiClient.get<Medication>(`/medications/${id}`)
+    return apiClient.get<Medication>(`/medications/${id}/`)
   }
 
   async createMedication(data: CreateMedicationRequest): Promise<Medication> {
-    return apiClient.post<Medication>('/medications', data)
+    return apiClient.post<Medication>('/medications/', data)
   }
 
   async updateMedication(id: string, data: UpdateMedicationRequest): Promise<Medication> {
-    return apiClient.patch<Medication>(`/medications/${id}`, data)
+    const url = `/medications/${id}/`
+    console.log('🔄 updateMedication URL:', url)
+    return apiClient.patch<Medication>(url, data)
   }
 
   async deleteMedication(id: string): Promise<void> {
-    return apiClient.delete<void>(`/medications/${id}`)
+    const url = `/medications/${id}/`
+    console.log('🔄 deleteMedication URL:', url)
+    return apiClient.delete<void>(url)
   }
 
   async toggleMedicationTaken(medicationId: string): Promise<TakenRecord> {
-    return apiClient.post<TakenRecord>(`/medications/${medicationId}/toggle-taken`)
+    const url = `/medications/${medicationId}/toggle-taken/`
+    console.log('🔄 toggleMedicationTaken URL:', url)
+    return apiClient.post<TakenRecord>(url)
   }
 
   async getTodayMedications(): Promise<TodayMedication[]> {
-    return apiClient.get<TodayMedication[]>('/medications/today')
+    const url = '/medications/today/'
+    console.log('🔄 getTodayMedications URL:', url)
+    return apiClient.get<TodayMedication[]>(url)
   }
 
   async getMedicationCalendar(month?: number, year?: number): Promise<MedicationCalendarResponse> {
@@ -128,7 +149,8 @@ export class MedicationService {
     if (year) params.append('year', String(year))
     
     const query = params.toString()
-    const url = query ? `/medications/calendar?${query}` : '/medications/calendar'
+    const url = query ? `/medications/calendar/?${query}` : '/medications/calendar/'
+    console.log('🔄 getMedicationCalendar URL:', url)
     return apiClient.get<MedicationCalendarResponse>(url)
   }
 
@@ -143,7 +165,8 @@ export class MedicationService {
     if (filters?.taken !== undefined) params.append('taken', String(filters.taken))
     
     const query = params.toString()
-    const url = query ? `/medications/taken?${query}` : '/medications/taken'
+    const url = query ? `/medications/taken/?${query}` : '/medications/taken/'
+    console.log('🔄 getTakenRecords URL:', url)
     return apiClient.get<TakenRecord[]>(url)
   }
 
@@ -152,7 +175,9 @@ export class MedicationService {
     date: string
     taken: boolean
   }): Promise<TakenRecord> {
-    return apiClient.post<TakenRecord>('/medications/taken', data)
+    const url = '/medications/taken/'
+    console.log('🔄 createTakenRecord URL:', url)
+    return apiClient.post<TakenRecord>(url, data)
   }
 }
 

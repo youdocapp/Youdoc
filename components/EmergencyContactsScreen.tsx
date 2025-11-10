@@ -40,10 +40,10 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
   const handleOpenEdit = (contact: EmergencyContact) => {
     setFormData({
       name: contact.name,
-      relationship: contact.relationship,
-      phoneNumber: contact.phoneNumber,
+      relationship: contact.relationship || '',
+      phoneNumber: (contact as any).phoneNumber || contact.phone_number || '',
       email: contact.email || '',
-      isPrimary: contact.isPrimary
+      isPrimary: (contact as any).isPrimary || contact.is_primary || false
     });
     setEditingContact(contact);
     setShowAddModal(true);
@@ -335,7 +335,7 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
                 <View style={styles.contactInfo}>
                   <Text style={styles.contactName}>{contact.name}</Text>
                   <Text style={styles.contactRelationship}>{contact.relationship}</Text>
-                  {contact.isPrimary && (
+                  {((contact as any).isPrimary || contact.is_primary) && (
                     <View style={styles.primaryBadge}>
                       <Star size={12} color="#FFFFFF" fill="#FFFFFF" />
                       <Text style={styles.primaryText}>Primary</Text>
@@ -355,7 +355,7 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
               <View style={styles.contactDetails}>
                 <View style={styles.detailRow}>
                   <Phone size={16} color={colors.textSecondary} />
-                  <Text style={styles.detailText}>{contact.phoneNumber}</Text>
+                  <Text style={styles.detailText}>{(contact as any).phoneNumber || contact.phone_number}</Text>
                 </View>
                 {contact.email && (
                   <View style={styles.detailRow}>
@@ -365,7 +365,7 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
                 )}
               </View>
 
-              {!contact.isPrimary && (
+              {!((contact as any).isPrimary || contact.is_primary) && (
                 <TouchableOpacity style={styles.setPrimaryButton} onPress={() => handleSetPrimary(contact)}>
                   <Text style={styles.setPrimaryText}>Set as Primary</Text>
                 </TouchableOpacity>

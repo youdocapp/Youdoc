@@ -123,15 +123,15 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     },
   })
 
-  const addContact = async (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'>) => {
+  const addContact = async (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'> | any) => {
     try {
-      const { name, phone_number, relationship, email, is_primary } = contact
+      // Transform camelCase to snake_case for backend
       const data: CreateEmergencyContactRequest = {
-        name,
-        phone_number,
-        relationship,
-        email,
-        is_primary,
+        name: contact.name,
+        phone_number: contact.phone_number || contact.phoneNumber, // Support both formats
+        relationship: contact.relationship,
+        email: contact.email,
+        is_primary: contact.is_primary || contact.isPrimary,
       }
       const newContact = await createMutation.mutateAsync(data)
       return { success: true, contact: newContact }
@@ -144,16 +144,22 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     }
   }
 
-  const updateContact = async (id: number, updates: Partial<EmergencyContact>) => {
+  const updateContact = async (id: number, updates: Partial<EmergencyContact> | any) => {
     try {
-      const { name, phone_number, relationship, email, is_primary } = updates
+      // Transform camelCase to snake_case for backend
       const data: UpdateEmergencyContactRequest = {
-        name,
-        phone_number,
-        relationship,
-        email,
-        is_primary,
+        name: updates.name,
+        phone_number: updates.phone_number || updates.phoneNumber, // Support both formats
+        relationship: updates.relationship,
+        email: updates.email,
+        is_primary: updates.is_primary || updates.isPrimary,
       }
+      // Remove undefined fields
+      Object.keys(data).forEach(key => {
+        if (data[key as keyof UpdateEmergencyContactRequest] === undefined) {
+          delete data[key as keyof UpdateEmergencyContactRequest]
+        }
+      })
       const updatedContact = await updateMutation.mutateAsync({ id, data })
       return { success: true, contact: updatedContact }
     } catch (error: any) {
