@@ -35,14 +35,14 @@ def api_root(request):
         'status': 'active',
         'endpoints': {
             'admin': '/admin/',
-            'authentication': '/api/auth/',
-            'medications': '/api/medications/',
-            'health_records': '/api/health-records/',
-            'medical_history': '/api/medical-history/',
-            'emergency_contacts': '/api/emergency-contacts/',
-            'articles': '/api/articles/',
-            'health_tracking': '/api/health-tracking/',
-            'notifications': '/api/notifications/',
+            'authentication': '/auth/',
+            'medications': '/medications/',
+            'health_records': '/health-records/',
+            'medical_history': '/medical-history/',
+            'emergency_contacts': '/emergency-contacts/',
+            'articles': '/articles/',
+            'health_tracking': '/health-tracking/',
+            'notifications': '/notifications/',
         },
         'documentation': 'https://github.com/your-repo/youdoc-backend'
     })

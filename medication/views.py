@@ -34,11 +34,14 @@ class MedicationListCreateView(generics.ListCreateAPIView):
     def dispatch(self, request, *args, **kwargs):
         """Debug logging for request headers"""
         logger = logging.getLogger(__name__)
-        logger.info(f'🔍 Medications {request.method} Request Headers:')
-        logger.info(f'  Authorization: {request.headers.get("Authorization", "NOT FOUND")}')
-        logger.info(f'  HTTP_AUTHORIZATION: {request.META.get("HTTP_AUTHORIZATION", "NOT FOUND")}')
-        logger.info(f'  All headers: {dict(request.headers)}')
-        logger.info(f'  All META keys with HTTP_: {[k for k in request.META.keys() if k.startswith("HTTP_")]}')
+        try:
+            logger.info(f'🔍 Medications {request.method} Request Headers:')
+            logger.info(f'  Authorization: {request.headers.get("Authorization", "NOT FOUND")}')
+            logger.info(f'  HTTP_AUTHORIZATION: {request.META.get("HTTP_AUTHORIZATION", "NOT FOUND")}')
+            logger.info(f'  All headers: {dict(request.headers)}')
+            logger.info(f'  All META keys with HTTP_: {[k for k in request.META.keys() if k.startswith("HTTP_")]}')
+        except Exception as e:
+            logger.error(f'Error in dispatch logging: {str(e)}')
         return super().dispatch(request, *args, **kwargs)
     
     def get_serializer_class(self):
@@ -48,44 +51,66 @@ class MedicationListCreateView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         """Filter medications by user and optional date parameters"""
-        queryset = Medication.objects.filter(user=self.request.user)
-        
-        # Filter by date if provided (for frontend calendar view)
-        date_param = self.request.query_params.get('date')
-        if date_param:
-            try:
-                filter_date = date.fromisoformat(date_param)
-                queryset = queryset.filter(
-                    Q(start_date__lte=filter_date) & 
-                    (Q(end_date__isnull=True) | Q(end_date__gte=filter_date))
-                )
-            except ValueError:
-                pass
-        
-        # Filter by date range if provided
-        start_date = self.request.query_params.get('start_date')
-        end_date = self.request.query_params.get('end_date')
-        if start_date and end_date:
-            try:
-                start_date_obj = date.fromisoformat(start_date)
-                end_date_obj = date.fromisoformat(end_date)
-                queryset = queryset.filter(
-                    Q(start_date__lte=end_date_obj) & 
-                    (Q(end_date__isnull=True) | Q(end_date__gte=start_date_obj))
-                )
-            except ValueError:
-                pass
-        
-        # Filter by active status
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active.lower() == 'true')
-        
-        return queryset.order_by('-created_at')
+        logger = logging.getLogger(__name__)
+        try:
+            queryset = Medication.objects.filter(user=self.request.user)
+            
+            # Filter by date if provided (for frontend calendar view)
+            date_param = self.request.query_params.get('date')
+            if date_param:
+                try:
+                    filter_date = date.fromisoformat(date_param)
+                    queryset = queryset.filter(
+                        Q(start_date__lte=filter_date) & 
+                        (Q(end_date__isnull=True) | Q(end_date__gte=filter_date))
+                    )
+                except ValueError as e:
+                    logger.warning(f'Invalid date parameter: {date_param}, error: {str(e)}')
+            
+            # Filter by date range if provided
+            start_date = self.request.query_params.get('start_date')
+            end_date = self.request.query_params.get('end_date')
+            if start_date and end_date:
+                try:
+                    start_date_obj = date.fromisoformat(start_date)
+                    end_date_obj = date.fromisoformat(end_date)
+                    queryset = queryset.filter(
+                        Q(start_date__lte=end_date_obj) & 
+                        (Q(end_date__isnull=True) | Q(end_date__gte=start_date_obj))
+                    )
+                except ValueError as e:
+                    logger.warning(f'Invalid date range parameters: {start_date}, {end_date}, error: {str(e)}')
+            
+            # Filter by active status
+            is_active = self.request.query_params.get('is_active')
+            if is_active is not None:
+                queryset = queryset.filter(is_active=is_active.lower() == 'true')
+            
+            return queryset.order_by('-created_at')
+        except Exception as e:
+            logger.error(f'Error in get_queryset: {str(e)}', exc_info=True)
+            raise
+    
+    def list(self, request, *args, **kwargs):
+        """Override list to add error handling"""
+        logger = logging.getLogger(__name__)
+        try:
+            return super().list(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f'Error in list view: {str(e)}', exc_info=True)
+            return Response(
+                {'error': True, 'message': 'An error occurred while fetching medications', 'details': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
     
     def perform_create(self, serializer):
         """Create medication for the authenticated user"""
-        serializer.save(user=self.request.user)
+        logger = logging.getLogger(__name__)
+        try:
+            serializer.save(user=self.request.user)
+        except Exception as e:
+            logger.error(f'Error in perform_create: {str(e)}', exc_info=True)
+            raise
 
 
 class MedicationDetailView(generics.RetrieveUpdateDestroyAPIView):
