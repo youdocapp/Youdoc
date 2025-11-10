@@ -113,9 +113,21 @@ export const [MedicationProvider, useMedication] = createContextHook(() => {
 
   const createMedication = async (data: CreateMedicationRequest) => {
     try {
+      // Verify token exists before making request
+      const token = await AsyncStorage.getItem('accessToken')
+      if (!token) {
+        console.error('❌ No token found when creating medication')
+        return {
+          success: false,
+          error: 'Authentication credentials were not provided. Please log in again.',
+        }
+      }
+      console.log('✅ Token verified before creating medication:', token.substring(0, 20) + '...')
+      
       const medication = await createMutation.mutateAsync(data)
       return { success: true, medication }
     } catch (error: any) {
+      console.error('❌ Error creating medication:', error)
       const apiError = error as ApiError
       return {
         success: false,

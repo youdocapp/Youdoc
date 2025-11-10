@@ -1,7 +1,13 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Svg, Path } from 'react-native-svg';
+import * as WebBrowser from 'expo-web-browser';
+import { useAuth } from '../../contexts/AuthContext';
+import Constants from 'expo-constants';
+
+// Complete the OAuth session when redirected back
+WebBrowser.maybeCompleteAuthSession();
 
 interface AuthScreenProps {
   onBack: () => void;
@@ -9,6 +15,98 @@ interface AuthScreenProps {
 
 const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
   const router = useRouter();
+  const { googleAuth } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleGoogleSignUp = async () => {
+    try {
+      setIsLoading(true);
+      console.log('🚀 Starting Google sign up...');
+
+      // Get Google OAuth Client ID from environment or config
+      const googleClientId = Constants.expoConfig?.extra?.googleClientId || 
+                            (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_GOOGLE_CLIENT_ID);
+
+      console.log('🔍 Google OAuth Check:', {
+        hasClientId: !!googleClientId,
+        clientIdLength: googleClientId?.length || 0,
+        clientIdPrefix: googleClientId ? googleClientId.substring(0, 20) + '...' : 'none'
+      });
+
+      if (!googleClientId || googleClientId === 'YOUR_CLIENT_ID' || googleClientId.trim() === '') {
+        Alert.alert(
+          'Google Sign In Not Configured',
+          'Google Sign In requires configuration. Please:\n\n1. Create OAuth 2.0 credentials in Google Cloud Console\n2. Add EXPO_PUBLIC_GOOGLE_CLIENT_ID to your .env file\n3. Configure redirect URIs\n\nFor now, please use email sign up.',
+          [{ text: 'OK' }]
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      // Get the API base URL for the redirect URI
+      // Google OAuth requires HTTPS redirect URIs (not custom schemes)
+      const apiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl || 
+                        (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_BASE_URL) ||
+                        'https://youdoc.onrender.com';
+      
+      // Remove trailing slash and /api if present (we want the base domain)
+      let baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
+      baseUrl = baseUrl.replace('/api', ''); // Remove /api if present
+      
+      // Use the backend callback URL (HTTPS) - Google requires HTTPS for redirect URIs
+      const redirectUri = `${baseUrl}/auth/google/callback`;
+      
+      // For Expo to handle the redirect back to the app
+      const appScheme = Constants.expoConfig?.scheme || 'myapp';
+      
+      console.log('🔍 OAuth Configuration:', {
+        apiBaseUrl: baseUrl,
+        redirectUri,
+        appScheme,
+        clientIdPrefix: googleClientId.substring(0, 20) + '...'
+      });
+      
+      // Construct the Google OAuth URL
+      // The redirect URI points to the backend, which will handle the callback
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Date.now()}`;
+
+      // Open Google OAuth in browser
+      // The redirect URI is HTTPS (backend URL), and Expo will handle the redirect back to app
+      const result = await WebBrowser.openAuthSessionAsync(
+        googleAuthUrl,
+        `${appScheme}://` // This is what Expo uses to redirect back to the app
+      );
+
+      if (result.type === 'success' && result.url) {
+        // Extract ID token from URL (Google returns id_token in the hash)
+        const url = new URL(result.url);
+        const idToken = url.hash.split('id_token=')[1]?.split('&')[0];
+        
+        if (idToken) {
+          console.log('✅ Google ID token received');
+          const authResult = await googleAuth({ access_token: idToken });
+          
+          if (authResult.success) {
+            console.log('✅ Google authentication successful');
+            router.replace('/dashboard');
+          } else {
+            Alert.alert('Error', authResult.error || 'Google authentication failed');
+          }
+        } else {
+          Alert.alert('Error', 'Could not retrieve ID token from Google');
+        }
+      } else if (result.type === 'cancel') {
+        console.log('ℹ️ User cancelled Google sign in');
+      } else {
+        Alert.alert('Error', 'Google sign in failed. Please try again.');
+      }
+    } catch (error: any) {
+      console.error('❌ Google sign up error:', error);
+      Alert.alert('Error', error.message || 'Failed to sign in with Google. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
@@ -66,16 +164,18 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
           </Text>
 
           <TouchableOpacity 
-            onPress={() => console.log('Google sign up')}
+            onPress={handleGoogleSignUp}
+            disabled={isLoading}
             style={{
               width: '100%',
-              backgroundColor: '#1F2937',
+              backgroundColor: isLoading ? '#9CA3AF' : '#1F2937',
               paddingVertical: 18,
               borderRadius: 28,
               alignItems: 'center',
               flexDirection: 'row',
               justifyContent: 'center',
-              gap: 12
+              gap: 12,
+              opacity: isLoading ? 0.6 : 1
             }}
           >
             <Svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -84,13 +184,17 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
               <Path d="M4.48084 11.9094C4.03084 10.6675 4.03084 9.33672 4.48084 8.09484V5.51758H1.14232C-0.379677 8.55859 -0.379677 12.4453 1.14232 15.4863L4.48084 11.9094Z" fill="#FBBC04"/>
               <Path d="M10.2002 3.95781C11.5977 3.93672 12.9463 4.47266 13.9549 5.43984L16.8316 2.56328C15.1856 0.991406 12.9438 0.126562 10.2002 0.154687C6.31779 0.154687 2.73779 2.49687 1.14258 5.67578L4.48107 8.25234C5.27185 5.87187 7.53951 3.95781 10.2002 3.95781Z" fill="#EA4335"/>
             </Svg>
-            <Text style={{
-              color: 'white',
-              fontSize: 17,
-              fontWeight: '600'
-            }}>
-              Sign up with Google
-            </Text>
+            {isLoading ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <Text style={{
+                color: 'white',
+                fontSize: 17,
+                fontWeight: '600'
+              }}>
+                Sign up with Google
+              </Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 

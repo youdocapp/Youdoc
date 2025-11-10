@@ -5,7 +5,7 @@ import SettingsScreen from '../components/SettingsScreen';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsRoute() {
-  const { signOut, deleteAccount } = useAuth();
+  const { logout, deleteAccount } = useAuth();
 
   const handleBack = () => {
     router.replace('/dashboard');
@@ -50,7 +50,7 @@ export default function SettingsRoute() {
           onPress: async () => {
             try {
               console.log('🚀 Signing out user...');
-              await signOut();
+              await logout();
               console.log('✅ User signed out successfully');
               router.replace('/');
             } catch (error) {

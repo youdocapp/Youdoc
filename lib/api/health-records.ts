@@ -51,7 +51,15 @@ export class HealthRecordsService {
     const query = params.toString()
     const endpoint = `/health-records${query ? `?${query}` : ''}`
     console.log('📋 GET Health Records - Endpoint:', endpoint)
-    return apiClient.get<PaginatedResponse<HealthRecord>>(endpoint)
+    console.log('📋 GET Health Records - About to call apiClient.get with requiresAuth=true')
+    try {
+      const result = await apiClient.get<PaginatedResponse<HealthRecord>>(endpoint, true)
+      console.log('📋 GET Health Records - Success:', result)
+      return result
+    } catch (error) {
+      console.error('📋 GET Health Records - Error caught in service:', error)
+      throw error
+    }
   }
 
   async getHealthRecord(id: string): Promise<HealthRecord> {

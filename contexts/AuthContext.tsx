@@ -171,14 +171,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (refreshToken) {
         try {
           await authService.logout({ refresh: refreshToken })
-        } catch (error) {
-          console.error('Logout API call failed:', error)
+          console.log('✅ Logout API call successful')
+        } catch (error: any) {
+          // Token might be expired/invalid - that's okay, we'll still clear local auth
+          const apiError = error as ApiError
+          if (apiError.message?.includes('Invalid token') || apiError.message?.includes('expired')) {
+            console.log('ℹ️ Token expired/invalid, clearing local auth anyway')
+          } else {
+            console.warn('⚠️ Logout API call failed (non-critical):', apiError.message)
+          }
         }
       }
     } catch (error) {
       console.error('Error during logout:', error)
     } finally {
+      // Always clear local auth regardless of API call result
       await clearAuth()
+      console.log('✅ Local auth cleared successfully')
     }
   }, [clearAuth])
 
