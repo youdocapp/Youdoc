@@ -100,21 +100,45 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
   })
 
   // Fetch notification stats - only when authenticated, auth initialized, and token exists
+  // Made optional with error handling to prevent breaking the notifications feature
   const {
     data: stats,
     isLoading: isLoadingStats,
     error: statsError,
   } = useQuery({
     queryKey: ['notifications', 'stats'],
-    queryFn: () => notificationsService.getNotificationStats(),
+    queryFn: async () => {
+      try {
+        return await notificationsService.getNotificationStats()
+      } catch (error: any) {
+        // Log error but don't throw - return default stats instead
+        console.warn('⚠️ Failed to fetch notification stats (backend may have an issue):', error)
+        // Return default stats structure so the app doesn't break
+        return {
+          total_notifications: 0,
+          unread_notifications: 0,
+          notifications_by_type: {},
+          recent_notifications: [],
+        }
+      }
+    },
     staleTime: 60000, // 1 minute
     enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
-    retry: false, // Don't retry on 404
+    retry: false, // Don't retry on error
   })
 
   const notifications = notificationsData?.results || []
   const isLoading = isLoadingNotifications || isLoadingPreferences || isLoadingTokens || isLoadingStats
-  const error = (notificationsError || preferencesError || tokensError || statsError) as Error | null
+  // Don't include statsError in main error - stats is optional and has fallback
+  const error = (notificationsError || preferencesError || tokensError) as Error | null
+  
+  // Provide default stats if stats query failed or returned null
+  const safeStats = stats || {
+    total_notifications: notifications.length,
+    unread_notifications: notifications.filter(n => !n.is_read).length,
+    notifications_by_type: {},
+    recent_notifications: notifications.slice(0, 5),
+  }
 
   // Mark notification read mutation
   const markReadMutation = useMutation({
@@ -313,7 +337,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     notifications,
     preferences,
     deviceTokens,
-    stats: stats || null,
+    stats: safeStats,
     isLoading,
     error,
     getNotifications,

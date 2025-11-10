@@ -1,7 +1,7 @@
 import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { medicationService, type Medication, type CreateMedicationRequest, type UpdateMedicationRequest, type TodayMedication, type MedicationCalendarResponse, type ApiError } from '@/lib/api'
+import { medicationService, notificationsService, type Medication, type CreateMedicationRequest, type UpdateMedicationRequest, type TodayMedication, type MedicationCalendarResponse, type ApiError } from '@/lib/api'
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
@@ -190,7 +190,39 @@ export const [MedicationProvider, useMedication] = createContextHook(() => {
 
   const toggleMedicationTaken = async (id: string) => {
     try {
+      // Get medication details before toggling
+      const medication = getMedication(id) || todayMedications.find(med => med.id === id)
+      const wasTaken = medication && ('taken' in medication ? medication.taken : false)
+      
+      // Toggle medication taken status
       await toggleTakenMutation.mutateAsync(id)
+      
+      // Create a notification only when medication is marked as taken (not when untaken)
+      if (isAuthenticated && hasToken && medication && !wasTaken) {
+        try {
+          const medicationName = medication.name || 'Medication'
+          const medicationDosage = 'dosage' in medication ? medication.dosage : medication.dosage_display || ''
+          
+          await notificationsService.createNotification({
+            type: 'medication',
+            title: 'Medication Taken',
+            message: `You marked ${medicationName}${medicationDosage ? ` (${medicationDosage})` : ''} as taken`,
+            metadata: {
+              medication_id: id,
+              medication_name: medicationName,
+              action: 'marked_taken',
+            },
+          })
+          
+          // Invalidate notifications to show the new one
+          queryClient.invalidateQueries({ queryKey: ['notifications'] })
+          console.log('✅ Notification created for medication taken:', medicationName)
+        } catch (notificationError) {
+          // Don't fail the medication toggle if notification creation fails
+          console.warn('⚠️ Failed to create notification for medication taken:', notificationError)
+        }
+      }
+      
       return { success: true }
     } catch (error: any) {
       const apiError = error as ApiError

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
-import { ChevronLeft, Plus, Clock } from 'lucide-react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList, Animated } from 'react-native';
+import { ChevronLeft, Plus, Clock, CheckCircle2, Circle } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
@@ -90,6 +90,114 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     }
     return medications.filter(med => med.dateAdded === selectedDate);
   }, [medications, selectedDate]);
+
+  // Medication Card Component with enhanced taken button
+  const MedicationCard = ({ medication, onToggle, colors }: { medication: any; onToggle: (id: string) => Promise<{ success: boolean; error?: string }>; colors: any }) => {
+    const [isProcessing, setIsProcessing] = useState(false);
+    const scaleAnim = useRef(new Animated.Value(1)).current;
+    const opacityAnim = useRef(new Animated.Value(medication.taken ? 1 : 0)).current;
+
+    useEffect(() => {
+      Animated.timing(opacityAnim, {
+        toValue: medication.taken ? 1 : 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
+    }, [medication.taken]);
+
+    const handleToggle = async () => {
+      if (isProcessing) return;
+
+      setIsProcessing(true);
+      
+      // Animate button press
+      Animated.sequence([
+        Animated.timing(scaleAnim, {
+          toValue: 0.95,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(scaleAnim, {
+          toValue: 1,
+          duration: 100,
+          useNativeDriver: true,
+        }),
+      ]).start();
+
+      const result = await onToggle(medication.id);
+      
+      if (result.success && !medication.taken) {
+        // Show success feedback
+        Animated.sequence([
+          Animated.timing(scaleAnim, {
+            toValue: 1.1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+          Animated.timing(scaleAnim, {
+            toValue: 1,
+            duration: 150,
+            useNativeDriver: true,
+          }),
+        ]).start();
+      }
+      
+      setIsProcessing(false);
+    };
+
+    return (
+      <View style={[styles.medicationCard, medication.taken && styles.medicationCardTaken]}>
+        <View style={styles.medicationIcon}>
+          <Text style={styles.pillEmoji}>💊</Text>
+        </View>
+        <View style={styles.medicationInfo}>
+          <Text style={[styles.medicationName, medication.taken && styles.medicationNameTaken]}>
+            {medication.name}
+          </Text>
+          <Text style={[styles.medicationDose, medication.taken && styles.medicationDoseTaken]}>
+            {medication.dosage}
+          </Text>
+          <View style={styles.medicationTime}>
+            <Clock size={14} color={colors.textSecondary} />
+            <Text style={[styles.timeText, medication.taken && styles.timeTextTaken]}>
+              {medication.time[0] || '08:00'}
+            </Text>
+          </View>
+        </View>
+        <Animated.View 
+          style={[
+            styles.takenButtonContainer,
+            { transform: [{ scale: scaleAnim }] }
+          ]}
+        >
+          <TouchableOpacity
+            style={[
+              styles.takenButton,
+              medication.taken && styles.takenButtonActive,
+              isProcessing && styles.takenButtonProcessing
+            ]}
+            onPress={handleToggle}
+            disabled={isProcessing}
+            activeOpacity={0.8}
+          >
+            {medication.taken ? (
+              <>
+                <CheckCircle2 size={20} color="#FFFFFF" />
+                <Text style={styles.takenButtonText}>Taken</Text>
+              </>
+            ) : (
+              <>
+                <Circle size={20} color="#4F7FFF" strokeWidth={2.5} />
+                <Text style={[styles.takenButtonText, styles.takenButtonTextInactive]}>
+                  {isProcessing ? 'Marking...' : 'Mark as Taken'}
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </Animated.View>
+      </View>
+    );
+  };
   
   useEffect(() => {
     const todayDateString = formatLocalDate(today);
@@ -258,10 +366,13 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       shadowRadius: 8,
       elevation: 3,
       borderWidth: 1,
-      borderColor: colors.border
+      borderColor: colors.border,
+      position: 'relative' as const
     },
     medicationCardTaken: {
-      opacity: 0.5
+      backgroundColor: '#F0F9FF',
+      borderColor: '#4F7FFF',
+      borderWidth: 1.5
     },
     medicationIcon: {
       width: 52,
@@ -307,28 +418,41 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     timeTextTaken: {
       textDecorationLine: 'line-through' as const
     },
-    checkbox: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
-      borderWidth: 2,
-      borderColor: '#D1D5DB',
-      backgroundColor: '#FFFFFF',
+    takenButtonContainer: {
+      marginLeft: 'auto'
+    },
+    takenButton: {
+      flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      justifyContent: 'center' as const
+      justifyContent: 'center' as const,
+      paddingVertical: 10,
+      paddingHorizontal: 16,
+      borderRadius: 12,
+      backgroundColor: '#F3F4F6',
+      borderWidth: 2,
+      borderColor: '#E5E7EB',
+      minWidth: 120,
+      gap: 8
     },
-    checkboxChecked: {
+    takenButtonActive: {
       backgroundColor: '#4F7FFF',
-      borderColor: '#4F7FFF'
+      borderColor: '#4F7FFF',
+      shadowColor: '#4F7FFF',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.3,
+      shadowRadius: 4,
+      elevation: 4
     },
-    checkmark: {
-      width: 14,
-      height: 10,
-      borderLeftWidth: 2.5,
-      borderBottomWidth: 2.5,
-      borderColor: '#FFFFFF',
-      transform: [{ rotate: '-45deg' }],
-      marginTop: -2
+    takenButtonProcessing: {
+      opacity: 0.6
+    },
+    takenButtonText: {
+      fontSize: 14,
+      fontWeight: '600' as const,
+      color: '#FFFFFF'
+    },
+    takenButtonTextInactive: {
+      color: '#4F7FFF'
     },
     emptyState: {
       flex: 1,
@@ -462,27 +586,12 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
         
         {filteredMedications.length > 0 ? (
           filteredMedications.map((med) => (
-            <TouchableOpacity 
-              key={med.id} 
-              style={[styles.medicationCard, med.taken && styles.medicationCardTaken]}
-              onPress={() => toggleMedicationTaken(med.id)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.medicationIcon}>
-                <Text style={styles.pillEmoji}>💊</Text>
-              </View>
-              <View style={styles.medicationInfo}>
-                <Text style={[styles.medicationName, med.taken && styles.medicationNameTaken]}>{med.name}</Text>
-                <Text style={[styles.medicationDose, med.taken && styles.medicationDoseTaken]}>{med.dosage}</Text>
-                <View style={styles.medicationTime}>
-                  <Clock size={14} color={colors.textSecondary} />
-                  <Text style={[styles.timeText, med.taken && styles.timeTextTaken]}>{med.time[0] || '08:00'}</Text>
-                </View>
-              </View>
-              <View style={[styles.checkbox, med.taken && styles.checkboxChecked]}>
-                {med.taken && <View style={styles.checkmark} />}
-              </View>
-            </TouchableOpacity>
+            <MedicationCard
+              key={med.id}
+              medication={med}
+              onToggle={toggleMedicationTaken}
+              colors={colors}
+            />
           ))
         ) : (
           <View style={styles.emptyState}>
