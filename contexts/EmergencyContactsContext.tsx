@@ -18,9 +18,9 @@ export interface EmergencyContactContextType {
   error: Error | null
   
   addContact: (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'>) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
-  updateContact: (id: number, updates: Partial<EmergencyContact>) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
-  deleteContact: (id: number) => Promise<{ success: boolean; error?: string }>
-  setPrimaryContact: (id: number) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
+  updateContact: (id: number | string, updates: Partial<EmergencyContact>) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
+  deleteContact: (id: number | string) => Promise<{ success: boolean; error?: string }>
+  setPrimaryContact: (id: number | string) => Promise<{ success: boolean; contact?: EmergencyContact; error?: string }>
   bulkDeleteContacts: (ids: number[]) => Promise<{ success: boolean; deletedCount?: number; error?: string }>
   refetch: () => Promise<void>
 }
@@ -88,7 +88,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateEmergencyContactRequest }) =>
+    mutationFn: ({ id, data }: { id: number | string; data: UpdateEmergencyContactRequest }) =>
       emergencyContactsService.updateEmergencyContact(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
@@ -98,7 +98,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
 
   // Delete mutation
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => emergencyContactsService.deleteEmergencyContact(id),
+    mutationFn: (id: number | string) => emergencyContactsService.deleteEmergencyContact(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
       queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
@@ -107,7 +107,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
 
   // Set primary mutation
   const setPrimaryMutation = useMutation({
-    mutationFn: (id: number) => emergencyContactsService.setPrimaryContact({ contact_id: id }),
+    mutationFn: (id: number | string) => emergencyContactsService.setPrimaryContact({ contact_id: id }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['emergency-contacts'] })
       queryClient.invalidateQueries({ queryKey: ['emergency-contacts', 'primary'] })
@@ -154,7 +154,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     }
   }
 
-  const updateContact = async (id: number, updates: Partial<EmergencyContact> | any) => {
+  const updateContact = async (id: number | string, updates: Partial<EmergencyContact> | any) => {
     try {
       // Transform camelCase to snake_case for backend
       const data: UpdateEmergencyContactRequest = {
@@ -184,12 +184,15 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     }
   }
 
-  const deleteContact = async (id: number) => {
+  const deleteContact = async (id: number | string) => {
     try {
-      await deleteMutation.mutateAsync(id)
+      console.log('🗑️ deleteContact called with id:', id)
+      const response = await deleteMutation.mutateAsync(id)
+      console.log('✅ deleteContact response:', response)
       return { success: true }
     } catch (error: any) {
       const apiError = error as ApiError
+      console.error('❌ Error deleting emergency contact:', apiError)
       return {
         success: false,
         error: apiError.message || 'Failed to delete emergency contact',
@@ -197,7 +200,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     }
   }
 
-  const setPrimaryContact = async (id: number) => {
+  const setPrimaryContact = async (id: number | string) => {
     try {
       const response = await setPrimaryMutation.mutateAsync(id)
       return { success: true, contact: response.contact }

@@ -98,7 +98,21 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
         {
           text: 'Delete',
           style: 'destructive',
-          onPress: () => deleteContact(contact.id)
+          onPress: async () => {
+            try {
+              console.log('🗑️ Deleting emergency contact with id:', contact.id)
+              const result = await deleteContact(contact.id)
+              if (result.success) {
+                console.log('✅ Successfully deleted emergency contact')
+              } else {
+                console.error('❌ Failed to delete emergency contact:', result.error)
+                Alert.alert('Error', result.error || 'Failed to delete contact')
+              }
+            } catch (error) {
+              console.error('❌ Error deleting emergency contact:', error)
+              Alert.alert('Error', error instanceof Error ? error.message : 'Failed to delete contact')
+            }
+          }
         }
       ]
     );

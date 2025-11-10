@@ -1,7 +1,7 @@
 import { apiClient } from './client'
 
 export interface EmergencyContact {
-  id: number
+  id: number | string // Support both number and UUID string
   name: string
   relationship?: string
   display_relationship?: string
@@ -65,36 +65,44 @@ export class EmergencyContactsService {
     return apiClient.get<EmergencyContactsListResponse>('/emergency-contacts/')
   }
 
-  async getEmergencyContact(id: number): Promise<EmergencyContact> {
-    return apiClient.get<EmergencyContact>(`/emergency-contacts/${id}/`)
+  async getEmergencyContact(id: number | string): Promise<EmergencyContact> {
+    const idStr = String(id)
+    return apiClient.get<EmergencyContact>(`/emergency-contacts/${idStr}/`)
   }
 
   async createEmergencyContact(data: CreateEmergencyContactRequest): Promise<EmergencyContact> {
     return apiClient.post<EmergencyContact>('/emergency-contacts/', data)
   }
 
-  async updateEmergencyContact(id: number, data: UpdateEmergencyContactRequest): Promise<EmergencyContact> {
-    return apiClient.patch<EmergencyContact>(`/emergency-contacts/${id}/`, data)
+  async updateEmergencyContact(id: number | string, data: UpdateEmergencyContactRequest): Promise<EmergencyContact> {
+    const idStr = String(id)
+    return apiClient.patch<EmergencyContact>(`/emergency-contacts/${idStr}/`, data)
   }
 
-  async deleteEmergencyContact(id: number): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/emergency-contacts/${id}/`)
+  async deleteEmergencyContact(id: number | string): Promise<{ message: string }> {
+    // Convert id to string for URL (Django might expect string format)
+    const idStr = String(id)
+    const url = `/emergency-contacts/${idStr}/`
+    console.log('🗑️ deleteEmergencyContact URL:', url)
+    console.log('🗑️ deleteEmergencyContact id (original):', id, 'type:', typeof id)
+    console.log('🗑️ deleteEmergencyContact id (string):', idStr)
+    return apiClient.delete<{ message: string }>(url)
   }
 
   async setPrimaryContact(data: SetPrimaryContactRequest): Promise<SetPrimaryContactResponse> {
-    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary/', data)
+    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary', data)
   }
 
   async getPrimaryContact(): Promise<EmergencyContact> {
-    return apiClient.get<EmergencyContact>('/emergency-contacts/primary/')
+    return apiClient.get<EmergencyContact>('/emergency-contacts/primary')
   }
 
   async getContactStats(): Promise<ContactStatsResponse> {
-    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats/')
+    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats')
   }
 
   async bulkDeleteContacts(data: BulkDeleteRequest): Promise<BulkDeleteResponse> {
-    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete/', data)
+    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete', data)
   }
 }
 
