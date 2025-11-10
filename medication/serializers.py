@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.utils import timezone
+from django.db import transaction
 from datetime import datetime
 from .models import (
     Medication, 
@@ -196,15 +197,33 @@ class MedicationCreateSerializer(serializers.ModelSerializer):
         """Create medication with reminder times"""
         reminder_times = validated_data.pop('reminder_times', [])
         
-        # Create the medication
-        medication = Medication.objects.create(**validated_data)
-        
-        # Create reminder times
-        for time in reminder_times:
-            MedicationReminder.objects.create(
-                medication=medication,
-                time=time
-            )
+        # Use transaction to ensure atomicity
+        with transaction.atomic():
+            # Create the medication
+            medication = Medication.objects.create(**validated_data)
+            
+            # Deduplicate reminder times - normalize times to seconds since midnight for comparison
+            unique_times = []
+            seen_time_seconds = set()
+            for time in reminder_times:
+                # Normalize time to seconds since midnight for accurate comparison
+                if hasattr(time, 'hour') and hasattr(time, 'minute') and hasattr(time, 'second'):
+                    time_seconds = time.hour * 3600 + time.minute * 60 + time.second
+                else:
+                    # Fallback to string comparison if not a time object
+                    time_seconds = hash(str(time))
+                
+                if time_seconds not in seen_time_seconds:
+                    seen_time_seconds.add(time_seconds)
+                    unique_times.append(time)
+            
+            # Create reminder times - use get_or_create to avoid duplicates
+            for time in unique_times:
+                MedicationReminder.objects.get_or_create(
+                    medication=medication,
+                    time=time,
+                    defaults={'is_active': True}
+                )
         
         return medication
 
@@ -232,20 +251,38 @@ class MedicationUpdateSerializer(serializers.ModelSerializer):
         """Update medication and its reminder times"""
         reminder_times = validated_data.pop('reminder_times', None)
         
-        # Update the medication
-        medication = super().update(instance, validated_data)
-        
-        # Update reminder times if provided
-        if reminder_times is not None:
-            # Delete existing reminders
-            medication.reminder_times.all().delete()
+        # Use transaction to ensure atomicity
+        with transaction.atomic():
+            # Update the medication
+            medication = super().update(instance, validated_data)
             
-            # Create new reminders
-            for time in reminder_times:
-                MedicationReminder.objects.create(
-                    medication=medication,
-                    time=time
-                )
+            # Update reminder times if provided
+            if reminder_times is not None:
+                # Delete existing reminders
+                medication.reminder_times.all().delete()
+                
+                # Deduplicate reminder times - normalize times to seconds since midnight for comparison
+                unique_times = []
+                seen_time_seconds = set()
+                for time in reminder_times:
+                    # Normalize time to seconds since midnight for accurate comparison
+                    if hasattr(time, 'hour') and hasattr(time, 'minute') and hasattr(time, 'second'):
+                        time_seconds = time.hour * 3600 + time.minute * 60 + time.second
+                    else:
+                        # Fallback to string comparison if not a time object
+                        time_seconds = hash(str(time))
+                    
+                    if time_seconds not in seen_time_seconds:
+                        seen_time_seconds.add(time_seconds)
+                        unique_times.append(time)
+                
+                # Create new reminders
+                for time in unique_times:
+                    MedicationReminder.objects.create(
+                        medication=medication,
+                        time=time,
+                        is_active=True
+                    )
         
         return medication
 

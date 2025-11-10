@@ -110,7 +110,35 @@ class MedicationListCreateView(generics.ListCreateAPIView):
             serializer.save(user=self.request.user)
         except Exception as e:
             logger.error(f'Error in perform_create: {str(e)}', exc_info=True)
+            # Re-raise to let DRF handle it with proper error response
             raise
+    
+    def create(self, request, *args, **kwargs):
+        """Override create to add better error handling"""
+        logger = logging.getLogger(__name__)
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            logger.error(f'Error in create view: {str(e)}', exc_info=True)
+            # Check if it's a database integrity error
+            error_message = str(e)
+            if 'unique constraint' in error_message.lower() or 'duplicate key' in error_message.lower():
+                return Response(
+                    {
+                        'error': True,
+                        'message': 'A reminder time already exists for this medication. Please remove duplicates.',
+                        'details': error_message
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            return Response(
+                {
+                    'error': True,
+                    'message': 'An error occurred while creating the medication',
+                    'details': error_message
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class MedicationDetailView(generics.RetrieveUpdateDestroyAPIView):
