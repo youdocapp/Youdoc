@@ -90,19 +90,19 @@ export class EmergencyContactsService {
   }
 
   async setPrimaryContact(data: SetPrimaryContactRequest): Promise<SetPrimaryContactResponse> {
-    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary', data)
+    return apiClient.post<SetPrimaryContactResponse>('/emergency-contacts/set-primary/', data)
   }
 
   async getPrimaryContact(): Promise<EmergencyContact> {
-    return apiClient.get<EmergencyContact>('/emergency-contacts/primary')
+    return apiClient.get<EmergencyContact>('/emergency-contacts/primary/')
   }
 
   async getContactStats(): Promise<ContactStatsResponse> {
-    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats')
+    return apiClient.get<ContactStatsResponse>('/emergency-contacts/stats/')
   }
 
   async bulkDeleteContacts(data: BulkDeleteRequest): Promise<BulkDeleteResponse> {
-    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete', data)
+    return apiClient.post<BulkDeleteResponse>('/emergency-contacts/bulk-delete/', data)
   }
 }
 
