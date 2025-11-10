@@ -79,7 +79,15 @@ class EmergencyContactSerializer(serializers.ModelSerializer):
 		"""
 		Cross-field validation.
 		"""
-		user = attrs.get('user') or self.instance.user if self.instance else None
+		# Get user from context (request) or from instance
+		user = attrs.get('user')
+		if not user:
+			# Try to get from context (request)
+			if self.context and 'request' in self.context:
+				user = self.context['request'].user
+			# Or get from instance if updating
+			elif self.instance:
+				user = self.instance.user
 		
 		if not user:
 			raise serializers.ValidationError('User is required.')
