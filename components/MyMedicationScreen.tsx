@@ -24,10 +24,19 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
 }) => {
   const { medications, toggleMedicationTaken } = useMedication();
   const { colors } = useTheme();
+  
+  // Helper function to format date in local timezone (YYYY-MM-DD)
+  const formatLocalDate = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
   const today = new Date();
   const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState<string>(today.toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(formatLocalDate(today));
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
@@ -41,7 +50,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       // Return days without medication data if medications is not available
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
-        const dateString = date.toISOString().split('T')[0];
+        const dateString = formatLocalDate(date);
         const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
         
         days.push({
@@ -56,7 +65,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
-      const dateString = date.toISOString().split('T')[0];
+      const dateString = formatLocalDate(date);
       const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
       const medicationsOnDate = medications.filter(med => med.dateAdded === dateString);
       const uniqueMedications = new Set(medicationsOnDate.map(m => m.name));
@@ -83,7 +92,8 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   }, [medications, selectedDate]);
   
   useEffect(() => {
-    const todayIndex = dates.findIndex(d => d.dateString === today.toISOString().split('T')[0]);
+    const todayDateString = formatLocalDate(today);
+    const todayIndex = dates.findIndex(d => d.dateString === todayDateString);
     if (todayIndex !== -1 && datesScrollRef.current) {
       setTimeout(() => {
         datesScrollRef.current?.scrollToIndex({
@@ -374,7 +384,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
               ]}
               onPress={() => {
                 setSelectedMonth(index);
-                const firstDayOfMonth = new Date(selectedYear, index, 1).toISOString().split('T')[0];
+                const firstDayOfMonth = formatLocalDate(new Date(selectedYear, index, 1));
                 setSelectedDate(firstDayOfMonth);
               }}
             >
@@ -404,7 +414,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
             });
           }}
           renderItem={({ item: date }) => {
-            const isToday = date.dateString === today.toISOString().split('T')[0];
+            const isToday = date.dateString === formatLocalDate(today);
             const isSelected = selectedDate === date.dateString;
             
             return (

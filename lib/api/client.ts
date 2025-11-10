@@ -115,7 +115,7 @@ export class ApiClient {
           refreshTokenLength: refreshToken.length
         })
 
-        const response = await fetch(`${this.baseUrl}/auth/token/refresh`, {
+        const response = await fetch(`${this.baseUrl}/auth/token/refresh/`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ refresh: refreshToken }),

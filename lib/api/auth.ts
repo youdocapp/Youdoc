@@ -174,11 +174,11 @@ export class AuthService {
       transformed: { first_name: transformedData.first_name, last_name: transformedData.last_name, email: transformedData.email }
     })
     
-    return apiClient.post<RegisterResponse>('/auth/register', transformedData, false)
+    return apiClient.post<RegisterResponse>('/auth/register/', transformedData, false)
   }
 
   async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await apiClient.post<any>('/auth/login', data, false)
+    const response = await apiClient.post<any>('/auth/login/', data, false)
     // Transform snake_case to camelCase for user object
     if (response.user) {
       response.user = {
@@ -201,7 +201,7 @@ export class AuthService {
   }
 
   async verifyOTP(data: VerifyOTPRequest): Promise<VerifyOTPResponse> {
-    const response = await apiClient.post<any>('/auth/verify-otp', data, false)
+    const response = await apiClient.post<any>('/auth/verify-otp/', data, false)
     // Transform snake_case to camelCase for user object
     if (response.user) {
       response.user = {
@@ -224,11 +224,11 @@ export class AuthService {
   }
 
   async resendVerification(data: ResendVerificationRequest): Promise<ResendVerificationResponse> {
-    return apiClient.post<ResendVerificationResponse>('/auth/resend-verification', data, false)
+    return apiClient.post<ResendVerificationResponse>('/auth/resend-verification/', data, false)
   }
 
   async getProfile(): Promise<User> {
-    const response = await apiClient.get<any>('/auth/profile')
+    const response = await apiClient.get<any>('/auth/profile/')
     // Transform snake_case to camelCase
     return {
       publicId: response.public_id || response.publicId,
@@ -248,7 +248,7 @@ export class AuthService {
   }
 
   async updateProfile(data: UpdateProfileRequest): Promise<UpdateProfileResponse> {
-    const response = await apiClient.patch<any>('/auth/profile', data)
+    const response = await apiClient.patch<any>('/auth/profile/', data)
     // Transform snake_case to camelCase for user object
     if (response.user) {
       response.user = {
@@ -271,27 +271,27 @@ export class AuthService {
   }
 
   async changePassword(data: ChangePasswordRequest): Promise<ChangePasswordResponse> {
-    return apiClient.post<ChangePasswordResponse>('/auth/change-password', data)
+    return apiClient.post<ChangePasswordResponse>('/auth/change-password/', data)
   }
 
   async passwordResetRequest(data: PasswordResetRequest): Promise<PasswordResetResponse> {
-    return apiClient.post<PasswordResetResponse>('/auth/password-reset-request', data, false)
+    return apiClient.post<PasswordResetResponse>('/auth/password-reset-request/', data, false)
   }
 
   async passwordResetConfirm(data: PasswordResetConfirmRequest): Promise<PasswordResetConfirmResponse> {
-    return apiClient.post<PasswordResetConfirmResponse>('/auth/password-reset-confirm', data, false)
+    return apiClient.post<PasswordResetConfirmResponse>('/auth/password-reset-confirm/', data, false)
   }
 
   async logout(data: LogoutRequest): Promise<LogoutResponse> {
-    return apiClient.post<LogoutResponse>('/auth/logout', data)
+    return apiClient.post<LogoutResponse>('/auth/logout/', data)
   }
 
   async deleteAccount(): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>('/auth/delete-account')
+    return apiClient.delete<{ message: string }>('/auth/delete-account/')
   }
 
   async googleAuth(data: GoogleAuthRequest): Promise<GoogleAuthResponse> {
-    const response = await apiClient.post<any>('/auth/google', data, false)
+    const response = await apiClient.post<any>('/auth/google/', data, false)
     // Transform snake_case to camelCase for user object
     if (response.user) {
       response.user = {
@@ -314,7 +314,7 @@ export class AuthService {
   }
 
   async refreshToken(data: TokenRefreshRequest): Promise<TokenRefreshResponse> {
-    return apiClient.post<TokenRefreshResponse>('/auth/token/refresh', data, false)
+    return apiClient.post<TokenRefreshResponse>('/auth/token/refresh/', data, false)
   }
 }
 
