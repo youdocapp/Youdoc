@@ -1,5 +1,5 @@
 from rest_framework import generics, status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from datetime import date, timedelta
+import logging
 from .models import (
     Medication, 
     MedicationReminder, 
@@ -29,6 +30,16 @@ class MedicationListCreateView(generics.ListCreateAPIView):
     """
     authentication_classes = [JWTAuthentication]
     permission_classes = [permissions.IsAuthenticated]
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Debug logging for request headers"""
+        logger = logging.getLogger(__name__)
+        logger.info(f'🔍 Medications {request.method} Request Headers:')
+        logger.info(f'  Authorization: {request.headers.get("Authorization", "NOT FOUND")}')
+        logger.info(f'  HTTP_AUTHORIZATION: {request.META.get("HTTP_AUTHORIZATION", "NOT FOUND")}')
+        logger.info(f'  All headers: {dict(request.headers)}')
+        logger.info(f'  All META keys with HTTP_: {[k for k in request.META.keys() if k.startswith("HTTP_")]}')
+        return super().dispatch(request, *args, **kwargs)
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -153,6 +164,7 @@ class MedicationTakenDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 @api_view(['POST'])
+@authentication_classes([JWTAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def toggle_medication_taken(request, medication_id):
     """
@@ -182,6 +194,7 @@ def toggle_medication_taken(request, medication_id):
 
 
 @api_view(['GET'])
+@authentication_classes([JWTAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def medication_calendar(request):
     """
@@ -255,6 +268,7 @@ def medication_calendar(request):
 
 
 @api_view(['GET'])
+@authentication_classes([JWTAuthentication])
 @permission_classes([permissions.IsAuthenticated])
 def today_medications(request):
     """
