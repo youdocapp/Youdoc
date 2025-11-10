@@ -126,17 +126,27 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
   const addContact = async (contact: Omit<EmergencyContact, 'id' | 'created_at' | 'updated_at' | 'display_relationship' | 'contact_info'> | any) => {
     try {
       // Transform camelCase to snake_case for backend
-      const data: CreateEmergencyContactRequest = {
-        name: contact.name,
-        phone_number: contact.phone_number || contact.phoneNumber, // Support both formats
-        relationship: contact.relationship,
-        email: contact.email,
-        is_primary: contact.is_primary || contact.isPrimary,
+      // Note: relationship is required in the database schema (NOT NULL)
+      const data: any = {
+        name: contact.name?.trim(),
+        phone_number: (contact.phone_number || contact.phoneNumber)?.trim(), // Support both formats
+        relationship: contact.relationship?.trim() || 'Other', // Required field - default to 'Other' if not provided
       }
+      
+      // Only add optional fields if they have values
+      if (contact.email?.trim()) {
+        data.email = contact.email.trim()
+      }
+      if (contact.is_primary !== undefined || contact.isPrimary !== undefined) {
+        data.is_primary = contact.is_primary || contact.isPrimary || false
+      }
+      
+      console.log('📤 Creating emergency contact with data:', data)
       const newContact = await createMutation.mutateAsync(data)
       return { success: true, contact: newContact }
     } catch (error: any) {
       const apiError = error as ApiError
+      console.error('❌ Error creating emergency contact:', apiError)
       return {
         success: false,
         error: apiError.message || 'Failed to add emergency contact',
@@ -148,22 +158,25 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     try {
       // Transform camelCase to snake_case for backend
       const data: UpdateEmergencyContactRequest = {
-        name: updates.name,
-        phone_number: updates.phone_number || updates.phoneNumber, // Support both formats
-        relationship: updates.relationship,
-        email: updates.email,
+        name: updates.name?.trim(),
+        phone_number: (updates.phone_number || updates.phoneNumber)?.trim(), // Support both formats
+        relationship: updates.relationship?.trim(),
+        email: updates.email?.trim(),
         is_primary: updates.is_primary || updates.isPrimary,
       }
-      // Remove undefined fields
+      // Remove undefined and empty fields
       Object.keys(data).forEach(key => {
-        if (data[key as keyof UpdateEmergencyContactRequest] === undefined) {
+        const value = data[key as keyof UpdateEmergencyContactRequest]
+        if (value === undefined || value === '' || (typeof value === 'string' && !value.trim())) {
           delete data[key as keyof UpdateEmergencyContactRequest]
         }
       })
+      console.log('📤 Updating emergency contact with data:', data)
       const updatedContact = await updateMutation.mutateAsync({ id, data })
       return { success: true, contact: updatedContact }
     } catch (error: any) {
       const apiError = error as ApiError
+      console.error('❌ Error updating emergency contact:', apiError)
       return {
         success: false,
         error: apiError.message || 'Failed to update emergency contact',

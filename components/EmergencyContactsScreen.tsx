@@ -49,24 +49,45 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
     setShowAddModal(true);
   };
 
+  const validatePhoneNumber = (phone: string): boolean => {
+    // Backend allows: digits, spaces, hyphens, parentheses, and +
+    const phoneRegex = /^[\d\s\-()+]+$/
+    const digitCount = phone.replace(/\D/g, '').length
+    return phoneRegex.test(phone) && digitCount >= 7 && digitCount <= 15
+  }
+
   const handleSave = async () => {
     if (!formData.name.trim() || !formData.phoneNumber.trim()) {
-      Alert.alert('Error', 'Name and phone number are required');
-      return;
+      Alert.alert('Error', 'Name and phone number are required')
+      return
+    }
+
+    // Validate phone number format
+    if (!validatePhoneNumber(formData.phoneNumber.trim())) {
+      Alert.alert(
+        'Invalid Phone Number',
+        'Please enter a valid phone number. Only digits, spaces, hyphens, parentheses, and + are allowed. Must contain 7-15 digits.'
+      )
+      return
+    }
+
+    // Ensure relationship is set (required by backend)
+    if (!formData.relationship.trim()) {
+      formData.relationship = 'Other' // Default relationship if not provided
     }
 
     try {
       if (editingContact) {
-        await updateContact(editingContact.id, formData);
+        await updateContact(editingContact.id, formData)
       } else {
-        await addContact(formData);
+        await addContact(formData)
       }
-      setShowAddModal(false);
-      resetForm();
+      setShowAddModal(false)
+      resetForm()
     } catch (error) {
-      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to save contact');
+      Alert.alert('Error', error instanceof Error ? error.message : 'Failed to save contact')
     }
-  };
+  }
 
   const handleDelete = (contact: EmergencyContact) => {
     Alert.alert(
@@ -422,8 +443,12 @@ const EmergencyContactsScreen: React.FC<EmergencyContactsScreenProps> = ({ onBac
                 <TextInput
                   style={styles.input}
                   value={formData.phoneNumber}
-                  onChangeText={(text) => setFormData({ ...formData, phoneNumber: text })}
-                  placeholder="Enter phone number"
+                  onChangeText={(text) => {
+                    // Allow only valid characters: digits, spaces, hyphens, parentheses, and +
+                    const cleaned = text.replace(/[^\d\s\-()+]/g, '')
+                    setFormData({ ...formData, phoneNumber: cleaned })
+                  }}
+                  placeholder="e.g., +1-555-123-4567 or (555) 123-4567"
                   placeholderTextColor={colors.textSecondary}
                   keyboardType="phone-pad"
                 />
