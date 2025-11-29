@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, TextInput, StyleSheet, Alert, Modal, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { ChevronLeft, ChevronDown, Clock } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
@@ -28,6 +28,17 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 }) => {
   const { addMedication } = useMedication();
   const { colors, isDark } = useTheme();
+  
+  // Helper function to get current time in 12-hour format
+  const getCurrentTime12Hour = (): string => {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    return `${hour12}:${minutes.toString().padStart(2, '0')} ${period}`;
+  };
+  
   const [name, setName] = useState<string>('');
   const [medicationType, setMedicationType] = useState<MedicationType>('Pill');
   const [quantity, setQuantity] = useState<string>('1');
@@ -35,7 +46,16 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const [unit, setUnit] = useState<string>('mg');
   const [frequency, setFrequency] = useState<FrequencyType>('Daily');
   const [timesPerDay, setTimesPerDay] = useState<TimesPerDayType>('Once daily');
-  const [reminderTimes, setReminderTimes] = useState<string[]>(['8:00 AM']);
+  const [reminderTimes, setReminderTimes] = useState<string[]>([getCurrentTime12Hour()]);
+  const reminderTimesRef = useRef<string[]>([getCurrentTime12Hour()]);
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    reminderTimesRef.current = reminderTimes;
+    console.log('💊 reminderTimes state updated:', reminderTimes);
+    console.log('💊 reminderTimesRef updated:', reminderTimesRef.current);
+  }, [reminderTimes]);
+  
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedDates, setSelectedDates] = useState<Date[]>([]);
@@ -51,9 +71,27 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
   // Convert time from "8:00 AM" format to "08:00" format
   const convertTimeTo24Hour = (time: string): string => {
+    // Handle if time is already in 24-hour format
+    if (!time.includes('AM') && !time.includes('PM')) {
+      // Already in 24-hour format, just ensure proper formatting
+      const [hours, minutes] = time.split(':');
+      return `${hours.padStart(2, '0')}:${(minutes || '00').padStart(2, '0')}`;
+    }
+    
     const [timePart, period] = time.split(' ');
+    if (!timePart || !period) {
+      console.warn('⚠️ Invalid time format:', time);
+      return '08:00'; // Default fallback
+    }
+    
     const [hours, minutes] = timePart.split(':');
+    if (!hours || !minutes) {
+      console.warn('⚠️ Invalid time format:', time);
+      return '08:00'; // Default fallback
+    }
+    
     let hour24 = parseInt(hours, 10);
+    const mins = minutes || '00';
     
     if (period === 'PM' && hour24 !== 12) {
       hour24 += 12;
@@ -61,7 +99,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
       hour24 = 0;
     }
     
-    return `${hour24.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+    return `${hour24.toString().padStart(2, '0')}:${mins.padStart(2, '0')}`;
   };
 
   const handleSave = async () => {
@@ -73,8 +111,29 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     setIsSaving(true);
 
     try {
-      // Convert reminder times from "8:00 AM" to "08:00" format
-      const reminderTimes24Hour = reminderTimes.map(convertTimeTo24Hour);
+      // Use the ref to ensure we have the latest state (avoid stale closures)
+      const latestReminderTimes = reminderTimesRef.current;
+      console.log('💊 Saving medication - reminderTimes state:', reminderTimes);
+      console.log('💊 Saving medication - reminderTimesRef:', latestReminderTimes);
+      
+      // Remove duplicates and ensure we have the latest state
+      const uniqueReminderTimes = Array.from(new Set(latestReminderTimes));
+      console.log('💊 Saving medication with reminder times (after deduplication):', uniqueReminderTimes);
+      console.log('💊 Array length:', uniqueReminderTimes.length);
+      
+      if (uniqueReminderTimes.length === 0) {
+        Alert.alert('Error', 'Please set at least one reminder time');
+        setIsSaving(false);
+        return;
+      }
+      
+      const reminderTimes24Hour = uniqueReminderTimes.map(time => {
+        const converted = convertTimeTo24Hour(time);
+        console.log(`💊 Converting "${time}" to "${converted}"`);
+        return converted;
+      });
+      console.log('💊 Converted reminder times (24-hour):', reminderTimes24Hour);
+      console.log('💊 Final array length:', reminderTimes24Hour.length);
 
       const result = await createMedication({
         name,
@@ -106,7 +165,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   };
 
   const addReminderTime = () => {
-    setReminderTimes([...reminderTimes, '12:00 PM']);
+    const newTime = getCurrentTime12Hour();
+    setReminderTimes(prevTimes => {
+      const newTimes = [...prevTimes, newTime];
+      reminderTimesRef.current = newTimes;
+      return newTimes;
+    });
   };
 
   const addSelectedDate = (date: Date) => {
@@ -135,15 +199,56 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
   const handleTimesPerDayChange = (option: TimesPerDayType) => {
     setTimesPerDay(option);
     const count = option === 'Once daily' ? 1 : option === 'Twice daily' ? 2 : option === 'Three times daily' ? 3 : 4;
-    const defaultTimes = ['8:00 AM', '12:00 PM', '4:00 PM', '8:00 PM'];
-    setReminderTimes(defaultTimes.slice(0, count));
+    // Use current time as default, then add evenly spaced times
+    const currentTime = getCurrentTime12Hour();
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Generate default times based on current time
+    const defaultTimes: string[] = [];
+    for (let i = 0; i < count; i++) {
+      const hoursToAdd = Math.floor((24 / count) * i);
+      const newDate = new Date();
+      newDate.setHours(currentHour + hoursToAdd, currentMinute, 0, 0);
+      const hours = newDate.getHours();
+      const minutes = newDate.getMinutes();
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const hour12 = hours % 12 || 12;
+      defaultTimes.push(`${hour12}:${minutes.toString().padStart(2, '0')} ${period}`);
+    }
+    
+    setReminderTimes(defaultTimes);
+    reminderTimesRef.current = defaultTimes;
     setShowTimesDropdown(false);
   };
 
   const updateReminderTime = (index: number, time: string) => {
-    const newTimes = [...reminderTimes];
-    newTimes[index] = time;
-    setReminderTimes(newTimes);
+    console.log(`💊 updateReminderTime called with index ${index}, time "${time}"`);
+    console.log(`💊 Current reminderTimes before update:`, reminderTimes);
+    console.log(`💊 Current reminderTimesRef before update:`, reminderTimesRef.current);
+    
+    setReminderTimes(prevTimes => {
+      if (index < 0 || index >= prevTimes.length) {
+        console.warn(`💊 Invalid index ${index} for reminder times array of length ${prevTimes.length}`);
+        return prevTimes;
+      }
+      const oldTime = prevTimes[index];
+      console.log(`💊 Updating reminder time at index ${index} from "${oldTime}" to "${time}"`);
+      
+      // Create a new array and replace the time at the specific index
+      const newTimes = prevTimes.map((t, i) => i === index ? time : t);
+      
+      // Ensure no duplicates (shouldn't happen, but just in case)
+      const uniqueTimes = Array.from(new Set(newTimes));
+      console.log('💊 Updated reminder times:', uniqueTimes);
+      console.log('💊 Array length:', uniqueTimes.length);
+      
+      // Update ref immediately
+      reminderTimesRef.current = uniqueTimes;
+      
+      return uniqueTimes;
+    });
   };
 
   const formatDate = (date: Date) => {
@@ -154,10 +259,58 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
     });
   };
 
+  // Convert 24-hour time (08:00) to 12-hour time (8:00 AM)
+  const convert24HourTo12Hour = (time24: string): string => {
+    // Check if already in 12-hour format
+    if (time24.includes('AM') || time24.includes('PM')) {
+      return time24;
+    }
+    
+    // Parse 24-hour format
+    const [hours, minutes] = time24.split(':');
+    const hour24 = parseInt(hours, 10);
+    const mins = minutes || '00';
+    
+    let hour12 = hour24;
+    let period: 'AM' | 'PM' = 'AM';
+    
+    if (hour24 === 0) {
+      hour12 = 12;
+      period = 'AM';
+    } else if (hour24 === 12) {
+      hour12 = 12;
+      period = 'PM';
+    } else if (hour24 > 12) {
+      hour12 = hour24 - 12;
+      period = 'PM';
+    } else {
+      hour12 = hour24;
+      period = 'AM';
+    }
+    
+    return `${hour12}:${mins} ${period}`;
+  };
+
   const TimePickerModal = ({ visible, onClose, onSelect, currentTime }: { visible: boolean; onClose: () => void; onSelect: (time: string) => void; currentTime: string }) => {
-    const [selectedHour, setSelectedHour] = useState<number>(parseInt(currentTime.split(':')[0]));
-    const [selectedMinute, setSelectedMinute] = useState<number>(parseInt(currentTime.split(':')[1].split(' ')[0]));
-    const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(currentTime.includes('AM') ? 'AM' : 'PM');
+    // Convert currentTime to 12-hour format if needed
+    const time12Hour = convert24HourTo12Hour(currentTime);
+    console.log('⏰ TimePickerModal render - currentTime:', currentTime, 'time12Hour:', time12Hour);
+    
+    // Parse initial values - use a function to ensure fresh parsing
+    const parseTime = (time: string) => {
+      const time12 = convert24HourTo12Hour(time);
+      const hour = parseInt(time12.split(':')[0]) || 8;
+      const minute = parseInt(time12.split(':')[1]?.split(' ')[0]) || 0;
+      const period = time12.includes('AM') ? 'AM' : 'PM';
+      return { hour, minute, period };
+    };
+    
+    const initialValues = parseTime(currentTime);
+    const [selectedHour, setSelectedHour] = useState<number>(initialValues.hour);
+    const [selectedMinute, setSelectedMinute] = useState<number>(initialValues.minute);
+    const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>(initialValues.period);
+    
+    console.log('⏰ TimePickerModal state - selectedHour:', selectedHour, 'selectedMinute:', selectedMinute, 'selectedPeriod:', selectedPeriod);
 
     const hourScrollRef = React.useRef<ScrollView>(null);
     const minuteScrollRef = React.useRef<ScrollView>(null);
@@ -167,19 +320,23 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
     React.useEffect(() => {
       if (visible) {
-        const hour = parseInt(currentTime.split(':')[0]);
-        const minute = parseInt(currentTime.split(':')[1].split(' ')[0]);
-        const period = currentTime.includes('AM') ? 'AM' : 'PM';
+        // Convert to 12-hour format if needed
+        const parsed = parseTime(currentTime);
+        console.log('⏰ TimePickerModal useEffect - currentTime:', currentTime, 'parsed:', parsed);
         
-        setSelectedHour(hour);
-        setSelectedMinute(minute);
-        setSelectedPeriod(period);
+        // Always update state when modal becomes visible or currentTime changes
+        setSelectedHour(parsed.hour);
+        setSelectedMinute(parsed.minute);
+        setSelectedPeriod(parsed.period);
         
+        console.log('⏰ TimePickerModal useEffect - state updated to - hour:', parsed.hour, 'minute:', parsed.minute, 'period:', parsed.period);
+        
+        // Use a longer timeout to ensure state has updated before scrolling
         setTimeout(() => {
-          hourScrollRef.current?.scrollTo({ y: (hour - 1) * ITEM_HEIGHT, animated: false });
-          minuteScrollRef.current?.scrollTo({ y: minute * ITEM_HEIGHT, animated: false });
-          periodScrollRef.current?.scrollTo({ y: (period === 'AM' ? 0 : 1) * ITEM_HEIGHT, animated: false });
-        }, 100);
+          hourScrollRef.current?.scrollTo({ y: (parsed.hour - 1) * ITEM_HEIGHT, animated: false });
+          minuteScrollRef.current?.scrollTo({ y: parsed.minute * ITEM_HEIGHT, animated: false });
+          periodScrollRef.current?.scrollTo({ y: (parsed.period === 'AM' ? 0 : 1) * ITEM_HEIGHT, animated: false });
+        }, 150);
       }
     }, [visible, currentTime]);
 
@@ -188,33 +345,46 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
 
     const handleHourScroll = (event: any) => {
       const offsetY = event.nativeEvent.contentOffset.y;
-      const index = Math.round(offsetY / ITEM_HEIGHT);
+      // Account for padding (ITEM_HEIGHT * 2 at top)
+      const adjustedOffset = offsetY;
+      const index = Math.max(0, Math.min(hours.length - 1, Math.round(adjustedOffset / ITEM_HEIGHT)));
       const hour = hours[index];
-      if (hour && hour !== selectedHour) {
+      if (hour !== undefined && hour !== selectedHour) {
+        console.log('⏰ Hour scroll - offsetY:', offsetY, 'index:', index, 'hour:', hour, 'current selectedHour:', selectedHour);
         setSelectedHour(hour);
       }
     };
 
     const handleMinuteScroll = (event: any) => {
       const offsetY = event.nativeEvent.contentOffset.y;
-      const index = Math.round(offsetY / ITEM_HEIGHT);
+      // Account for padding (ITEM_HEIGHT * 2 at top)
+      const adjustedOffset = offsetY;
+      const index = Math.max(0, Math.min(minutes.length - 1, Math.round(adjustedOffset / ITEM_HEIGHT)));
       const minute = minutes[index];
       if (minute !== undefined && minute !== selectedMinute) {
+        console.log('⏰ Minute scroll - offsetY:', offsetY, 'index:', index, 'minute:', minute, 'current selectedMinute:', selectedMinute);
         setSelectedMinute(minute);
       }
     };
 
     const handlePeriodScroll = (event: any) => {
       const offsetY = event.nativeEvent.contentOffset.y;
-      const index = Math.round(offsetY / ITEM_HEIGHT);
+      // Account for padding (ITEM_HEIGHT * 2 at top)
+      const adjustedOffset = offsetY;
+      const index = Math.max(0, Math.min(1, Math.round(adjustedOffset / ITEM_HEIGHT)));
       const period = index === 0 ? 'AM' : 'PM';
       if (period !== selectedPeriod) {
+        console.log('⏰ Period scroll - offsetY:', offsetY, 'index:', index, 'period:', period, 'current selectedPeriod:', selectedPeriod);
         setSelectedPeriod(period);
       }
     };
 
     const handleConfirm = () => {
+      // Use current state values to build the time string
       const time = `${selectedHour}:${selectedMinute.toString().padStart(2, '0')} ${selectedPeriod}`;
+      console.log('⏰ TimePickerModal handleConfirm - selectedHour:', selectedHour, 'selectedMinute:', selectedMinute, 'selectedPeriod:', selectedPeriod);
+      console.log('⏰ TimePickerModal handleConfirm - formatted time:', time);
+      console.log('⏰ TimePickerModal handleConfirm - calling onSelect with:', time);
       onSelect(time);
       onClose();
     };
@@ -965,9 +1135,12 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, gap: 8 }}>
           {reminderTimes.map((time, index) => (
             <TouchableOpacity 
-              key={index} 
+              key={`reminder-time-${index}`} 
               style={styles.reminderTimeButton}
-              onPress={() => setShowTimePickerIndex(index)}
+              onPress={() => {
+                console.log(`💊 Clicked on time button at index ${index}, current time: ${time}`);
+                setShowTimePickerIndex(index);
+              }}
             >
               <Clock size={16} color="#FFFFFF" style={{ marginRight: 6 }} />
               <Text style={styles.reminderTimeText}>{time}</Text>
@@ -1002,7 +1175,7 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
             {selectedDates.length > 0 && (
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 12, gap: 8 }}>
                 {selectedDates.map((date, index) => (
-                  <View key={index} style={styles.dateChip}>
+                  <View key={`selected-date-${date.getTime()}-${index}`} style={styles.dateChip}>
                     <Text style={styles.dateChipText}>{formatShortDate(date)}</Text>
                     <TouchableOpacity onPress={() => removeSelectedDate(index)}>
                       <Text style={styles.dateChipRemove}>×</Text>
@@ -1087,17 +1260,29 @@ const AddMedicationScreen: React.FC<AddMedicationScreenProps> = ({
         </TouchableOpacity>
       </Modal>
 
-      {showTimePickerIndex !== null && (
-        <TimePickerModal
-          visible={true}
-          onClose={() => setShowTimePickerIndex(null)}
-          onSelect={(time) => {
-            updateReminderTime(showTimePickerIndex, time);
-            setShowTimePickerIndex(null);
-          }}
-          currentTime={reminderTimes[showTimePickerIndex]}
-        />
-      )}
+      {showTimePickerIndex !== null && (() => {
+        const currentIndex = showTimePickerIndex;
+        const currentTime = reminderTimes[currentIndex] || getCurrentTime12Hour();
+        return (
+          <TimePickerModal
+            key={`time-picker-${currentIndex}-${currentTime}`}
+            visible={true}
+            onClose={() => {
+              console.log('⏰ TimePickerModal onClose - closing picker');
+              setShowTimePickerIndex(null);
+            }}
+            onSelect={(time) => {
+              console.log('⏰ TimePickerModal onSelect called with time:', time, 'for index:', currentIndex);
+              console.log('⏰ Current reminderTimes before update:', reminderTimes);
+              // Update the time immediately
+              updateReminderTime(currentIndex, time);
+              // Close the picker after update
+              setShowTimePickerIndex(null);
+            }}
+            currentTime={currentTime}
+          />
+        );
+      })()}
 
       {showStartDatePicker && (
         <DatePickerModal

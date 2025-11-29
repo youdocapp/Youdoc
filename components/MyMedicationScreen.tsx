@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList, Animated } from 'react-native';
-import { ChevronLeft, Plus, Clock, CheckCircle2, Circle } from 'lucide-react-native';
+import { ChevronLeft, Plus, Clock, CheckCircle2, Circle, Eye, EyeOff, Filter } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import BottomNav from './ui/BottomNav';
@@ -37,6 +37,8 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
   const [selectedMonth, setSelectedMonth] = useState<number>(today.getMonth());
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string>(formatLocalDate(today));
+  const [showTaken, setShowTaken] = useState<boolean>(true); // Show taken medications by default
+  const [sortBy, setSortBy] = useState<'default' | 'taken-last'>('default');
   const monthsScrollRef = useRef<FlatList>(null);
   const datesScrollRef = useRef<FlatList>(null);
   
@@ -88,8 +90,64 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
     if (!medications || !Array.isArray(medications)) {
       return [];
     }
-    return medications.filter(med => med.dateAdded === selectedDate);
+    
+    // Filter by selected date
+    let filtered = medications.filter(med => med.dateAdded === selectedDate);
+    
+    // Filter out taken medications if showTaken is false
+    if (!showTaken) {
+      filtered = filtered.filter(med => !med.taken);
+    }
+    
+    // Sort medications
+    if (sortBy === 'taken-last') {
+      // Sort: not taken first, then taken
+      filtered = [...filtered].sort((a, b) => {
+        if (a.taken === b.taken) return 0;
+        return a.taken ? 1 : -1;
+      });
+    }
+    
+    return filtered;
+  }, [medications, selectedDate, showTaken, sortBy]);
+  
+  // Calculate completion stats
+  const completionStats = useMemo(() => {
+    const allForDate = medications?.filter(med => med.dateAdded === selectedDate) || [];
+    const takenCount = allForDate.filter(med => med.taken).length;
+    const totalCount = allForDate.length;
+    const percentage = totalCount > 0 ? Math.round((takenCount / totalCount) * 100) : 0;
+    
+    return {
+      taken: takenCount,
+      total: totalCount,
+      percentage,
+      remaining: totalCount - takenCount
+    };
   }, [medications, selectedDate]);
+
+  // Get medication emoji based on type
+  const getMedicationEmoji = (medicationType: string | undefined): string => {
+    if (!medicationType) return '💊'; // Default to pill
+    
+    const typeMap: { [key: string]: string } = {
+      'Pill': '💊',
+      'Injection': '💉',
+      'Drops': '💧',
+      'Inhaler': '🫁',
+      'Cream': '🧴',
+      'Spray': '💨',
+      // Handle lowercase variations
+      'pill': '💊',
+      'injection': '💉',
+      'drops': '💧',
+      'inhaler': '🫁',
+      'cream': '🧴',
+      'spray': '💨',
+    };
+    
+    return typeMap[medicationType] || '💊'; // Default to pill if type not found
+  };
 
   // Medication Card Component with enhanced taken button
   const MedicationCard = ({ medication, onToggle, colors }: { medication: any; onToggle: (id: string) => Promise<{ success: boolean; error?: string }>; colors: any }) => {
@@ -145,10 +203,14 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       setIsProcessing(false);
     };
 
+    // Get medication type (handle both camelCase and snake_case)
+    const medicationType = medication.medication_type || medication.medicationType || 'Pill';
+    const medicationEmoji = getMedicationEmoji(medicationType);
+
     return (
       <View style={[styles.medicationCard, medication.taken && styles.medicationCardTaken]}>
         <View style={styles.medicationIcon}>
-          <Text style={styles.pillEmoji}>💊</Text>
+          <Text style={styles.pillEmoji}>{medicationEmoji}</Text>
         </View>
         <View style={styles.medicationInfo}>
           <Text style={[styles.medicationName, medication.taken && styles.medicationNameTaken]}>
@@ -347,11 +409,58 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       paddingHorizontal: 20,
       paddingTop: 20
     },
+    sectionHeader: {
+      flexDirection: 'row' as const,
+      justifyContent: 'space-between' as const,
+      alignItems: 'center' as const,
+      marginBottom: 16
+    },
     sectionTitle: {
       fontSize: 20,
       fontWeight: '700' as const,
       color: colors.text,
+      flex: 1
+    },
+    completionBadge: {
+      backgroundColor: '#E0E7FF',
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: 12,
+      marginLeft: 12
+    },
+    completionText: {
+      fontSize: 12,
+      fontWeight: '600' as const,
+      color: '#4F7FFF'
+    },
+    filterControls: {
+      flexDirection: 'row' as const,
+      gap: 8,
       marginBottom: 16
+    },
+    filterButton: {
+      flexDirection: 'row' as const,
+      alignItems: 'center' as const,
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 8,
+      backgroundColor: colors.background,
+      borderWidth: 1,
+      borderColor: colors.border
+    },
+    filterButtonActive: {
+      backgroundColor: '#E0E7FF',
+      borderColor: '#4F7FFF'
+    },
+    filterButtonText: {
+      fontSize: 13,
+      fontWeight: '500' as const,
+      color: colors.textSecondary
+    },
+    filterButtonTextActive: {
+      color: '#4F7FFF',
+      fontWeight: '600' as const
     },
     medicationCard: {
       backgroundColor: colors.card,
@@ -567,7 +676,7 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
                 <View style={styles.dotsContainer}>
                   {Array.from({ length: date.dots }).map((_, i) => (
                     <View 
-                      key={i} 
+                      key={`dot-${date.dateString}-${i}`} 
                       style={[
                         styles.dot,
                         isSelected && styles.dotActive
@@ -582,12 +691,46 @@ const MyMedicationScreen: React.FC<MyMedicationScreenProps> = ({
       </View>
 
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.sectionTitle}>Medicine</Text>
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionTitle}>Medicine</Text>
+          {completionStats.total > 0 && (
+            <View style={styles.completionBadge}>
+              <Text style={styles.completionText}>
+                {completionStats.taken}/{completionStats.total} taken ({completionStats.percentage}%)
+              </Text>
+            </View>
+          )}
+        </View>
+        
+        {/* Filter and Sort Controls */}
+        {medications?.filter(med => med.dateAdded === selectedDate).length > 0 && (
+          <View style={styles.filterControls}>
+            <TouchableOpacity
+              style={[styles.filterButton, !showTaken && styles.filterButtonActive]}
+              onPress={() => setShowTaken(!showTaken)}
+            >
+              {showTaken ? <Eye size={16} color={colors.textSecondary} /> : <EyeOff size={16} color="#4F7FFF" />}
+              <Text style={[styles.filterButtonText, !showTaken && styles.filterButtonTextActive]}>
+                {showTaken ? 'Show All' : 'Hide Taken'}
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.filterButton, sortBy === 'taken-last' && styles.filterButtonActive]}
+              onPress={() => setSortBy(sortBy === 'taken-last' ? 'default' : 'taken-last')}
+            >
+              <Filter size={16} color={sortBy === 'taken-last' ? '#4F7FFF' : colors.textSecondary} />
+              <Text style={[styles.filterButtonText, sortBy === 'taken-last' && styles.filterButtonTextActive]}>
+                {sortBy === 'taken-last' ? 'Pending First' : 'Sort'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
         
         {filteredMedications.length > 0 ? (
           filteredMedications.map((med) => (
             <MedicationCard
-              key={med.id}
+              key={med.id} 
               medication={med}
               onToggle={toggleMedicationTaken}
               colors={colors}

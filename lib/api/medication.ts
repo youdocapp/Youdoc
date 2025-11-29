@@ -55,7 +55,10 @@ export interface CreateMedicationRequest {
   reminder_times?: string[]
 }
 
-export interface UpdateMedicationRequest extends Partial<CreateMedicationRequest> {}
+export interface UpdateMedicationRequest extends Partial<Omit<CreateMedicationRequest, 'reminder_times'>> {
+  time?: string[] // Backend expects 'time' field, not 'reminder_times'
+  reminder_times?: string[] // Keep for backward compatibility
+}
 
 export interface MedicationCalendarResponse {
   [date: string]: Medication[]
@@ -122,7 +125,67 @@ export class MedicationService {
   async updateMedication(id: string, data: UpdateMedicationRequest): Promise<Medication> {
     const url = `/medications/${id}/`
     console.log('🔄 updateMedication URL:', url)
-    return apiClient.patch<Medication>(url, data)
+    
+    // Convert reminder_times to time field if provided, and convert to 24-hour format
+    const updateData: any = { ...data }
+    
+    // If reminder_times is provided, convert it to time field with 24-hour format
+    if (updateData.reminder_times && Array.isArray(updateData.reminder_times)) {
+      updateData.time = updateData.reminder_times.map((time: string) => {
+        // If already in 24-hour format (HH:MM), return as is
+        if (!time.includes('AM') && !time.includes('PM')) {
+          return time
+        }
+        // Convert from 12-hour format (H:MM AM/PM) to 24-hour format (HH:MM)
+        const [timePart, period] = time.split(' ')
+        if (!timePart || !period) return time
+        
+        const [hours, minutes] = timePart.split(':')
+        if (!hours || !minutes) return time
+        
+        let hour24 = parseInt(hours, 10)
+        const mins = minutes || '00'
+        
+        if (period === 'PM' && hour24 !== 12) {
+          hour24 += 12
+        } else if (period === 'AM' && hour24 === 12) {
+          hour24 = 0
+        }
+        
+        return `${hour24.toString().padStart(2, '0')}:${mins.padStart(2, '0')}`
+      })
+      delete updateData.reminder_times
+    }
+    
+    // If time is provided directly, ensure it's in 24-hour format
+    if (updateData.time && Array.isArray(updateData.time)) {
+      updateData.time = updateData.time.map((time: string) => {
+        // If already in 24-hour format (HH:MM), return as is
+        if (!time.includes('AM') && !time.includes('PM')) {
+          return time
+        }
+        // Convert from 12-hour format (H:MM AM/PM) to 24-hour format (HH:MM)
+        const [timePart, period] = time.split(' ')
+        if (!timePart || !period) return time
+        
+        const [hours, minutes] = timePart.split(':')
+        if (!hours || !minutes) return time
+        
+        let hour24 = parseInt(hours, 10)
+        const mins = minutes || '00'
+        
+        if (period === 'PM' && hour24 !== 12) {
+          hour24 += 12
+        } else if (period === 'AM' && hour24 === 12) {
+          hour24 = 0
+        }
+        
+        return `${hour24.toString().padStart(2, '0')}:${mins.padStart(2, '0')}`
+      })
+    }
+    
+    console.log('🔄 updateMedication data (after conversion):', updateData)
+    return apiClient.patch<Medication>(url, updateData)
   }
 
   async deleteMedication(id: string): Promise<void> {
