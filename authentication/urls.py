@@ -29,6 +29,7 @@ urlpatterns = [
     
     # OAuth endpoints
     path('google/', oauth_views.google_auth, name='google_auth'),
+    path('google/callback/', oauth_views.google_callback, name='google_callback'),
     path('apple/', oauth_views.apple_auth, name='apple_auth'),
     
     # Testing endpoint
