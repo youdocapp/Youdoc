@@ -97,39 +97,25 @@ def register(request):
             
             # Get OTP code from user (already set by serializer)
             otp_code = user.email_verification_token
-            logger.info(f"OTP code generated for {user.email}")
+            logger.info(f"OTP code generated for {user.email}: {otp_code}")
             
-            # Send OTP email - try to send but don't block if it fails
-            # Use background thread for production to avoid blocking, but ensure it's sent
-            def send_email_async():
-                try:
-                    logger.info(f"Background thread: Starting email send to {user.email}")
-                    result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                    if result:
-                        logger.info(f"Background thread: OTP email sent successfully to {user.email}")
-                    else:
-                        logger.warning(f"Background thread: OTP email returned False for {user.email}")
-                except Exception as email_error:
-                    logger.error(f"Background thread: Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
-            
-            # Start email sending in background thread (non-blocking)
-            # Use non-daemon thread so Gunicorn waits for it to complete
-            # This ensures emails are sent even if the request completes quickly
-            logger.info(f"Starting background email thread for {user.email}")
+            # Send OTP email synchronously to ensure it's sent
+            # This is more reliable than background threads which can be killed in production
+            logger.info(f"Attempting to send OTP email to {user.email}")
+            email_sent = False
             try:
-                # Use daemon=False so Gunicorn doesn't kill the thread immediately
-                # The thread will complete even after response is sent
-                email_thread = threading.Thread(target=send_email_async, daemon=False)
-                email_thread.start()
-                logger.info(f"Background email thread started for {user.email} (non-daemon)")
-            except Exception as thread_error:
-                logger.error(f"Failed to start email thread for {user.email}: {str(thread_error)}", exc_info=True)
-                # If threading fails, try to send directly as fallback
-                try:
-                    logger.warning(f"Falling back to synchronous email send for {user.email}")
-                    send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                except Exception as fallback_error:
-                    logger.error(f"Fallback email send also failed for {user.email}: {str(fallback_error)}", exc_info=True)
+                email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                if email_result:
+                    logger.info(f"OTP email sent successfully to {user.email}")
+                    email_sent = True
+                else:
+                    logger.error(f"OTP email send returned False for {user.email} - email may not have been sent")
+            except Exception as email_error:
+                logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
+            
+            # Add email status to response for debugging (only in development)
+            if not email_sent and settings.DEBUG:
+                response_data['email_warning'] = 'Email sending failed. Please use resend-verification endpoint.'
             
             # Return response immediately - don't wait for email
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -307,18 +293,26 @@ def resend_verification_email(request):
         user.email_verification_token = otp_code
         user.email_verification_sent_at = timezone.now()
         user.save()
+        logger.info(f"New OTP code generated for {user.email}: {otp_code}")
         
-        # Send OTP verification email in background thread to avoid blocking
-        def send_email_async():
-            try:
-                send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+        # Send OTP verification email synchronously to ensure it's sent
+        logger.info(f"Attempting to resend OTP email to {user.email}")
+        try:
+            email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+            if email_result:
                 logger.info(f"Resend OTP email sent successfully to {user.email}")
-            except Exception as email_error:
-                logger.error(f"Failed to send resend OTP email to {user.email}: {str(email_error)}", exc_info=True)
-        
-        # Start email sending in background thread
-        email_thread = threading.Thread(target=send_email_async, daemon=True)
-        email_thread.start()
+            else:
+                logger.error(f"Resend OTP email send returned False for {user.email} - email may not have been sent")
+                return Response({
+                    'error': True,
+                    'message': 'Failed to send verification email. Please try again later or contact support.'
+                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as email_error:
+            logger.error(f"Failed to send resend OTP email to {user.email}: {str(email_error)}", exc_info=True)
+            return Response({
+                'error': True,
+                'message': f'Failed to send verification email: {str(email_error)}. Please try again later or contact support.'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response({
             'success': True,

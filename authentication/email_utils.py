@@ -91,51 +91,73 @@ def send_otp_email(user_email, otp_code, user_name=None):
         
         if gmail_api_credentials and GMAIL_API_AVAILABLE:
             try:
-                logger.info(f"Using Gmail API to send email to {user_email}")
+                logger.info(f"Attempting to use Gmail API to send email to {user_email}")
                 import json
                 
                 # Parse credentials from JSON string or dict
-                if isinstance(gmail_api_credentials, str):
-                    creds_data = json.loads(gmail_api_credentials)
+                try:
+                    if isinstance(gmail_api_credentials, str):
+                        if not gmail_api_credentials.strip():
+                            raise ValueError("GMAIL_API_CREDENTIALS is empty string")
+                        creds_data = json.loads(gmail_api_credentials)
+                    elif isinstance(gmail_api_credentials, dict):
+                        creds_data = gmail_api_credentials
+                    else:
+                        raise ValueError(f"GMAIL_API_CREDENTIALS must be JSON string or dict, got {type(gmail_api_credentials)}")
+                    
+                    # Validate required fields
+                    required_fields = ['client_id', 'client_secret', 'refresh_token', 'token_uri']
+                    missing_fields = [field for field in required_fields if field not in creds_data]
+                    if missing_fields:
+                        raise ValueError(f"GMAIL_API_CREDENTIALS missing required fields: {missing_fields}")
+                    
+                    logger.info("Gmail API credentials parsed successfully")
+                except (json.JSONDecodeError, ValueError) as parse_error:
+                    logger.error(f"Failed to parse Gmail API credentials: {str(parse_error)}")
+                    # Fall through to SMTP
                 else:
-                    creds_data = gmail_api_credentials
-                
-                # Create credentials object
-                creds = Credentials.from_authorized_user_info(creds_data)
-                
-                # Refresh token if needed
-                if creds.expired and creds.refresh_token:
-                    creds.refresh(Request())
-                
-                # Build Gmail service
-                service = build('gmail', 'v1', credentials=creds)
-                
-                # Create email message
-                message = MIMEMultipart('alternative')
-                message['Subject'] = subject
-                message['From'] = settings.DEFAULT_FROM_EMAIL
-                message['To'] = user_email
-                
-                # Add text and HTML parts
-                text_part = MIMEText(plain_message, 'plain')
-                html_part = MIMEText(html_message, 'html')
-                message.attach(text_part)
-                message.attach(html_part)
-                
-                # Encode message for Gmail API
-                # Convert message to string, then encode to bytes, then base64 encode
-                raw_message = base64.urlsafe_b64encode(
-                    message.as_string().encode('utf-8')
-                ).decode()
-                
-                # Send email via Gmail API
-                send_message = service.users().messages().send(
-                    userId='me',
-                    body={'raw': raw_message}
-                ).execute()
-                
-                logger.info(f"Gmail API: OTP email sent successfully to {user_email}, message ID: {send_message.get('id')}")
-                return True
+                    # Create credentials object
+                    try:
+                        creds = Credentials.from_authorized_user_info(creds_data)
+                        
+                        # Refresh token if needed
+                        if creds.expired and creds.refresh_token:
+                            logger.info("Refreshing Gmail API token")
+                            creds.refresh(Request())
+                        
+                        # Build Gmail service
+                        service = build('gmail', 'v1', credentials=creds)
+                        
+                        # Create email message
+                        message = MIMEMultipart('alternative')
+                        message['Subject'] = subject
+                        message['From'] = settings.DEFAULT_FROM_EMAIL
+                        message['To'] = user_email
+                        
+                        # Add text and HTML parts
+                        text_part = MIMEText(plain_message, 'plain')
+                        html_part = MIMEText(html_message, 'html')
+                        message.attach(text_part)
+                        message.attach(html_part)
+                        
+                        # Encode message for Gmail API
+                        # Convert message to string, then encode to bytes, then base64 encode
+                        raw_message = base64.urlsafe_b64encode(
+                            message.as_string().encode('utf-8')
+                        ).decode()
+                        
+                        # Send email via Gmail API
+                        send_message = service.users().messages().send(
+                            userId='me',
+                            body={'raw': raw_message}
+                        ).execute()
+                        
+                        logger.info(f"Gmail API: OTP email sent successfully to {user_email}, message ID: {send_message.get('id')}")
+                        return True
+                        
+                    except Exception as gmail_error:
+                        logger.error(f"Gmail API error during email send: {str(gmail_error)}", exc_info=True)
+                        # Fall through to SMTP if Gmail API fails
                 
             except Exception as gmail_api_error:
                 logger.error(f"Gmail API error: {str(gmail_api_error)}", exc_info=True)
@@ -243,13 +265,24 @@ def send_otp_email(user_email, otp_code, user_name=None):
             error_msg = str(last_error)
             logger.error(f"All SMTP configurations failed. Last error: {error_msg}", exc_info=True)
             
+            # Check for common error patterns
             if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
-                logger.error(f"Network unreachable - Render is blocking SMTP ports. Solutions:")
+                logger.error(f"Network unreachable - SMTP ports may be blocked. Solutions:")
                 logger.error(f"1. Use Gmail API (recommended): Set GMAIL_API_CREDENTIALS environment variable")
                 logger.error(f"   - Enable Gmail API in Google Cloud Console")
                 logger.error(f"   - Create OAuth2 credentials and get refresh token")
                 logger.error(f"   - Set GMAIL_API_CREDENTIALS as JSON with 'client_id', 'client_secret', 'refresh_token', 'token_uri'")
-                logger.error(f"2. Contact Render support about SMTP port restrictions")
+                logger.error(f"2. Check if SMTP ports are blocked by your hosting provider")
+            elif 'authentication' in error_msg.lower() or '535' in error_msg or '534' in error_msg:
+                logger.error(f"SMTP authentication failed. Check:")
+                logger.error(f"1. EMAIL_HOST_USER is set correctly")
+                logger.error(f"2. EMAIL_HOST_PASSWORD is set correctly (use App Password for Gmail)")
+                logger.error(f"3. Gmail 'Less secure app access' is enabled OR use App Password")
+            elif 'timeout' in error_msg.lower():
+                logger.error(f"SMTP connection timeout. Check:")
+                logger.error(f"1. Network connectivity")
+                logger.error(f"2. Firewall settings")
+                logger.error(f"3. EMAIL_TIMEOUT setting (current: {getattr(settings, 'EMAIL_TIMEOUT', 30)})")
             
             raise last_error
         
