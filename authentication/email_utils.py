@@ -112,10 +112,7 @@ def send_otp_email(user_email, otp_code, user_name=None):
                         raise ValueError(f"GMAIL_API_CREDENTIALS missing required fields: {missing_fields}")
                     
                     logger.info("Gmail API credentials parsed successfully")
-                except (json.JSONDecodeError, ValueError) as parse_error:
-                    logger.error(f"Failed to parse Gmail API credentials: {str(parse_error)}")
-                    # Fall through to SMTP
-                else:
+                    
                     # Create credentials object
                     try:
                         creds = Credentials.from_authorized_user_info(creds_data)
@@ -123,7 +120,16 @@ def send_otp_email(user_email, otp_code, user_name=None):
                         # Refresh token if needed
                         if creds.expired and creds.refresh_token:
                             logger.info("Refreshing Gmail API token")
-                            creds.refresh(Request())
+                            try:
+                                creds.refresh(Request())
+                            except Exception as refresh_error:
+                                error_msg = str(refresh_error)
+                                logger.error(f"Gmail API token refresh failed: {error_msg}")
+                                if 'invalid_grant' in error_msg or 'RefreshError' in str(type(refresh_error)):
+                                    logger.error("Gmail API refresh token is invalid/expired. Please update GMAIL_API_CREDENTIALS.")
+                                    # Don't try to use invalid credentials - fall through to SMTP
+                                    raise ValueError("Gmail API token refresh failed - invalid grant")
+                                raise  # Re-raise other errors
                         
                         # Build Gmail service
                         service = build('gmail', 'v1', credentials=creds)
@@ -156,11 +162,20 @@ def send_otp_email(user_email, otp_code, user_name=None):
                         return True
                         
                     except Exception as gmail_error:
-                        logger.error(f"Gmail API error during email send: {str(gmail_error)}", exc_info=True)
+                        error_msg = str(gmail_error)
+                        logger.error(f"Gmail API error during email send: {error_msg}")
+                        # If it's a refresh error, don't try SMTP (token is invalid)
+                        if 'invalid_grant' in error_msg or 'RefreshError' in str(type(gmail_error)) or 'ValueError' in str(type(gmail_error)):
+                            logger.error("Gmail API credentials are invalid. Falling back to SMTP.")
                         # Fall through to SMTP if Gmail API fails
+                        
+                except (json.JSONDecodeError, ValueError) as parse_error:
+                    logger.error(f"Failed to parse Gmail API credentials: {str(parse_error)}")
+                    # Fall through to SMTP
                 
             except Exception as gmail_api_error:
-                logger.error(f"Gmail API error: {str(gmail_api_error)}", exc_info=True)
+                error_msg = str(gmail_api_error)
+                logger.error(f"Gmail API error: {error_msg}")
                 # Fall through to SMTP if Gmail API fails
         
         # Fallback to SMTP - try multiple configurations for cloud compatibility
@@ -214,6 +229,9 @@ def send_otp_email(user_email, otp_code, user_name=None):
                 # Create a custom email backend for this configuration
                 from django.core.mail.backends.smtp import EmailBackend
                 
+                # Use shorter timeout to prevent worker timeouts
+                email_timeout = min(getattr(settings, 'EMAIL_TIMEOUT', 30), 15)  # Max 15 seconds
+                
                 backend = EmailBackend(
                     host=config['host'],
                     port=config['port'],
@@ -222,15 +240,15 @@ def send_otp_email(user_email, otp_code, user_name=None):
                     use_tls=config['use_tls'],
                     use_ssl=config['use_ssl'],
                     fail_silently=False,
-                    timeout=getattr(settings, 'EMAIL_TIMEOUT', 30)
+                    timeout=email_timeout
                 )
                 
                 # Create email message
                 from django.core.mail.message import EmailMultiAlternatives
                 email = EmailMultiAlternatives(
-            subject=subject,
+                    subject=subject,
                     body=plain_message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[user_email],
                     connection=backend
                 )
@@ -250,44 +268,50 @@ def send_otp_email(user_email, otp_code, user_name=None):
                 last_error = smtp_error
                 logger.warning(f"{config['name']} failed: {error_msg}")
                 
-                # If it's a network unreachable error, try next config
+                # If it's a network unreachable error, try next config quickly
                 if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
+                    logger.warning(f"{config['name']}: Network unreachable - SMTP ports may be blocked")
                     continue  # Try next configuration
-                elif 'authentication' in error_msg.lower() or '535' in error_msg:
+                elif 'authentication' in error_msg.lower() or '535' in error_msg or '534' in error_msg:
                     # Authentication error - don't try other configs
                     logger.error(f"SMTP authentication failed - check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD")
-                    raise
+                    # Don't raise - continue to try other configs or return False
+                    continue
+                elif 'timeout' in error_msg.lower():
+                    logger.warning(f"{config['name']}: Connection timeout - trying next config")
+                    continue
                 # For other errors, try next config
                 continue
         
         # All configurations failed
         if last_error:
             error_msg = str(last_error)
-            logger.error(f"All SMTP configurations failed. Last error: {error_msg}", exc_info=True)
+            logger.error(f"All SMTP configurations failed. Last error: {error_msg}")
             
             # Check for common error patterns
             if 'network is unreachable' in error_msg.lower() or 'errno 101' in error_msg.lower():
-                logger.error(f"Network unreachable - SMTP ports may be blocked. Solutions:")
-                logger.error(f"1. Use Gmail API (recommended): Set GMAIL_API_CREDENTIALS environment variable")
-                logger.error(f"   - Enable Gmail API in Google Cloud Console")
-                logger.error(f"   - Create OAuth2 credentials and get refresh token")
-                logger.error(f"   - Set GMAIL_API_CREDENTIALS as JSON with 'client_id', 'client_secret', 'refresh_token', 'token_uri'")
-                logger.error(f"2. Check if SMTP ports are blocked by your hosting provider")
+                logger.error(f"Network unreachable - SMTP ports are blocked on this platform.")
+                logger.error(f"SOLUTION: Use Gmail API instead of SMTP:")
+                logger.error(f"  1. Enable Gmail API in Google Cloud Console")
+                logger.error(f"  2. Create OAuth2 credentials and get a valid refresh token")
+                logger.error(f"  3. Set GMAIL_API_CREDENTIALS environment variable with valid credentials")
             elif 'authentication' in error_msg.lower() or '535' in error_msg or '534' in error_msg:
-                logger.error(f"SMTP authentication failed. Check:")
-                logger.error(f"1. EMAIL_HOST_USER is set correctly")
-                logger.error(f"2. EMAIL_HOST_PASSWORD is set correctly (use App Password for Gmail)")
-                logger.error(f"3. Gmail 'Less secure app access' is enabled OR use App Password")
+                logger.error(f"SMTP authentication failed. Check EMAIL_HOST_USER and EMAIL_HOST_PASSWORD")
             elif 'timeout' in error_msg.lower():
-                logger.error(f"SMTP connection timeout. Check:")
-                logger.error(f"1. Network connectivity")
-                logger.error(f"2. Firewall settings")
-                logger.error(f"3. EMAIL_TIMEOUT setting (current: {getattr(settings, 'EMAIL_TIMEOUT', 30)})")
+                logger.error(f"SMTP connection timeout. Network may be blocking SMTP ports.")
             
-            raise last_error
+            # Don't raise - return False so the request can complete
+            # This prevents worker timeouts
+            logger.error(f"Email sending failed - returning False to prevent blocking")
+            return False
         
     except Exception as e:
-        logger.error(f"Failed to send OTP email to {user_email}: {str(e)}", exc_info=True)
+        error_msg = str(e)
+        logger.error(f"Failed to send OTP email to {user_email}: {error_msg}")
+        # Don't log full traceback in production to avoid log spam
+        if settings.DEBUG:
+            import traceback
+            logger.error(traceback.format_exc())
         return False
 
 
