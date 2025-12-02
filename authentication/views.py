@@ -99,23 +99,34 @@ def register(request):
             otp_code = user.email_verification_token
             logger.info(f"OTP code generated for {user.email}: {otp_code}")
             
-            # Send OTP email synchronously to ensure it's sent
-            # This is more reliable than background threads which can be killed in production
-            logger.info(f"Attempting to send OTP email to {user.email}")
-            email_sent = False
-            try:
-                email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-                if email_result:
-                    logger.info(f"OTP email sent successfully to {user.email}")
-                    email_sent = True
-                else:
-                    logger.error(f"OTP email send returned False for {user.email} - email may not have been sent")
-            except Exception as email_error:
-                logger.error(f"Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
+            # Send OTP email in background thread to avoid blocking request
+            # Use non-daemon thread so it completes even after response is sent
+            def send_email_async():
+                try:
+                    logger.info(f"Background thread: Starting email send to {user.email}")
+                    email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                    if email_result:
+                        logger.info(f"Background thread: OTP email sent successfully to {user.email}")
+                    else:
+                        logger.error(f"Background thread: OTP email returned False for {user.email}")
+                except Exception as email_error:
+                    logger.error(f"Background thread: Failed to send OTP email to {user.email}: {str(email_error)}", exc_info=True)
             
-            # Add email status to response for debugging (only in development)
-            if not email_sent and settings.DEBUG:
-                response_data['email_warning'] = 'Email sending failed. Please use resend-verification endpoint.'
+            # Start email sending in background thread (non-blocking)
+            # Use non-daemon thread so Gunicorn waits for it to complete
+            logger.info(f"Starting background email thread for {user.email}")
+            try:
+                email_thread = threading.Thread(target=send_email_async, daemon=False)
+                email_thread.start()
+                logger.info(f"Background email thread started for {user.email}")
+            except Exception as thread_error:
+                logger.error(f"Failed to start email thread for {user.email}: {str(thread_error)}", exc_info=True)
+                # If threading fails, try to send synchronously as fallback (with timeout protection)
+                try:
+                    logger.warning(f"Falling back to synchronous email send for {user.email}")
+                    send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                except Exception as fallback_error:
+                    logger.error(f"Fallback email send also failed for {user.email}: {str(fallback_error)}", exc_info=True)
             
             # Return response immediately - don't wait for email
             return Response(response_data, status=status.HTTP_201_CREATED)
@@ -295,24 +306,31 @@ def resend_verification_email(request):
         user.save()
         logger.info(f"New OTP code generated for {user.email}: {otp_code}")
         
-        # Send OTP verification email synchronously to ensure it's sent
+        # Send OTP verification email in background thread to avoid blocking
         logger.info(f"Attempting to resend OTP email to {user.email}")
+        def send_email_async():
+            try:
+                logger.info(f"Background thread: Starting resend email to {user.email}")
+                email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+                if email_result:
+                    logger.info(f"Background thread: Resend OTP email sent successfully to {user.email}")
+                else:
+                    logger.error(f"Background thread: Resend OTP email returned False for {user.email}")
+            except Exception as email_error:
+                logger.error(f"Background thread: Failed to send resend OTP email to {user.email}: {str(email_error)}", exc_info=True)
+        
+        # Start email sending in background thread (non-blocking)
         try:
-            email_result = send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
-            if email_result:
-                logger.info(f"Resend OTP email sent successfully to {user.email}")
-            else:
-                logger.error(f"Resend OTP email send returned False for {user.email} - email may not have been sent")
-                return Response({
-                    'error': True,
-                    'message': 'Failed to send verification email. Please try again later or contact support.'
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        except Exception as email_error:
-            logger.error(f"Failed to send resend OTP email to {user.email}: {str(email_error)}", exc_info=True)
-            return Response({
-                'error': True,
-                'message': f'Failed to send verification email: {str(email_error)}. Please try again later or contact support.'
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            email_thread = threading.Thread(target=send_email_async, daemon=False)
+            email_thread.start()
+            logger.info(f"Background email thread started for resend to {user.email}")
+        except Exception as thread_error:
+            logger.error(f"Failed to start email thread for {user.email}: {str(thread_error)}", exc_info=True)
+            # If threading fails, try synchronous send as fallback
+            try:
+                send_otp_email(user.email, otp_code, user.first_name or user.email.split('@')[0])
+            except Exception as fallback_error:
+                logger.error(f"Fallback email send failed for {user.email}: {str(fallback_error)}", exc_info=True)
         
         return Response({
             'success': True,
