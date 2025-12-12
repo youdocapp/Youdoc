@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Alert, ActivityIndicator, Image } from 'react-native';
 import { ChevronLeft, User, Mail, Phone, Calendar, Smile, Heart, Hand, Target, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { authService } from '@/lib/api';
+import * as ImagePicker from 'expo-image-picker';
 
 interface ProfileScreenProps {
   onBack: () => void;
@@ -48,6 +49,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
   const [showHeightModal, setShowHeightModal] = useState<boolean>(false);
   const [showWeightModal, setShowWeightModal] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [profilePhoto, setProfilePhoto] = useState<string | null>(null);
+  const [hasMediaPermission, setHasMediaPermission] = useState<boolean>(false);
 
   // Fetch profile from API
   const { data: profile, isLoading, refetch, error: profileError } = useQuery({
@@ -68,6 +71,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
 
   // Update local state when profile data is loaded
   useEffect(() => {
+    (async () => {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      setHasMediaPermission(status === 'granted');
+    })();
+  }, []);
+
+  useEffect(() => {
     if (profile) {
       console.log('📥 Setting profile data:', {
         firstName: profile.firstName,
@@ -75,37 +85,41 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
         email: profile.email,
         mobile: profile.mobile,
       });
-      // Profile is already transformed to camelCase by authService.getProfile()
       setFirstName(profile.firstName || '');
       setLastName(profile.lastName || '');
       setEmail(profile.email || '');
       setMobile(profile.mobile || '');
       if (profile.dateOfBirth) {
         setDateOfBirth(new Date(profile.dateOfBirth));
+      } else {
+        setDateOfBirth(null);
       }
       setGender(profile.gender || '');
       setBloodType(profile.bloodType || '');
       setHeight(profile.height || null);
       setWeight(profile.weight || null);
+      setProfilePhoto((profile as any)?.profilePicture || null);
     } else if (user) {
-      // Fallback to user from context if profile not yet loaded
       console.log('📥 Using user from context:', {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        mobile: user.mobile,
+        firstName: user?.firstName,
+        lastName: user?.lastName,
+        email: user?.email,
+        mobile: user?.mobile,
       });
-      setFirstName(user.firstName || '');
-      setLastName(user.lastName || '');
-      setEmail(user.email || '');
-      setMobile(user.mobile || '');
-      if (user.dateOfBirth) {
+      setFirstName(user?.firstName || '');
+      setLastName(user?.lastName || '');
+      setEmail(user?.email || '');
+      setMobile(user?.mobile || '');
+      if (user?.dateOfBirth) {
         setDateOfBirth(new Date(user.dateOfBirth));
+      } else {
+        setDateOfBirth(null);
       }
-      setGender(user.gender || '');
-      setBloodType(user.bloodType || '');
-      setHeight(user.height || null);
-      setWeight(user.weight || null);
+      setGender(user?.gender || '');
+      setBloodType(user?.bloodType || '');
+      setHeight(user?.height || null);
+      setWeight(user?.weight || null);
+      setProfilePhoto((user as any)?.profilePicture || null);
     }
   }, [profile, user]);
 
@@ -123,13 +137,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       if (bloodType) profileData.bloodType = bloodType;
       if (height !== null) profileData.height = height;
       if (weight !== null) profileData.weight = weight;
+      if (profilePhoto) profileData.profilePicture = profilePhoto;
       
       const result = await updateProfile(profileData);
       
       if (result.success) {
         Alert.alert('Success', result.message || 'Profile updated successfully');
-      setIsEditing(false);
-        // Refetch profile to get updated data
+        setIsEditing(false);
         await refetch();
       } else {
         Alert.alert('Error', result.error || result.message || 'Failed to update profile. Please try again.');
@@ -141,6 +155,45 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handlePickPhoto = async () => {
+    try {
+      if (!hasMediaPermission) {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+          Alert.alert('Permission needed', 'Please allow photo access to select a profile picture.');
+          return;
+        }
+        setHasMediaPermission(true);
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setProfilePhoto(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('❌ Error selecting profile photo:', error);
+      Alert.alert('Error', 'Unable to select photo. Please try again.');
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    if (!profilePhoto) return;
+    Alert.alert('Remove Photo', 'Are you sure you want to remove your profile photo?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => setProfilePhoto(null),
+      },
+    ]);
   };
 
 
@@ -838,16 +891,26 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     },
     cameraButton: {
       position: 'absolute',
-      bottom: 0,
-      right: 0,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
+      bottom: -8,
+      right: -8,
+      paddingHorizontal: 16,
+      paddingVertical: 6,
+      borderRadius: 18,
       backgroundColor: '#10B981',
       alignItems: 'center',
       justifyContent: 'center',
-      borderWidth: 3,
+      borderWidth: 2,
       borderColor: '#FFFFFF',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+      elevation: 2,
+    },
+    cameraButtonText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      fontWeight: '600',
     },
     name: {
       fontSize: 24,
@@ -858,6 +921,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
     email: {
       fontSize: 14,
       color: colors.textSecondary,
+    },
+    changePhotoText: {
+      marginTop: 8,
+      fontSize: 13,
+      color: '#4F7FFF',
+      fontWeight: '600',
+    },
+    removePhotoText: {
+      marginTop: 4,
+      fontSize: 12,
+      color: '#EF4444',
     },
     section: {
       paddingHorizontal: 20,
@@ -1025,20 +1099,35 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({
       <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }} showsVerticalScrollIndicator={false}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
-                {firstName?.[0] && lastName?.[0] 
-                  ? `${firstName[0]}${lastName[0]}`.toUpperCase()
-                  : firstName?.[0] 
-                    ? firstName[0].toUpperCase()
-                    : email?.[0]?.toUpperCase() || '👤'}
-              </Text>
-            </View>
+            <TouchableOpacity style={styles.avatar} onPress={handlePickPhoto}>
+              {profilePhoto ? (
+                <Image source={{ uri: profilePhoto }} style={styles.avatarImage} />
+              ) : (
+                <Text style={styles.avatarText}>
+                  {firstName?.[0] && lastName?.[0]
+                    ? `${firstName[0]}${lastName[0]}`.toUpperCase()
+                    : firstName?.[0]
+                      ? firstName[0].toUpperCase()
+                      : email?.[0]?.toUpperCase() || '👤'}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cameraButton} onPress={handlePickPhoto}>
+              <Text style={styles.cameraButtonText}>Edit</Text>
+            </TouchableOpacity>
           </View>
           <Text style={styles.name}>
             {`${firstName} ${lastName}`.trim() || email?.split('@')[0] || 'User'}
           </Text>
           <Text style={styles.email}>{email || ''}</Text>
+          <TouchableOpacity onPress={handlePickPhoto}>
+            <Text style={styles.changePhotoText}>{profilePhoto ? 'Tap to change photo' : 'Tap to add photo'}</Text>
+          </TouchableOpacity>
+          {profilePhoto && (
+            <TouchableOpacity onPress={handleRemovePhoto}>
+              <Text style={styles.removePhotoText}>Remove photo</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View style={styles.section}>

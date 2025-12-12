@@ -37,6 +37,20 @@ const MedicalHistoryScreen: React.FC<MedicalHistoryScreenProps> = ({ onBack }) =
     status: 'active' as MedicalCondition['status'],
     notes: ''
   });
+  const [hasConsent, setHasConsent] = useState(false);
+
+  useEffect(() => {
+    const loadConsent = async () => {
+      const value = await AsyncStorage.getItem('medicalHistoryConsent');
+      setHasConsent(value === 'true');
+    };
+    loadConsent();
+  }, []);
+
+  const handleConsent = async () => {
+    await AsyncStorage.setItem('medicalHistoryConsent', 'true');
+    setHasConsent(true);
+  };
 
   const [surgeryForm, setSurgeryForm] = useState({
     name: '',
@@ -427,6 +441,38 @@ const MedicalHistoryScreen: React.FC<MedicalHistoryScreenProps> = ({ onBack }) =
     },
     saveButtonDisabled: {
       backgroundColor: colors.border
+    },
+    consentCard: {
+      backgroundColor: colors.background,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginHorizontal: 20,
+      marginTop: 16
+    },
+    consentTitle: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.text,
+      marginBottom: 8
+    },
+    consentText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20
+    },
+    consentButton: {
+      marginTop: 14,
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center' as const
+    },
+    consentButtonText: {
+      color: '#FFFFFF',
+      fontWeight: '700' as const,
+      fontSize: 15
     }
   });
 
@@ -741,39 +787,56 @@ const MedicalHistoryScreen: React.FC<MedicalHistoryScreenProps> = ({ onBack }) =
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tabs}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'conditions' && styles.tabActive]}
-          onPress={() => setActiveTab('conditions')}
-        >
-          <Text style={[styles.tabText, activeTab === 'conditions' && styles.tabTextActive]}>
-            Conditions
+      {!hasConsent ? (
+        <View style={styles.consentCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <ShieldCheck size={24} color={colors.primary} />
+            <Text style={styles.consentTitle}>Protecting your medical history</Text>
+          </View>
+          <Text style={styles.consentText}>
+            By continuing, you consent to store your medical history in YouDoc. Your data is encrypted and remains private unless you choose to share it.
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'surgeries' && styles.tabActive]}
-          onPress={() => setActiveTab('surgeries')}
-        >
-          <Text style={[styles.tabText, activeTab === 'surgeries' && styles.tabTextActive]}>
-            Surgeries
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'allergies' && styles.tabActive]}
-          onPress={() => setActiveTab('allergies')}
-        >
-          <Text style={[styles.tabText, activeTab === 'allergies' && styles.tabTextActive]}>
-            Allergies
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity style={styles.consentButton} onPress={handleConsent}>
+            <Text style={styles.consentButtonText}>I Consent & Continue</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <>
+          <View style={styles.tabs}>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'conditions' && styles.tabActive]}
+              onPress={() => setActiveTab('conditions')}
+            >
+              <Text style={[styles.tabText, activeTab === 'conditions' && styles.tabTextActive]}>
+                Conditions
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'surgeries' && styles.tabActive]}
+              onPress={() => setActiveTab('surgeries')}
+            >
+              <Text style={[styles.tabText, activeTab === 'surgeries' && styles.tabTextActive]}>
+                Surgeries
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.tab, activeTab === 'allergies' && styles.tabActive]}
+              onPress={() => setActiveTab('allergies')}
+            >
+              <Text style={[styles.tabText, activeTab === 'allergies' && styles.tabTextActive]}>
+                Allergies
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {activeTab === 'conditions' && renderConditions()}
-        {activeTab === 'surgeries' && renderSurgeries()}
-        {activeTab === 'allergies' && renderAllergies()}
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+            {activeTab === 'conditions' && renderConditions()}
+            {activeTab === 'surgeries' && renderSurgeries()}
+            {activeTab === 'allergies' && renderAllergies()}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        </>
+      )}
 
       <Modal
         visible={showModal}

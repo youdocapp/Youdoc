@@ -34,12 +34,14 @@ interface ConnectedDevicesScreenProps {
 
 const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack }) => {
   const { colors } = useTheme();
-  const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
+  const { connectedDevices = [], connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
     useHealthTracker();
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
   const [deviceName, setDeviceName] = useState('');
   const [isScanning, setIsScanning] = useState(false);
   const [availableDevices, setAvailableDevices] = useState<{ id: string; name: string }[]>([]);
+  const [isSyncingDevices, setIsSyncingDevices] = useState(false);
+  const [togglingDeviceId, setTogglingDeviceId] = useState<string | null>(null);
 
   const getDeviceIcon = (type: string) => {
     switch (type) {
@@ -56,8 +58,10 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     }
   };
 
-  const formatLastSync = (date: Date | null) => {
-    if (!date) return 'Never synced';
+  const formatLastSync = (iso?: string | null) => {
+    if (!iso) return 'Never synced';
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return 'Never synced';
     const now = new Date();
     const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
@@ -70,11 +74,38 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     return `${days} day${days > 1 ? 's' : ''} ago`;
   };
 
-  const handleToggleDevice = (deviceId: string, connected: boolean) => {
-    if (connected) {
-      disconnectDevice(deviceId);
-    } else {
-      connectDevice(deviceId);
+  const handleToggleDevice = async (deviceId: string, connected: boolean) => {
+    if (togglingDeviceId) {
+      return;
+    }
+    setTogglingDeviceId(deviceId);
+    const result = connected ? await disconnectDevice(deviceId) : await connectDevice(deviceId);
+    if (!result.success && result.error) {
+      Alert.alert('Device Error', result.error);
+    }
+    setTogglingDeviceId(null);
+  };
+
+  const handleSyncAllDevices = async () => {
+    if (isSyncingDevices) {
+      return;
+    }
+    const connected = connectedDevices.filter((device) => device.connected);
+    if (connected.length === 0) {
+      Alert.alert('No Devices', 'Connect a device first to sync health data.');
+      return;
+    }
+
+    setIsSyncingDevices(true);
+    try {
+      for (const device of connected) {
+        await syncHealthData(device.id);
+      }
+      Alert.alert('Success', 'Health data synced successfully.');
+    } catch (error) {
+      Alert.alert('Sync Failed', 'Unable to sync devices right now. Please try again.');
+    } finally {
+      setIsSyncingDevices(false);
     }
   };
 
@@ -437,9 +468,13 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
         </View>
 
         <View style={styles.syncSection}>
-          <TouchableOpacity style={styles.syncButton} onPress={syncHealthData}>
+          <TouchableOpacity
+            style={[styles.syncButton, isSyncingDevices && { opacity: 0.7 }]}
+            onPress={handleSyncAllDevices}
+            disabled={isSyncingDevices}
+          >
             <RefreshCw size={20} color="#FFFFFF" />
-            <Text style={styles.syncButtonText}>Sync All Devices</Text>
+            <Text style={styles.syncButtonText}>{isSyncingDevices ? 'Syncing...' : 'Sync All Devices'}</Text>
           </TouchableOpacity>
         </View>
 
@@ -453,6 +488,12 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
               <Text style={styles.addDeviceSubtext}>Connect via Bluetooth or manually</Text>
             </View>
           </TouchableOpacity>
+
+          {connectedDevices.length === 0 && (
+            <View style={[styles.deviceCard, { justifyContent: 'center' }]}>
+              <Text style={{ color: colors.textSecondary }}>No devices yet. Add one to get started.</Text>
+            </View>
+          )}
 
           {connectedDevices.map((device) => (
             <View key={device.id} style={styles.deviceCard}>
@@ -478,6 +519,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
                 onValueChange={() => handleToggleDevice(device.id, device.connected)}
                 trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
                 thumbColor={device.connected ? '#4F7FFF' : '#F3F4F6'}
+                disabled={togglingDeviceId === device.id}
               />
             </View>
           ))}

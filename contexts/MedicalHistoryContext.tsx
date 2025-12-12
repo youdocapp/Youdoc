@@ -5,6 +5,9 @@ import { medicalHistoryService, type MedicalCondition, type Surgery, type Allerg
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
+// TEMPORARY: Disable backend calls to test UI only
+const MOCK_MODE = true
+
 export interface MedicalHistoryContextType {
   conditions: MedicalCondition[]
   surgeries: Surgery[]
@@ -61,7 +64,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -77,7 +80,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -93,7 +96,7 @@ export const [MedicalHistoryProvider, useMedicalHistory] = createContextHook(() 
       return response.data || []
     },
     staleTime: 30000,
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 

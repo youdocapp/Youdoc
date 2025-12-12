@@ -5,6 +5,9 @@ import { healthRecordsService, type HealthRecord, type CreateHealthRecordRequest
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
+// TEMPORARY: Disable backend calls to test UI only
+const MOCK_MODE = true
+
 export interface HealthRecordContextType {
   records: HealthRecord[]
   isLoading: boolean
@@ -69,7 +72,7 @@ export const [HealthRecordsProvider, useHealthRecords] = createContextHook(() =>
       }
     },
     staleTime: 30000, // 30 seconds
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 

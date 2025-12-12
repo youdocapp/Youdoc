@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
-import { ChevronLeft, Plus, FileText, Calendar, Edit2, Trash2, X, Upload } from 'lucide-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ChevronLeft, Plus, FileText, Calendar, Edit2, Trash2, X, Upload, ShieldCheck } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHealthRecords } from '../contexts/HealthRecordsContext';
 import { type HealthRecord } from '../lib/api';
@@ -22,6 +23,20 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
   const { records, isLoading, addRecord, updateRecord, deleteRecord } = useHealthRecords();
   // Ensure records is always an array to prevent map errors
   const safeRecords = Array.isArray(records) ? records : [];
+  const [hasConsent, setHasConsent] = useState(false);
+
+  useEffect(() => {
+    const loadConsent = async () => {
+      const value = await AsyncStorage.getItem('healthRecordsConsent');
+      setHasConsent(value === 'true');
+    };
+    loadConsent();
+  }, []);
+
+  const handleConsent = async () => {
+    await AsyncStorage.setItem('healthRecordsConsent', 'true');
+    setHasConsent(true);
+  };
   
   // Debug logging
   React.useEffect(() => {
@@ -329,6 +344,38 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
     },
     saveButtonDisabled: {
       backgroundColor: colors.border
+    },
+    consentCard: {
+      backgroundColor: colors.background,
+      borderRadius: 16,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: colors.border,
+      marginHorizontal: 20,
+      marginTop: 16
+    },
+    consentTitle: {
+      fontSize: 18,
+      fontWeight: '700' as const,
+      color: colors.text,
+      marginBottom: 8
+    },
+    consentText: {
+      color: colors.textSecondary,
+      fontSize: 14,
+      lineHeight: 20
+    },
+    consentButton: {
+      marginTop: 14,
+      backgroundColor: colors.primary,
+      paddingVertical: 12,
+      borderRadius: 12,
+      alignItems: 'center' as const
+    },
+    consentButtonText: {
+      color: '#FFFFFF',
+      fontWeight: '700' as const,
+      fontSize: 15
     }
   });
 
@@ -344,55 +391,70 @@ const HealthRecordsScreen: React.FC<HealthRecordsScreenProps> = ({ onBack }) => 
         </TouchableOpacity>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {isLoading ? (
-          <View style={styles.emptyState}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={[styles.emptyText, { marginTop: 16 }]}>Loading health records...</Text>
+      {!hasConsent ? (
+        <View style={styles.consentCard}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <ShieldCheck size={24} color={colors.primary} />
+            <Text style={styles.consentTitle}>Your health data is protected</Text>
           </View>
-        ) : safeRecords.length === 0 ? (
-          <View style={styles.emptyState}>
-            <FileText size={64} color={colors.textSecondary} style={styles.emptyIcon} />
-            <Text style={styles.emptyText}>
-              No health records yet.{'\n'}Add your first record to get started.
-            </Text>
-            <TouchableOpacity style={styles.addFirstButton} onPress={handleOpenAdd}>
-              <Upload size={20} color="#FFFFFF" />
-              <Text style={styles.addFirstButtonText}>Add Record</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          safeRecords.map((record) => (
-            <View key={record.id} style={styles.recordCard}>
-              <View style={styles.recordHeader}>
-                <View style={styles.recordInfo}>
-                  <Text style={styles.recordTitle}>{record.title}</Text>
-                  <View style={[styles.typeBadge, { backgroundColor: getTypeColor(record.type) }]}>
-                    <Text style={styles.typeText}>{getTypeLabel(record.type)}</Text>
+          <Text style={styles.consentText}>
+            By continuing, you consent to store your health records in YouDoc. Data is encrypted in transit and at rest, and only you control what is shared.
+          </Text>
+          <TouchableOpacity style={styles.consentButton} onPress={handleConsent}>
+            <Text style={styles.consentButtonText}>I Consent & Continue</Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+          {isLoading ? (
+            <View style={styles.emptyState}>
+              <ActivityIndicator size="large" color={colors.primary} />
+              <Text style={[styles.emptyText, { marginTop: 16 }]}>Loading health records...</Text>
+            </View>
+          ) : safeRecords.length === 0 ? (
+            <View style={styles.emptyState}>
+              <FileText size={64} color={colors.textSecondary} style={styles.emptyIcon} />
+              <Text style={styles.emptyText}>
+                No health records yet.{'\n'}Add your first record to get started.
+              </Text>
+              <TouchableOpacity style={styles.addFirstButton} onPress={handleOpenAdd}>
+                <Upload size={20} color="#FFFFFF" />
+                <Text style={styles.addFirstButtonText}>Add Record</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            safeRecords.map((record) => (
+              <View key={record.id} style={styles.recordCard}>
+                <View style={styles.recordHeader}>
+                  <View style={styles.recordInfo}>
+                    <Text style={styles.recordTitle}>{record.title}</Text>
+                    <View style={[styles.typeBadge, { backgroundColor: getTypeColor(record.type) }]}>
+                      <Text style={styles.typeText}>{getTypeLabel(record.type)}</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                      <Calendar size={14} color={colors.textSecondary} />
+                      <Text style={styles.recordDate}>{new Date(record.date).toLocaleDateString()}</Text>
+                    </View>
+                    {record.description && (
+                      <Text style={styles.recordDescription}>{record.description}</Text>
+                    )}
                   </View>
-                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                    <Calendar size={14} color={colors.textSecondary} />
-                    <Text style={styles.recordDate}>{new Date(record.date).toLocaleDateString()}</Text>
+                  <View style={styles.recordActions}>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => handleOpenEdit(record)}>
+                      <Edit2 size={20} color={colors.primary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.actionButton} onPress={() => handleDelete(record)}>
+                      <Trash2 size={20} color={colors.error} />
+                    </TouchableOpacity>
                   </View>
-                  {record.description && (
-                    <Text style={styles.recordDescription}>{record.description}</Text>
-                  )}
-                </View>
-                <View style={styles.recordActions}>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleOpenEdit(record)}>
-                    <Edit2 size={20} color={colors.primary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.actionButton} onPress={() => handleDelete(record)}>
-                    <Trash2 size={20} color={colors.error} />
-                  </TouchableOpacity>
                 </View>
               </View>
-            </View>
-          ))
-        )}
+            ))
+          )}
 
-        <View style={{ height: 40 }} />
-      </ScrollView>
+          <View style={{ height: 40 }} />
+        </ScrollView>
+      )}
 
       <Modal
         visible={showAddModal}

@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const register = useCallback(async (data: RegisterRequest) => {
     try {
-      console.log('📤 Register request:', { email: data.email, firstName: data.firstName, lastName: data.lastName })
+      console.log('📤 Register request:', { email: data.email })
       const response = await authService.register(data)
       console.log('📥 Register response:', response)
       if (response.success) {
@@ -122,12 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error: any) {
       console.error('❌ Register error:', error)
       const apiError = error as ApiError
-      // Log full error details
-      console.error('❌ Register error details:', {
-        message: apiError.message,
-        details: apiError.details,
-        fullError: error,
-      })
       return { 
         success: false, 
         error: apiError.message || 'Registration failed',
@@ -135,7 +129,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         details: apiError.details,
       }
     }
-  }, [])
+  }, [storeAuth])
 
   const login = useCallback(async (data: LoginRequest) => {
     try {
@@ -143,14 +137,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('📥 Login response:', response)
       if (response.success) {
         await storeAuth(response.access, response.refresh, response.user)
-        // Fetch fresh profile after login to ensure we have all data
         try {
           const profile = await authService.getProfile()
-          console.log('📥 Profile after login:', profile)
           setUser(profile)
           await AsyncStorage.setItem(USER_KEY, JSON.stringify(profile))
         } catch (profileError) {
-          console.error('⚠️ Failed to fetch profile after login, using login response user:', profileError)
+          console.error('⚠️ Failed to fetch profile after login:', profileError)
         }
         return { success: true, message: response.message }
       }
@@ -163,7 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         message: apiError.message,
       }
     }
-  }, [])
+  }, [storeAuth])
 
   const logout = useCallback(async () => {
     try {

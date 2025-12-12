@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ChevronLeft, Search, Bookmark } from 'lucide-react-native';
+import { ChevronLeft, Search, Bookmark, MessageCircle, Send } from 'lucide-react-native';
 import { articles as allArticlesData, categories as categoriesData } from '@/constants/articles';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -10,10 +10,29 @@ interface HealthArticlesScreenProps {
   onArticlePress?: (articleId: string) => void;
 }
 
+interface ArticleComment {
+  id: string;
+  author: string;
+  text: string;
+  timestamp: string;
+}
+
 const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onArticlePress }) => {
   const { colors, isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All Articles');
+  const [activeCommentArticleId, setActiveCommentArticleId] = useState<string | null>(null);
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
+  const [articleComments, setArticleComments] = useState<Record<string, ArticleComment[]>>({
+    '1': [
+      {
+        id: 'comment-1',
+        author: 'Alice',
+        text: 'This was super helpful!',
+        timestamp: '3h ago',
+      },
+    ],
+  });
 
   const filteredArticles = useMemo(() => {
     let filtered = allArticlesData;
@@ -37,6 +56,33 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
 
   const featuredArticle = allArticlesData.find(article => article.featured);
   const latestArticles = filteredArticles.filter(article => !article.featured);
+
+  const handleToggleCommentBox = (articleId: string) => {
+    setActiveCommentArticleId(prev => (prev === articleId ? null : articleId));
+  };
+
+  const handleCommentChange = (articleId: string, text: string) => {
+    setCommentDrafts(prev => ({ ...prev, [articleId]: text }));
+  };
+
+  const handleSubmitComment = (articleId: string) => {
+    const draft = commentDrafts[articleId]?.trim();
+    if (!draft) return;
+
+    const newComment: ArticleComment = {
+      id: `${articleId}-${Date.now()}`,
+      author: 'You',
+      text: draft,
+      timestamp: 'Just now',
+    };
+
+    setArticleComments(prev => ({
+      ...prev,
+      [articleId]: [newComment, ...(prev[articleId] ?? [])],
+    }));
+    setCommentDrafts(prev => ({ ...prev, [articleId]: '' }));
+    setActiveCommentArticleId(null);
+  };
 
   const styles = StyleSheet.create({
     container: {
@@ -279,6 +325,55 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
     bookmarkButton: {
       padding: 8
     },
+    addCommentButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      paddingHorizontal: 12,
+      paddingBottom: 12,
+    },
+    commentCountText: {
+      fontSize: 13,
+      color: colors.textSecondary,
+    },
+    commentInputArea: {
+      paddingHorizontal: 12,
+      paddingBottom: 16,
+    },
+    commentTextInput: {
+      borderWidth: 1,
+      borderColor: '#E5E7EB',
+      borderRadius: 12,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      color: colors.text,
+      fontSize: 14,
+      backgroundColor: colors.card,
+    },
+    commentActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      alignItems: 'center',
+      gap: 16,
+      marginTop: 10,
+    },
+    cancelComment: {
+      fontSize: 14,
+      color: colors.textSecondary,
+    },
+    submitComment: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 6,
+      backgroundColor: '#4F7FFF',
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 16,
+    },
+    submitCommentText: {
+      color: '#FFFFFF',
+      fontWeight: '600',
+    },
     emptyState: {
       alignItems: 'center',
       justifyContent: 'center',
@@ -380,42 +475,82 @@ const HealthArticlesScreen: React.FC<HealthArticlesScreenProps> = ({ onBack, onA
               <Text style={styles.emptyStateText}>No articles found</Text>
             </View>
           ) : (
-            latestArticles.map((article) => (
-              <TouchableOpacity
-                key={article.id}
-                style={styles.articleCard}
-                onPress={() => onArticlePress?.(article.id)}
-              >
-                <View style={styles.articleCardContent}>
-                  <Image
-                    source={{ uri: article.image }}
-                    style={styles.articleImage}
-                    resizeMode="cover"
-                  />
-                  <View style={styles.articleInfo}>
-                    <View style={styles.articleTop}>
-                      <View style={styles.categoryBadge}>
-                        <View style={styles.categoryIcon} />
-                        <Text style={styles.categoryText}>{article.category}</Text>
+            latestArticles.map((article) => {
+              const commentCount = articleComments[article.id]?.length || 0;
+              return (
+                <View key={article.id} style={styles.articleCard}>
+                  <TouchableOpacity onPress={() => onArticlePress?.(article.id)}>
+                    <View style={styles.articleCardContent}>
+                      <Image
+                        source={{ uri: article.image }}
+                        style={styles.articleImage}
+                        resizeMode="cover"
+                      />
+                      <View style={styles.articleInfo}>
+                        <View style={styles.articleTop}>
+                          <View style={styles.categoryBadge}>
+                            <View style={styles.categoryIcon} />
+                            <Text style={styles.categoryText}>{article.category}</Text>
+                          </View>
+                          <Text style={styles.articleTitle} numberOfLines={2}>
+                            {article.title}
+                          </Text>
+                          <Text style={styles.articleDescription} numberOfLines={2}>
+                            {article.description}
+                          </Text>
+                        </View>
+                        <View style={styles.articleFooter}>
+                          <View>
+                            <Text style={styles.articleAuthor}>By {article.author}</Text>
+                            <Text style={styles.articleReadTime}>{article.readTime}</Text>
+                          </View>
+                          <TouchableOpacity style={styles.bookmarkButton}>
+                            <Bookmark size={20} color={colors.textSecondary} />
+                          </TouchableOpacity>
+                        </View>
                       </View>
-                      <Text style={styles.articleTitle} numberOfLines={2}>
-                        {article.title}
-                      </Text>
-                      <Text style={styles.articleDescription} numberOfLines={2}>
-                        {article.description}
-                      </Text>
                     </View>
-                    <View style={styles.articleFooter}>
-                      <Text style={styles.articleAuthor}>By {article.author}</Text>
-                      <Text style={styles.articleReadTime}>{article.readTime}</Text>
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.bookmarkButton}>
-                    <Bookmark size={20} color={colors.textSecondary} />
                   </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.addCommentButton}
+                    onPress={() => handleToggleCommentBox(article.id)}
+                    activeOpacity={0.7}
+                  >
+                    <MessageCircle size={16} color="#4F7FFF" />
+                    <Text style={styles.commentCountText}>
+                      {commentCount} comment{commentCount === 1 ? '' : 's'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  {activeCommentArticleId === article.id && (
+                    <View style={styles.commentInputArea}>
+                      <TextInput
+                        style={styles.commentTextInput}
+                        placeholder="Share your thoughts..."
+                        placeholderTextColor={colors.textSecondary}
+                        multiline
+                        value={commentDrafts[article.id] || ''}
+                        onChangeText={(text) => handleCommentChange(article.id, text)}
+                      />
+                      <View style={styles.commentActions}>
+                        <TouchableOpacity onPress={() => handleToggleCommentBox(article.id)}>
+                          <Text style={styles.cancelComment}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={styles.submitComment}
+                          onPress={() => handleSubmitComment(article.id)}
+                          disabled={!commentDrafts[article.id]?.trim()}
+                        >
+                          <Send size={16} color="#FFFFFF" />
+                          <Text style={styles.submitCommentText}>Post</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
                 </View>
-              </TouchableOpacity>
-            ))
+              );
+            })
           )}
         </View>
       </ScrollView>

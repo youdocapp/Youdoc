@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Settings, Search, Stethoscope, Syringe, MapPin, Moon, Flame, Heart, Footprints, TrendingUp } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useMedication } from '@/contexts/MedicationContext';
@@ -7,11 +7,13 @@ import { useHealthTracker } from '@/contexts/HealthTrackerContext';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { articles as articleList } from '@/constants/articles';
 
 interface DashboardScreenProps {
   onSymptomChecker?: () => void;
   onMyMedication?: () => void;
   onSeeDoctor?: () => void;
+  onCalorieCheck?: () => void;
   onHealthArticles?: () => void;
   onSettings?: () => void;
   onNotifications?: () => void;
@@ -27,6 +29,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   onSymptomChecker,
   onMyMedication,
   onSeeDoctor,
+  onCalorieCheck,
   onHealthArticles,
   onSettings,
   onNotifications,
@@ -40,6 +43,7 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
   const { healthData } = useHealthTracker();
   const router = useRouter();
   const { user } = useAuth();
+  const topArticles = useMemo(() => articleList.slice(0, 3), []);
   
   // Get user's full name from auth context
   const firstName = user?.firstName || '';
@@ -128,12 +132,16 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
     },
     quickActions: {
       flexDirection: 'row',
+      flexWrap: 'wrap',
       paddingHorizontal: 20,
       paddingVertical: 20,
-      gap: 12
+      gap: 12,
+      rowGap: 12,
+      justifyContent: 'space-between'
     },
     actionCard: {
-      flex: 1,
+      flexBasis: '48%',
+      maxWidth: '48%',
       backgroundColor: colors.background,
       borderRadius: 16,
       padding: 16,
@@ -519,6 +527,13 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
             </View>
             <Text style={styles.actionLabel}>See a{'\n'}Doctor</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionCard} onPress={onCalorieCheck}>
+            <View style={styles.actionIcon}>
+              <Flame size={24} color="#F97316" />
+            </View>
+            <Text style={styles.actionLabel}>Calorie{'\n'}Check</Text>
+          </TouchableOpacity>
         </View>
 
 
@@ -526,11 +541,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
         <View style={styles.healthTrackerContainer}>
           <View style={styles.healthTrackerHeader}>
             <Text style={styles.sectionTitle}>Health Tracker</Text>
-            {healthData && (
-            <TouchableOpacity onPress={() => router.push('/connected-devices')}>
-              <Text style={styles.viewAllButton}>View All</Text>
-            </TouchableOpacity>
-            )}
           </View>
 
           {!healthData ? (
@@ -697,6 +707,48 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({
                 </TouchableOpacity>
               </View>
             ))
+          )}
+        </View>
+
+        <View style={styles.articlesSection}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Latest Articles</Text>
+            <TouchableOpacity onPress={onHealthArticles}>
+              <Text style={styles.seeAllButton}>See All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {topArticles.length === 0 ? (
+            <Text style={styles.emptyMedicationText}>Articles are coming soon.</Text>
+          ) : (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {topArticles.map(article => (
+                <TouchableOpacity
+                  key={article.id}
+                  style={styles.articleCard}
+                  onPress={onHealthArticles}
+                  activeOpacity={0.8}
+                >
+                  <Image source={{ uri: article.image }} style={styles.articleImage} />
+                  <View style={styles.articleContent}>
+                    <View style={styles.articleTag}>
+                      <View style={styles.categoryIcon} />
+                      <Text style={styles.articleTagText}>{article.category}</Text>
+                    </View>
+                    <Text style={styles.articleTitle} numberOfLines={2}>
+                      {article.title}
+                    </Text>
+                    <Text style={styles.articleDescription} numberOfLines={3}>
+                      {article.description}
+                    </Text>
+                    <View style={styles.articleFooter}>
+                      <Text style={styles.articleAuthor}>{article.author}</Text>
+                      <Text style={styles.articleReadTime}>{article.readTime}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           )}
         </View>
 

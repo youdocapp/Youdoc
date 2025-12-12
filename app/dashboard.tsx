@@ -15,6 +15,10 @@ export default function DashboardPage() {
     router.push('/see-doctor');
   };
 
+  const handleCalorieCheck = () => {
+    router.push('/calorie-check');
+  };
+
   const handleHealthArticles = () => {
     router.push('/health-articles');
   };
@@ -43,6 +47,7 @@ export default function DashboardPage() {
       onSymptomChecker={handleSymptomChecker}
       onMyMedication={handleMyMedication}
       onSeeDoctor={handleSeeDoctor}
+      onCalorieCheck={handleCalorieCheck}
       onHealthArticles={handleHealthArticles}
       onSettings={handleSettings}
       onNotifications={handleNotifications}

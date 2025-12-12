@@ -577,14 +577,19 @@ export class ApiClient {
         hasAuth: !!headers['Authorization']
       })
     
-    return this.makeRequest<T>(
-      endpoint,
-      {
-        method: 'GET',
-        headers,
-      },
-      requiresAuth
-    )
+      const isAuthEndpoint = endpoint.includes('/auth/')
+      const timeout = isAuthEndpoint ? 120000 : 45000
+
+      return this.makeRequest<T>(
+        endpoint,
+        {
+          method: 'GET',
+          headers,
+        },
+        requiresAuth,
+        0,
+        timeout
+      )
     } catch (error) {
       console.error('📥 GET: Error in get method:', error)
       throw error

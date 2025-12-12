@@ -71,10 +71,10 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
       const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Date.now()}`;
 
       // Open Google OAuth in browser
-      // The redirect URI is HTTPS (backend URL), and Expo will handle the redirect back to app
+      // The redirect URI is HTTPS (backend URL). Watch for that exact URL to know when Google finishes.
       const result = await WebBrowser.openAuthSessionAsync(
         googleAuthUrl,
-        `${appScheme}://` // This is what Expo uses to redirect back to the app
+        redirectUri
       );
 
       if (result.type === 'success' && result.url) {

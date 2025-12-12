@@ -7,6 +7,9 @@ import { Platform } from 'react-native'
 import * as Notifications from 'expo-notifications'
 import { useAuth } from './AuthContext'
 
+// TEMPORARY: Disable backend calls to test UI only
+const MOCK_MODE = true
+
 export interface NotificationsContextType {
   notifications: Notification[]
   preferences: NotificationPreference[]
@@ -69,7 +72,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryFn: () => notificationsService.getNotifications({ page_size: 50 }),
     staleTime: 30000, // 30 seconds
     refetchInterval: isAuthenticated && hasToken ? 60000 : false, // Only refetch when authenticated and token exists
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -82,7 +85,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications', 'preferences'],
     queryFn: () => notificationsService.getNotificationPreferences(),
     staleTime: 300000, // 5 minutes
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -95,7 +98,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     queryKey: ['notifications', 'device-tokens'],
     queryFn: () => notificationsService.getDeviceTokens(),
     staleTime: 300000, // 5 minutes
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -123,7 +126,7 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
       }
     },
     staleTime: 60000, // 1 minute
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on error
   })
 

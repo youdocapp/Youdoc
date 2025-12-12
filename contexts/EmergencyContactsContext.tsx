@@ -5,6 +5,9 @@ import { emergencyContactsService, type EmergencyContact, type CreateEmergencyCo
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
+// TEMPORARY: Disable backend calls to test UI only
+const MOCK_MODE = true
+
 export interface EmergencyContactContextType {
   contacts: EmergencyContact[]
   primaryContact: EmergencyContact | null
@@ -55,7 +58,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
       return response
     },
     staleTime: 30000,
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
     retry: false, // Don't retry on 404
   })
 
@@ -68,7 +71,7 @@ export const [EmergencyContactsProvider, useEmergencyContacts] = createContextHo
     queryFn: () => emergencyContactsService.getPrimaryContact(),
     staleTime: 30000,
     retry: false, // Don't retry if no primary contact exists
-    enabled: isAuthenticated && !authLoading && hasToken, // Only fetch when authenticated, auth initialized, and token exists
+    enabled: !MOCK_MODE && isAuthenticated && !authLoading && hasToken, // Disabled in mock mode
   })
 
   const contacts = contactsData?.contacts || []
