@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeft, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react-native';

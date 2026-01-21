@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Edit2, Trash2, X, AlertCircle } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useMedicalHistory, MedicalCondition, Surgery, Allergy } from '../contexts/MedicalHistoryContext';
@@ -173,7 +174,7 @@ const MedicalHistoryScreen: React.FC<MedicalHistoryScreenProps> = ({ onBack }) =
   };
 
   const getStatusColor = (status: MedicalCondition['status']) => {
-    const statusColors = {
+    const statusColors: Record<string, string> = {
       active: colors.error,
       resolved: colors.success,
       chronic: colors.warning
@@ -182,7 +183,7 @@ const MedicalHistoryScreen: React.FC<MedicalHistoryScreenProps> = ({ onBack }) =
   };
 
   const getSeverityColor = (severity: Allergy['severity']) => {
-    const severityColors = {
+    const severityColors: Record<string, string> = {
       mild: colors.success,
       moderate: colors.warning,
       severe: colors.error

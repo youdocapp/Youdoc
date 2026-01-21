@@ -4,7 +4,6 @@ import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
 import React, { useEffect, useMemo, useState } from 'react';
 import { LogBox } from 'react-native';
-import 'react-native-reanimated';
 import { useFonts } from 'expo-font';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 

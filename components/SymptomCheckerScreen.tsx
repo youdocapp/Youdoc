@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';

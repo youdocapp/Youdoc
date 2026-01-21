@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, FileText, Calendar, Edit2, Trash2, X, Upload } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useHealthRecords } from '../contexts/HealthRecordsContext';

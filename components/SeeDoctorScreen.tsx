@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SeeDoctorScreenProps {
@@ -18,7 +19,6 @@ const SeeDoctorScreen: React.FC<SeeDoctorScreenProps> = ({ onBack }) => {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       paddingHorizontal: 24,
-      paddingTop: 48,
       paddingBottom: 24
     },
     backButton: {

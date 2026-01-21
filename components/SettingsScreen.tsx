@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, Switch } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, ChevronRight, User, Lock, Fingerprint, Bell, Mail, Activity, Clock, Sun, Smartphone, DollarSign, HelpCircle, Info, LogOut, Trash2 } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 
