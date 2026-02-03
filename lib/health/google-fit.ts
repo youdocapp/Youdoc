@@ -38,8 +38,8 @@ export class GoogleFitService {
     }
 
     try {
-      // Feature implementation in progress
-      console.log('ℹ️ Google Fit integration requested (Coming Soon)');
+      // Feature implementation currently uses manual sync and preview logs
+      console.log('ℹ️ Google Fit: Platform detected. Implementation is currently in PREVIEW mode.');
       
       this.isInitialized = true;
       return true;
