@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { useAuthTheme } from '../../contexts/AuthThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { ChevronLeft, User, Mail, Lock, Eye, EyeOff, Phone } from 'lucide-react-native';
@@ -21,7 +22,8 @@ interface FormData {
 
 const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const { colors } = useAuthTheme();
-  const { register } = useAuth();
+  const { register, user } = useAuth();
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
@@ -35,6 +37,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [repeatPasswordVisible, setRepeatPasswordVisible] = useState(false);
 
+  useEffect(() => {
+    if (user) {
+      console.log('✅ User authenticated, navigating to dashboard');
+      router.replace('/dashboard');
+    }
+  }, [user]);
+
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -45,7 +54,13 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
   const passwordsMatch = formData.password && formData.repeatPassword && formData.password === formData.repeatPassword;
 
   const isFormValid = () => {
-    return true;
+    return (
+      formData.firstName.trim().length > 0 &&
+      formData.lastName.trim().length > 0 &&
+      formData.email.trim().length > 0 &&
+      formData.password.trim().length >= 8 &&
+      formData.password === formData.repeatPassword
+    );
   };
 
   const handleCreateAccount = async () => {
@@ -53,13 +68,36 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
     console.log('📋 Form valid:', isFormValid());
     console.log('📋 Form data:', { ...formData, password: '***', repeatPassword: '***' });
     
-    if (!isFormValid()) {
-      console.log('❌ Form validation failed');
-      if (formData.password !== formData.repeatPassword) {
-        Alert.alert('Password Mismatch', 'Passwords do not match.');
-        return;
-      }
-      Alert.alert('Invalid Form', 'Please fill in all fields correctly.');
+    // Validate form fields
+    if (!formData.firstName.trim()) {
+      Alert.alert('Missing Information', 'Please enter your first name.');
+      return;
+    }
+    
+    if (!formData.lastName.trim()) {
+      Alert.alert('Missing Information', 'Please enter your last name.');
+      return;
+    }
+    
+    if (!formData.email.trim()) {
+      Alert.alert('Missing Information', 'Please enter your email address.');
+      return;
+    }
+    
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      Alert.alert('Invalid Email', 'Please enter a valid email address.');
+      return;
+    }
+    
+    if (formData.password.length < 8) {
+      Alert.alert('Password Too Short', 'Password must be at least 8 characters long.');
+      return;
+    }
+    
+    if (formData.password !== formData.repeatPassword) {
+      Alert.alert('Password Mismatch', 'Passwords do not match. Please try again.');
       return;
     }
 
@@ -218,7 +256,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             </Text>
             <Text style={{ fontSize: 28, marginLeft: 8 }}>✨</Text>
           </View>
-          <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 32 }}>
+          <Text style={{ fontSize: 15, color: '#6B7280', marginBottom: 32 }}>
             Welcome! Please enter your details.
           </Text>
         </View>
@@ -302,7 +340,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           </View>
 
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-            Mobile Number
+            Mobile Number (Optional)
           </Text>
           <View style={{ position: 'relative', marginBottom: 20 }}>
             <Phone size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
@@ -333,7 +371,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           <View style={{ position: 'relative', marginBottom: 20 }}>
             <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
             <TextInput
-              placeholder="Enter your password"
+              placeholder="Enter your password (min. 8 characters)"
               value={formData.password}
               onChangeText={(value) => handleInputChange('password', value)}
               secureTextEntry={!passwordVisible}
@@ -373,7 +411,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
           </View>
 
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 }}>
-            Repeat Password
+            Confirm Password
           </Text>
           <View style={{ position: 'relative', marginBottom: 16 }}>
             <Lock size={20} color="#9CA3AF" style={{ position: 'absolute', left: 16, top: 16, zIndex: 1 }} />
@@ -445,11 +483,11 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             activeOpacity={0.8}
             style={{
               width: '100%',
-              backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#D1D5DB',
+              backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#93C5FD',
               paddingVertical: 16,
               borderRadius: 12,
               alignItems: 'center',
-              marginBottom: 24,
+              marginBottom: 32,
               opacity: loading ? 0.7 : 1
             }}
             disabled={loading}
@@ -467,6 +505,7 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
             )}
           </TouchableOpacity>
 
+          {/* GOOGLE AUTH COMMENTED OUT - Uncomment when ready to re-enable
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
             <Text style={{ marginHorizontal: 16, color: '#9CA3AF', fontSize: 13 }}>
@@ -487,10 +526,12 @@ const SignUpScreen: React.FC<SignUpScreenProps> = ({ onNext, onBack }) => {
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
+              onPress={onGooglePress}
             >
               <Text style={{ fontSize: 24 }}>G</Text>
             </TouchableOpacity>
           </View>
+          */}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
             <Text style={{ color: '#6B7280', fontSize: 14 }}>

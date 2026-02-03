@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, SafeAreaView, ScrollView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'expo-router';
 import { Eye, EyeOff, Mail, Lock, ChevronLeft } from 'lucide-react-native';
-import { GoogleIcon, AppleIcon } from '../ui';
+// GOOGLE AUTH COMMENTED OUT - Uncomment when ready to re-enable
+// import { GoogleIcon, AppleIcon } from '../ui';
 
 interface SignInScreenProps {
   onForgotPassword: () => void;
@@ -20,6 +21,10 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
+    }
+  };
+  */
+
   useEffect(() => {
     if (user) {
       console.log('✅ User authenticated, navigating to dashboard');
@@ -28,12 +33,12 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   }, [user]);
 
   const isFormValid = () => {
-    return true;
+    return email.trim().length > 0 && password.trim().length > 0;
   };
 
   const handleSignIn = async () => {
     if (!isFormValid()) {
-      Alert.alert('Invalid Form', 'Please fill in all fields.');
+      Alert.alert('Invalid Form', 'Please enter your email and password.');
       return;
     }
 
@@ -155,7 +160,8 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
             </Text>
             <Text style={{ fontSize: 28, marginLeft: 8 }}>✨</Text>
           </View>
-          <Text style={{ fontSize: 15, color: '#9CA3AF', marginBottom: 32 }}>
+
+          <Text style={{ fontSize: 15, color: '#6B7280', marginBottom: 32 }}>
             Welcome back! Please enter your details.
           </Text>
         </View>
@@ -265,14 +271,14 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
             onPress={handleSignIn}
             style={{
               width: '100%',
-              backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#D1D5DB',
+              backgroundColor: (isFormValid() && !loading) ? '#3B82F6' : '#93C5FD',
               paddingVertical: 16,
               borderRadius: 12,
               alignItems: 'center',
-              marginBottom: 24,
+              marginBottom: 32,
               opacity: loading ? 0.7 : 1
             }}
-            disabled={!isFormValid() || loading}
+            disabled={loading}
           >
             {loading ? (
               <ActivityIndicator size="small" color="white" />
@@ -287,6 +293,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
             )}
           </TouchableOpacity>
 
+          {/* GOOGLE AUTH COMMENTED OUT - Uncomment when ready to re-enable
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 24 }}>
             <View style={{ flex: 1, height: 1, backgroundColor: '#E5E7EB' }} />
             <Text style={{ marginHorizontal: 16, color: '#9CA3AF', fontSize: 13 }}>
@@ -307,7 +314,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
                 alignItems: 'center',
                 justifyContent: 'center'
               }}
-              onPress={() => Alert.alert('Google Sign In', 'Google sign in coming soon')}
+              onPress={onGooglePress}
             >
               <GoogleIcon size={24} />
             </TouchableOpacity>
@@ -328,6 +335,7 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
               <AppleIcon size={24} color="#000000" />
             </TouchableOpacity>
           </View>
+          */}
 
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginBottom: 32 }}>
             <Text style={{ color: '#6B7280', fontSize: 14 }}>

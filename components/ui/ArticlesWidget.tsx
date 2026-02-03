@@ -4,22 +4,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Card } from './Card';
 import { router } from 'expo-router';
 
-const MOCK_ARTICLES = [
-    {
-        id: '1',
-        title: 'Understand Your Heart Health',
-        category: 'Cardiology',
-        duration: '5 min read',
-        image: 'https://images.unsplash.com/photo-1505751172876-fa1923c5c528?q=80&w=2070&auto=format&fit=crop'
-    },
-    {
-        id: '2',
-        title: 'Mental Wellness Tips',
-        category: 'Mental Health',
-        duration: '3 min read',
-        image: 'https://images.unsplash.com/photo-1493836512294-502baa1986e2?q=80&w=2090&auto=format&fit=crop'
-    }
-];
+import { articles } from '@/constants/articles';
+
+const DISPLAY_ARTICLES = articles.slice(0, 5);
 
 export const ArticlesWidget: React.FC = () => {
   const { colors } = useTheme();
@@ -100,14 +87,14 @@ export const ArticlesWidget: React.FC = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
-        {MOCK_ARTICLES.map(article => (
-            <Card key={article.id} style={styles.articleCard} onPress={() => {}}>
+        {DISPLAY_ARTICLES.map(article => (
+            <Card key={article.id} style={styles.articleCard} onPress={() => router.push({ pathname: '/article-detail', params: { articleId: article.id } })}>
                 <Image source={{ uri: article.image }} style={styles.image} resizeMode="cover" />
                 <View style={styles.content}>
                     <Text style={styles.category}>{article.category.toUpperCase()}</Text>
                     <Text style={styles.articleTitle} numberOfLines={2}>{article.title}</Text>
                     <View style={styles.footer}>
-                        <Text style={styles.duration}>{article.duration}</Text>
+                        <Text style={styles.duration}>{article.readTime}</Text>
                     </View>
                 </View>
             </Card>

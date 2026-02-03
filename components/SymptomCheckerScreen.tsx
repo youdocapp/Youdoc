@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, KeyboardAvoidingView, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
@@ -536,12 +536,85 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
     </View>
   );
 
+  const [searchText, setSearchText] = useState('');
+
+  const filteredSymptoms = useMemo(() => {
+    if (!searchText) return SYMPTOMS;
+    return SYMPTOMS.filter(s => s.toLowerCase().includes(searchText.toLowerCase()));
+  }, [searchText]);
+
+  const handleAddSearchSymptom = () => {
+    if (searchText.trim()) {
+       // Check if it's already in the list to avoid duplicates
+       const existing = symptomData.symptoms.find(s => s.toLowerCase() === searchText.trim().toLowerCase());
+       if (!existing) {
+          handleSymptomToggle(searchText.trim());
+       }
+       setSearchText('');
+    }
+  };
+
   const renderSelectScreen = () => (
     <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-      <Text style={styles.sectionTitle}>Select all symptoms you're currently experiencing:</Text>
+      <Text style={styles.sectionTitle}>What are your symptoms?</Text>
+      
+      {/* Search Bar */}
+      <View style={{ 
+        flexDirection: 'row', 
+        alignItems: 'center', 
+        backgroundColor: colors.background, 
+        borderWidth: 1, 
+        borderColor: colors.border, 
+        borderRadius: 12, 
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        marginBottom: 24
+      }}>
+        <TextInput
+            style={{ flex: 1, fontSize: 16, color: colors.text }}
+            placeholder="Type your symptoms (e.g. 'Headache')"
+            placeholderTextColor="#FFFFFF"
+            value={searchText}
+            onChangeText={setSearchText}
+            onSubmitEditing={handleAddSearchSymptom}
+            blurOnSubmit={false}
+        />
+        {searchText.length > 0 && (
+            <TouchableOpacity onPress={handleAddSearchSymptom}>
+                <Text style={{ color: '#4F7FFF', fontWeight: '600' }}>Add</Text>
+            </TouchableOpacity>
+        )}
+      </View>
+
+      {/* Selected Symptoms Chips */}
+      {symptomData.symptoms.length > 0 && (
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 }}>
+          {symptomData.symptoms.map(s => (
+            <TouchableOpacity 
+              key={s} 
+              onPress={() => handleSymptomToggle(s)}
+              style={{ 
+                flexDirection: 'row', 
+                alignItems: 'center', 
+                backgroundColor: '#EEF2FF', 
+                borderRadius: 20, 
+                paddingHorizontal: 12, 
+                paddingVertical: 6,
+                borderWidth: 1,
+                borderColor: '#4F7FFF'
+              }}
+            >
+              <Text style={{ color: '#4F7FFF', fontWeight: '500', marginRight: 4 }}>{s}</Text>
+              <Text style={{ color: '#4F7FFF', fontSize: 16 }}>×</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
+      <Text style={[styles.sectionTitle, { fontSize: 14, color: colors.textSecondary }]}>Suggested Symptoms:</Text>
 
       <View style={styles.symptomsGrid}>
-        {SYMPTOMS.map((symptom) => (
+        {filteredSymptoms.map((symptom) => (
           <TouchableOpacity
             key={symptom}
             style={[
@@ -560,6 +633,16 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
             </Text>
           </TouchableOpacity>
         ))}
+
+        {/* Show "Add custom" if search text doesn't match any existing symptoms exactly */}
+        {searchText && !filteredSymptoms.includes(searchText) && (
+             <TouchableOpacity 
+              style={styles.symptomButtonDashed}
+              onPress={handleAddSearchSymptom}
+            >
+              <Text style={styles.symptomButtonDashedText}>+ Add "{searchText}"</Text>
+            </TouchableOpacity>
+        )}
 
         <TouchableOpacity 
           style={styles.symptomButtonDashed}
@@ -635,18 +718,184 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
     </View>
   );
 
+  const determineConditions = (symptoms: string[], severity: string | null, duration: string | null) => {
+    // database of conditions with weighted symptoms
+    const conditionsDB = [
+      {
+        name: 'Common Cold',
+        primary: ['Cough', 'Sore Throat', 'Runny Nose', 'Sneezing'],
+        secondary: ['Fever', 'Fatigue', 'Headache'],
+        description: 'A viral infection of your nose and throat (upper respiratory tract).',
+        minMatch: 2
+      },
+      {
+        name: 'Influenza (Flu)',
+        primary: ['Fever', 'Fatigue', 'Body Aches', 'Chills'],
+        secondary: ['Cough', 'Sore Throat', 'Headache'],
+        description: 'A viral infection that attacks your respiratory system.',
+        minMatch: 3
+      },
+      {
+        name: 'Migraine',
+        primary: ['Headache', 'Nausea', 'Sensitivity to Light'],
+        secondary: ['Dizziness', 'Vision Changes'],
+        description: 'A headache of varying intensity, often accompanied by nausea and sensitivity to light and sound.',
+        requiredSeverity: ['severe', 'extreme'],
+        minMatch: 2
+      },
+      {
+        name: 'Tension Headache',
+        primary: ['Headache'],
+        secondary: ['Neck Pain', 'Fatigue'],
+        description: 'A mild to moderate pain often described as feeling like a tight band around your head.',
+        requiredSeverity: ['mild', 'moderate'],
+        minMatch: 1
+      },
+      {
+        name: 'Gastroenteritis (Stomach Flu)',
+        primary: ['Stomach Pain', 'Nausea', 'Vomiting', 'Diarrhea'],
+        secondary: ['Fever', 'Headache', 'Cough'],
+        description: 'Intestinal infection marked by diarrhea, cramps, nausea, vomiting, and fever.',
+        minMatch: 2
+      },
+      {
+        name: 'COVID-19',
+        primary: ['Fever', 'Cough', 'Loss of Taste or Smell', 'Shortness of Breath'],
+        secondary: ['Fatigue', 'Body Aches', 'Sore Throat'],
+        description: 'A respiratory illness caused by the coronavirus SARS-CoV-2.',
+        minMatch: 2
+      },
+      {
+        name: 'Angina (Heart Related)',
+        primary: ['Chest Pain', 'Shortness of Breath'],
+        secondary: ['Nausea', 'Dizziness', 'Sweating', 'Pain in Arm'],
+        description: 'Chest pain caused by reduced blood flow to the heart.',
+        isUrgent: true,
+        minMatch: 2
+      },
+      {
+        name: 'Allergic Rhinitis (Hay Fever)',
+        primary: ['Sneezing', 'Runny Nose', 'Itchy Eyes'],
+        secondary: ['Cough', 'Sore Throat', 'Fatigue'],
+        description: 'An allergic response to specific allergens like pollen, dust mites, or pets.',
+        duration: ['More than a month', '2-7 days', '1-4 weeks'],
+        minMatch: 2
+      },
+      {
+         name: 'Pneumonia',
+         primary: ['Cough', 'Fever', 'Shortness of Breath'],
+         secondary: ['Chest Pain', 'Fatigue', 'Nausea'],
+         description: 'An infection that inflames the air sacs in one or both lungs.',
+         isUrgent: true,
+         minMatch: 3
+      }
+    ];
+
+    const normalizedSymptoms = symptoms.map(s => s.toLowerCase());
+    
+    // Helper to calculate score
+    const calculateScore = (condition: any) => {
+        let score = 0;
+        let matches = 0;
+        let primaryMatches = 0;
+
+        // Check primary symptoms (Weight: 2)
+        condition.primary.forEach((s: string) => {
+            if (normalizedSymptoms.some(ns => ns.includes(s.toLowerCase()))) {
+                score += 2;
+                matches++;
+                primaryMatches++;
+            }
+        });
+
+        // Check secondary symptoms (Weight: 1)
+        condition.secondary.forEach((s: string) => {
+            if (normalizedSymptoms.some(ns => ns.includes(s.toLowerCase()))) {
+                score += 1;
+                matches++;
+            }
+        });
+
+        // Severity Adjustments
+        if (severity && condition.requiredSeverity) {
+             if (condition.requiredSeverity.includes(severity)) {
+                 score += 1; // Bonus for matching severity
+             } else {
+                 score -= 1; // Penalty for mismatching severity
+             }
+        }
+
+        // Urgency weight (if symptoms match urgent condition, boost it slightly to ensure visibility)
+        if (condition.isUrgent && primaryMatches >= 1) {
+            score += 0.5;
+        }
+
+        return { score, matches };
+    };
+
+    const results = conditionsDB.map(condition => {
+        const { score, matches } = calculateScore(condition);
+        
+        let probability = 'Low';
+        const maxPossibleScore = (condition.primary.length * 2) + condition.secondary.length;
+        const confidence = score / maxPossibleScore;
+
+        if (confidence > 0.6 || (matches >= condition.minMatch + 1)) probability = 'High';
+        else if (confidence > 0.3 || matches >= condition.minMatch) probability = 'Moderate';
+        
+        return {
+            ...condition,
+            score,
+            matches,
+            probability
+        };
+    })
+    .filter(c => c.matches >= 1 && c.score > 0) // Must match at least one thing
+    .filter(c => c.matches >= (c.minMatch || 1)) // Enforce minimum match count
+    .sort((a, b) => b.score - a.score); // Sort by highest score first
+
+    // Fallback if no specific conditions match well but symptoms exist
+    if (results.length === 0 && symptoms.length > 0) {
+        if (normalizedSymptoms.some(s => s.includes('pain'))) {
+             results.push({
+                 name: 'General Pain / Discomfort',
+                 probability: 'Moderate',
+                 description: 'Your symptoms suggest localized pain. Please monitor severity.',
+                 primary: [], secondary: [], minMatch: 0 // structural fillers
+             });
+        } else {
+             results.push({
+                name: 'Undetermined Viral Infection',
+                probability: 'Low',
+                description: 'Symptoms are non-specific. Ensure plenty of rest and hydration.',
+                primary: [], secondary: [], minMatch: 0
+             });
+        }
+    }
+
+    return results.slice(0, 3); // Return top 3 results
+  };
+
   const renderResultsScreen = () => {
     const severityColor = SEVERITY_OPTIONS.find(s => s.level === symptomData.severity)?.color || '#F59E0B';
-    
+    const conditions = determineConditions(symptomData.symptoms, symptomData.severity, symptomData.duration);
+    const isUrgent = conditions.some(c => c.isUrgent && (c.probability === 'High' || c.probability === 'Moderate'));
+
     return (
       <View style={{ paddingHorizontal: 20, paddingTop: 24 }}>
-        <View style={[styles.alertBox, { borderColor: severityColor }]}>
-          <View style={[styles.alertIcon, { backgroundColor: severityColor }]}>
+        <View style={[styles.alertBox, { borderColor: isUrgent ? '#DC2626' : severityColor, backgroundColor: isUrgent ? '#FEF2F2' : '#FFFBEB' }]}>
+          <View style={[styles.alertIcon, { backgroundColor: isUrgent ? '#DC2626' : severityColor }]}>
             <Text style={styles.alertIconText}>⚠</Text>
           </View>
           <View style={styles.alertContent}>
-            <Text style={[styles.alertTitle, { color: severityColor }]}>Consider Medical Consultation</Text>
-            <Text style={styles.alertDescription}>Your symptoms may benefit from medical evaluation.</Text>
+            <Text style={[styles.alertTitle, { color: isUrgent ? '#DC2626' : severityColor }]}>
+              {isUrgent ? 'Seek Immediate Medical Attention' : 'Consider Medical Consultation'}
+            </Text>
+            <Text style={styles.alertDescription}>
+              {isUrgent 
+                ? 'Your symptoms indicate a potentially serious condition (e.g., heart or lung related). Please visit an emergency room or call emergency services.' 
+                : 'Your symptoms may benefit from medical evaluation.'}
+            </Text>
           </View>
         </View>
 
@@ -663,6 +912,24 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
         <Text style={styles.metaText}>
           Severity: {symptomData.severity?.charAt(0).toUpperCase()}{symptomData.severity?.slice(1)} • Duration: {symptomData.duration}
         </Text>
+
+        <Text style={styles.resultsTitle}>Possible Conditions (AI Analysis)</Text>
+        
+        {conditions.length > 0 ? conditions.map((condition, index) => (
+          <View key={index} style={{ marginBottom: 16, backgroundColor: colors.background, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: colors.border }}>
+             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>{condition.name}</Text>
+                <View style={{ backgroundColor: condition.probability === 'High' ? '#FEE2E2' : (condition.probability === 'Moderate' ? '#FEF3C7' : '#ECFDF5'), paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: condition.probability === 'High' ? '#DC2626' : (condition.probability === 'Moderate' ? '#D97706' : '#059669') }}>{condition.probability}</Text>
+                </View>
+             </View>
+             <Text style={{ fontSize: 14, color: colors.textSecondary }}>{condition.description}</Text>
+          </View>
+        )) : (
+            <Text style={{ color: colors.textSecondary, fontStyle: 'italic', marginBottom: 16 }}>
+                Not enough data to determine specific conditions.
+            </Text>
+        )}
 
         <Text style={styles.resultsTitle}>Recommendations</Text>
 
@@ -684,11 +951,8 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
           <View style={styles.recommendationNumber}>
             <Text style={styles.recommendationNumberText}>3</Text>
           </View>
-          <Text style={styles.recommendationText}>Contact your healthcare provider if symptoms persist</Text>
+          <Text style={styles.recommendationText}>Contact your healthcare provider if symptoms persist or worsen</Text>
         </View>
-
-        <Text style={styles.resultsTitle}>Possible Conditions</Text>
-        <Text style={styles.conditionsPlaceholder}>Based on your symptoms, several conditions may be possible...</Text>
 
         <TouchableOpacity style={styles.primaryButton} onPress={() => {}}>
           <Text style={styles.primaryButtonText}>Schedule Provider Appointment</Text>
@@ -708,15 +972,20 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalOverlay}
+      >
         <View style={styles.modalContent}>
           <Text style={styles.modalTitle}>Add Custom Symptom</Text>
           <TextInput
             style={styles.modalInput}
-            placeholder="Enter symptom name"
+            placeholder="Enter symptom name (e.g. 'Back pain')"
             value={customSymptom}
             onChangeText={setCustomSymptom}
             autoFocus
+            onSubmitEditing={handleAddCustomSymptom}
+            returnKeyType="done"
           />
           <View style={styles.modalButtons}>
             <TouchableOpacity 
@@ -733,7 +1002,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
             </TouchableOpacity>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 
@@ -768,6 +1037,7 @@ const SymptomCheckerScreen: React.FC<SymptomCheckerScreenProps> = ({
         style={{ flex: 1 }} 
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         {currentScreen === 'intro' && renderIntroScreen()}
         {currentScreen === 'select' && renderSelectScreen()}
