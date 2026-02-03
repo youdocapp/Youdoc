@@ -38,14 +38,11 @@ export class GoogleFitService {
     }
 
     try {
-      // TODO: Implement Google Sign-In and Fit API initialization
-      // This requires:
-      // 1. Google Sign-In setup
-      // 2. OAuth token acquisition
-      // 3. Google Fit API authorization
+      // Feature implementation in progress
+      console.log('ℹ️ Google Fit integration requested (Coming Soon)');
       
-      this.isInitialized = true
-      return true
+      this.isInitialized = true;
+      return true;
     } catch (error) {
       console.error('Failed to initialize Google Fit:', error)
       return false

@@ -1,4 +1,4 @@
-import { View, StyleSheet, ViewStyle, Platform, StyleProp } from 'react-native';
+import { View, StyleSheet, ViewStyle, Platform, StyleProp, TouchableOpacity } from 'react-native';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface CardProps {
@@ -14,6 +14,7 @@ export const Card: React.FC<CardProps> = ({
   style,
   padding = 16,
   variant = 'elevated',
+  onPress,
 }) => {
   const { colors, isDark } = useTheme();
 
@@ -38,14 +39,28 @@ export const Card: React.FC<CardProps> = ({
     return {};
   };
 
+  const cardStyle = [
+    styles.container,
+    { backgroundColor: getBackgroundColor(), padding },
+    getBorder(),
+    getShadow(),
+    style
+  ];
+
+  if (onPress) {
+    return (
+      <TouchableOpacity 
+        style={cardStyle} 
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        {children}
+      </TouchableOpacity>
+    );
+  }
+
   return (
-    <View style={[
-      styles.container,
-      { backgroundColor: getBackgroundColor(), padding },
-      getBorder(),
-      getShadow(),
-      style
-    ]}>
+    <View style={cardStyle}>
       {children}
     </View>
   );

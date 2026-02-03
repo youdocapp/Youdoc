@@ -281,7 +281,7 @@ export class ApiClient {
     config: RequestConfig,
     requiresAuth: boolean = true,
     retryCount: number = 0,
-    timeout: number = 30000
+    timeout: number = 60000
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`
     

@@ -1,11 +1,12 @@
 {
   "expo": {
-    "name": "youdoc",
+    "name": "Youdoc",
     "slug": "youdoc",
+    "owner": "oluwatobi_daniel",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "youdoc",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
@@ -15,11 +16,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "app.rork.youdoc",
+      "bundleIdentifier": "com.youdoc.app",
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Allow $(PRODUCT_NAME) to access your photos",
-        "NSCameraUsageDescription": "Allow $(PRODUCT_NAME) to access your camera",
-        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
+        "NSPhotoLibraryUsageDescription": "Allow Youdoc to access your photos to upload health records.",
+        "NSCameraUsageDescription": "Allow Youdoc to access your camera to take photos of medical documents.",
+        "NSMicrophoneUsageDescription": "Allow Youdoc to access your microphone for telehealth consultations."
       }
     },
     "android": {
@@ -27,12 +28,13 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "app.rork.youdoc",
+      "package": "com.youdoc.app",
       "permissions": [
         "android.permission.HIGH_SAMPLING_RATE_SENSORS",
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "web": {
@@ -42,18 +44,28 @@
       [
         "expo-router",
         {
-          "origin": "https://rork.com/"
+          "origin": "https://youdoc.app/"
         }
       ],
       [
         "expo-image-picker",
         {
-          "photosPermission": "The app accesses your photos to let you share them with your friends."
+          "photosPermission": "The app accesses your photos to let you upload and share health records."
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://youdoc.app/"
+      },
+      "eas": {
+        "projectId": "feadfa28-ad46-4a9b-b32c-be6ab0113f98"
+      }
     }
   }
 }

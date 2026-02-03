@@ -40,14 +40,11 @@ export class AppleHealthService {
     }
 
     try {
-      // TODO: Implement HealthKit initialization
-      // This requires:
-      // 1. HealthKit framework setup
-      // 2. Permission requests
-      // 3. Authorization handling
+      // Feature implementation in progress
+      console.log('ℹ️ Apple HealthKit integration requested (Coming Soon)');
       
-      this.isInitialized = true
-      return true
+      this.isInitialized = true;
+      return true;
     } catch (error) {
       console.error('Failed to initialize Apple HealthKit:', error)
       return false

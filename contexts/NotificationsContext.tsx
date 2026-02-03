@@ -59,6 +59,31 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
     checkToken()
   }, [isAuthenticated, authLoading])
 
+  // Configure global notification handler
+  React.useEffect(() => {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+
+    const responseListener = Notifications.addNotificationResponseReceivedListener(response => {
+      const { notification } = response;
+      // Handle notification tap logic here
+      console.log('Notification tapped:', notification);
+    });
+
+    return () => {
+      if (responseListener) {
+        responseListener.remove();
+      }
+    };
+  }, []);
+
   // Fetch notifications - only when authenticated, auth initialized, and token exists
   const {
     data: notificationsData,

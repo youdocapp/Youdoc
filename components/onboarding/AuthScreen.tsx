@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TouchableOpacity, SafeAreaView, Alert, ActivityIndicator, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Svg, Path } from 'react-native-svg';
 import * as WebBrowser from 'expo-web-browser';
+import * as AuthSession from 'expo-auth-session';
 import { useAuth } from '../../contexts/AuthContext';
 import Constants from 'expo-constants';
 
@@ -18,95 +19,113 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
   const { googleAuth } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
+  // DIRECT BROWSER-BASED OAUTH (Bypasses unreliable Expo proxy)
+  const nativeRedirectUri = AuthSession.makeRedirectUri({
+    scheme: 'youdoc',
+    path: 'oauth',
+  });
+  
+  // Log environment info on mount
+  useEffect(() => {
+    console.log('\n=== AUTHSCREEN GOOGLE OAUTH CONFIG ===');
+    console.log('📱 Platform:', Platform.OS);
+    console.log('🏠 App Ownership:', Constants.appOwnership);
+    console.log('🔗 Native Redirect URI:', nativeRedirectUri);
+    console.log('=========================\n');
+  }, [nativeRedirectUri]);
+
   const handleGoogleSignUp = async () => {
+    setIsLoading(true);
+    
     try {
-      setIsLoading(true);
-      console.log('🚀 Starting Google sign up...');
-
-      // Get Google OAuth Client ID from environment or config
-      const googleClientId = Constants.expoConfig?.extra?.googleClientId || 
-                            (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_GOOGLE_CLIENT_ID);
-
-      console.log('🔍 Google OAuth Check:', {
-        hasClientId: !!googleClientId,
-        clientIdLength: googleClientId?.length || 0,
-        clientIdPrefix: googleClientId ? googleClientId.substring(0, 20) + '...' : 'none'
-      });
-
-      if (!googleClientId || googleClientId === 'YOUR_CLIENT_ID' || googleClientId.trim() === '') {
-        Alert.alert(
-          'Google Sign In Not Configured',
-          'Google Sign In requires configuration. Please:\n\n1. Create OAuth 2.0 credentials in Google Cloud Console\n2. Add EXPO_PUBLIC_GOOGLE_CLIENT_ID to your .env file\n3. Configure redirect URIs\n\nFor now, please use email sign up.',
-          [{ text: 'OK' }]
-        );
-        setIsLoading(false);
-        return;
-      }
-
-      // Get the API base URL for the redirect URI
-      // Google OAuth requires HTTPS redirect URIs (not custom schemes)
-      const apiBaseUrl = Constants.expoConfig?.extra?.apiBaseUrl || 
-                        (typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_BASE_URL) ||
-                        'https://youdoc.onrender.com';
+      console.log('🚀 Starting Google Sign-Up with direct browser flow...');
+      console.log('📍 Redirect URI:', nativeRedirectUri);
       
-      // Remove trailing slash and /api if present (we want the base domain)
-      let baseUrl = apiBaseUrl.endsWith('/') ? apiBaseUrl.slice(0, -1) : apiBaseUrl;
-      baseUrl = baseUrl.replace('/api', ''); // Remove /api if present
+      // Build the Google OAuth URL manually
+      const clientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID!;
+      const scopes = ['openid', 'profile', 'email'].join(' ');
       
-      // Use the backend callback URL (HTTPS) - Google requires HTTPS for redirect URIs
-      const redirectUri = `${baseUrl}/auth/google/callback`;
+      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+        `client_id=${encodeURIComponent(clientId)}` +
+        `&redirect_uri=${encodeURIComponent(nativeRedirectUri)}` +
+        `&response_type=token` +
+        `&scope=${encodeURIComponent(scopes)}` +
+        `&prompt=select_account`;
       
-      // For Expo to handle the redirect back to the app
-      const appScheme = Constants.expoConfig?.scheme || 'myapp';
+      console.log('🌐 Opening auth URL...');
       
-      console.log('🔍 OAuth Configuration:', {
-        apiBaseUrl: baseUrl,
-        redirectUri,
-        appScheme,
-        clientIdPrefix: googleClientId.substring(0, 20) + '...'
-      });
-      
-      // Construct the Google OAuth URL
-      // The redirect URI points to the backend, which will handle the callback
-      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=id_token&scope=openid%20email%20profile&nonce=${Date.now()}`;
-
-      // Open Google OAuth in browser
-      // The redirect URI is HTTPS (backend URL), and Expo will handle the redirect back to app
+      // Open the browser and wait for redirect
       const result = await WebBrowser.openAuthSessionAsync(
-        googleAuthUrl,
-        `${appScheme}://` // This is what Expo uses to redirect back to the app
+        authUrl,
+        nativeRedirectUri
       );
-
+      
+      console.log('📥 Browser result:', result.type);
+      
       if (result.type === 'success' && result.url) {
-        // Extract ID token from URL (Google returns id_token in the hash)
-        const url = new URL(result.url);
-        const idToken = url.hash.split('id_token=')[1]?.split('&')[0];
+        console.log('✅ Got redirect URL');
         
-        if (idToken) {
-          console.log('✅ Google ID token received');
-          const authResult = await googleAuth({ access_token: idToken });
+        // Parse the access token from the URL fragment
+        const url = result.url;
+        const fragmentIndex = url.indexOf('#');
+        
+        if (fragmentIndex !== -1) {
+          const fragment = url.substring(fragmentIndex + 1);
+          const params = new URLSearchParams(fragment);
+          const accessToken = params.get('access_token');
           
-          if (authResult.success) {
-            console.log('✅ Google authentication successful');
-            router.replace('/dashboard');
+          if (accessToken) {
+            console.log('🎉 Access token extracted successfully!');
+            handleGoogleSignIn(accessToken);
           } else {
-            Alert.alert('Error', authResult.error || 'Google authentication failed');
+            console.error('❌ No access token in URL');
+            setIsLoading(false);
+            Alert.alert('Sign Up Error', 'Failed to get access token from Google.');
           }
         } else {
-          Alert.alert('Error', 'Could not retrieve ID token from Google');
+          console.error('❌ No fragment in URL:', url);
+          setIsLoading(false);
+          Alert.alert('Sign Up Error', 'Invalid response from Google.');
         }
       } else if (result.type === 'cancel') {
-        console.log('ℹ️ User cancelled Google sign in');
+        console.log('👋 User cancelled');
+        setIsLoading(false);
+      } else if (result.type === 'dismiss') {
+        console.log('🚪 Browser dismissed');
+        setIsLoading(false);
       } else {
-        Alert.alert('Error', 'Google sign in failed. Please try again.');
+        console.log('❓ Unknown result type:', result.type);
+        setIsLoading(false);
       }
-    } catch (error: any) {
-      console.error('❌ Google sign up error:', error);
-      Alert.alert('Error', error.message || 'Failed to sign in with Google. Please try again.');
-    } finally {
+    } catch (error) {
+      console.error('❌ Google Sign-Up error:', error);
       setIsLoading(false);
+      Alert.alert('Error', 'Failed to start Google Sign-Up. Please try again.');
     }
   };
+
+  const handleGoogleSignIn = async (token: string) => {
+    setIsLoading(true);
+    try {
+      console.log('🔑 Attempting Google sign in...');
+      const result = await googleAuth({
+        access_token: token,
+      });
+      
+      if (result.success) {
+        console.log('✅ Google authentication successful');
+        router.replace('/dashboard');
+      } else {
+        setIsLoading(false);
+        Alert.alert('Sign In Failed', result.message || 'Failed to sign in with Google');
+      }
+    } catch (error) {
+      setIsLoading(false);
+      console.error('❌ Google sign in error:', error);
+      Alert.alert('Error', 'An unexpected error occurred during Google sign in');
+    }
+  };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FFFFFF' }}>
