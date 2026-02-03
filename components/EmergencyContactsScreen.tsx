@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Alert } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Phone, Mail, Star, Edit2, Trash2, X } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useEmergencyContacts, EmergencyContact } from '../contexts/EmergencyContactsContext';

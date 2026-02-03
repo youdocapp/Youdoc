@@ -454,7 +454,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
             </View>
           </TouchableOpacity>
 
-          {connectedDevices.map((device) => (
+          {Array.isArray(connectedDevices) && connectedDevices.map((device) => (
             <View key={device.id} style={styles.deviceCard}>
               <View style={styles.deviceIcon}>{getDeviceIcon(device.type)}</View>
               <View style={styles.deviceInfo}>

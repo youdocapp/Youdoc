@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, FlatList, Animated } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, FlatList, Animated } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, Plus, Clock, CheckCircle2, Circle, Eye, EyeOff, Filter } from 'lucide-react-native';
 import { useMedication } from '../contexts/MedicationContext';
 import { useTheme } from '@/contexts/ThemeContext';

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, TextInput, Modal, Platform, Alert, ActivityIndicator } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ChevronLeft, User, Mail, Phone, Calendar, Smile, Heart, Hand, Target, FileText, Clock, Settings } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';

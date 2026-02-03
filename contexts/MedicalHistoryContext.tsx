@@ -2,6 +2,7 @@ import React from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { medicalHistoryService, type MedicalCondition, type Surgery, type Allergy, type CreateConditionRequest, type CreateSurgeryRequest, type CreateAllergyRequest, type ApiError } from '@/lib/api'
+export type { MedicalCondition, Surgery, Allergy };
 import createContextHook from '@nkzw/create-context-hook'
 import { useAuth } from './AuthContext'
 
