@@ -21,10 +21,6 @@ const SignInScreen: React.FC<SignInScreenProps> = ({ onForgotPassword, onSignUp,
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-    }
-  };
-  */
-
   useEffect(() => {
     if (user) {
       console.log('✅ User authenticated, navigating to dashboard');
