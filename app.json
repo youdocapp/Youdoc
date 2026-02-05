@@ -8,7 +8,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "youdoc",
     "userInterfaceStyle": "automatic",
-     "newArchEnabled": true,
+    "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -86,10 +86,10 @@
             "newArchEnabled": true
           },
           "android": {
-            "compileSdkVersion": 34,
-            "targetSdkVersion": 34,
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
             "minSdkVersion": 24,
-            "newArchEnabled": false,
+            "newArchEnabled": true,
             "kotlinVersion": "2.0.21",
             "enableProguardInReleaseBuilds": false,
             "packagingOptions": {
