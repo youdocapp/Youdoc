@@ -1,6 +1,25 @@
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Constants from 'expo-constants'
 
+// Helper to only log in development mode
+const devLog = (...args: any[]) => {
+  if (__DEV__) {
+    console.log(...args)
+  }
+}
+
+const devWarn = (...args: any[]) => {
+  if (__DEV__) {
+    console.warn(...args)
+  }
+}
+
+const devError = (...args: any[]) => {
+  if (__DEV__) {
+    console.error(...args)
+  }
+}
+
 // Get API base URL from environment or use default
 const getApiBaseUrl = (): string => {
   if (typeof Constants !== 'undefined' && Constants.expoConfig?.extra?.apiBaseUrl) {
@@ -16,8 +35,8 @@ const getApiBaseUrl = (): string => {
 
 const API_BASE_URL = getApiBaseUrl()
 
-// Log API base URL for debugging
-console.log('🔧 API Base URL:', API_BASE_URL)
+// Log API base URL for debugging (only in dev)
+devLog('🔧 API Base URL:', API_BASE_URL)
 
 export interface ApiError {
   error: boolean
@@ -41,9 +60,9 @@ export class ApiClient {
   }
 
   private async getAuthHeaders(includeContentType: boolean = true, requiresAuth: boolean = true): Promise<Record<string, string>> {
-    console.log('🔑 getAuthHeaders called:', { includeContentType, requiresAuth })
+    devLog('🔑 getAuthHeaders called:', { includeContentType, requiresAuth })
     const token = await AsyncStorage.getItem('accessToken')
-    console.log('🔑 getAuthHeaders: Token retrieved:', {
+    devLog('🔑 getAuthHeaders: Token retrieved:', {
       hasToken: !!token,
       tokenLength: token?.length || 0,
       tokenPrefix: token ? token.substring(0, 20) + '...' : 'none',
@@ -58,7 +77,7 @@ export class ApiClient {
     
     if (token && token.trim()) {
       headers['Authorization'] = `Bearer ${token.trim()}`
-      console.log('🔑 Token found, adding Authorization header:', {
+      devLog('🔑 Token found, adding Authorization header:', {
         tokenLength: token.length,
         tokenPrefix: token.substring(0, 20) + '...',
         hasAuthHeader: !!headers['Authorization'],
@@ -67,7 +86,7 @@ export class ApiClient {
       })
     } else {
       if (requiresAuth) {
-        console.error('❌ getAuthHeaders: No access token found but auth is required', {
+        devError('❌ getAuthHeaders: No access token found but auth is required', {
           tokenExists: !!token,
           tokenValue: token || 'null',
           tokenLength: token?.length || 0,
@@ -79,12 +98,12 @@ export class ApiClient {
           details: {}
         } as ApiError
     } else {
-      console.warn('⚠️ No access token found in AsyncStorage')
-      console.warn('⚠️ Request will be made without Authorization header')
+      devWarn('⚠️ No access token found in AsyncStorage')
+      devWarn('⚠️ Request will be made without Authorization header')
       }
     }
     
-    console.log('🔑 getAuthHeaders returning:', {
+    devLog('🔑 getAuthHeaders returning:', {
       headerKeys: Object.keys(headers),
       hasAuth: !!headers['Authorization']
     })
@@ -106,11 +125,11 @@ export class ApiClient {
       try {
         const refreshToken = await AsyncStorage.getItem('refreshToken')
         if (!refreshToken) {
-          console.error('❌ No refresh token available')
+          devError('❌ No refresh token available')
           return null
         }
 
-        console.log('🔄 Refreshing token...', {
+        devLog('🔄 Refreshing token...', {
           refreshTokenPrefix: refreshToken.substring(0, 20) + '...',
           refreshTokenLength: refreshToken.length
         })
@@ -121,7 +140,7 @@ export class ApiClient {
           body: JSON.stringify({ refresh: refreshToken }),
         })
 
-        console.log('🔄 Token refresh response:', {
+        devLog('🔄 Token refresh response:', {
           status: response.status,
           ok: response.ok,
           url: response.url
@@ -129,7 +148,7 @@ export class ApiClient {
 
         if (response.ok) {
           const data = await response.json()
-          console.log('✅ Token refresh successful:', {
+          devLog('✅ Token refresh successful:', {
             hasAccessToken: !!data.access,
             accessTokenPrefix: data.access ? data.access.substring(0, 20) + '...' : 'none',
             accessTokenLength: data.access?.length || 0,
@@ -138,15 +157,15 @@ export class ApiClient {
           
           if (data.access) {
             await AsyncStorage.setItem('accessToken', data.access)
-            console.log('✅ New access token saved to AsyncStorage')
+            devLog('✅ New access token saved to AsyncStorage')
             return data.access
           } else {
-            console.error('❌ Token refresh response missing access token:', data)
+            devError('❌ Token refresh response missing access token:', data)
             return null
           }
         } else {
           const errorData = await response.json().catch(() => ({}))
-          console.error('❌ Token refresh failed:', {
+          devError('❌ Token refresh failed:', {
             status: response.status,
             error: errorData
           })
@@ -155,7 +174,7 @@ export class ApiClient {
           return null
         }
       } catch (error) {
-        console.error('❌ Token refresh error:', error)
+        devError('❌ Token refresh error:', error)
         await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'user'])
         return null
       } finally {
@@ -181,7 +200,7 @@ export class ApiClient {
 
     // Log successful responses for POST requests to help debug
     if (response.ok && method.toUpperCase() === 'POST') {
-      console.log('✅ POST Success:', {
+      devLog('✅ POST Success:', {
         status: response.status,
         url: response.url,
         hasData: !!data
@@ -194,7 +213,7 @@ export class ApiClient {
       
       // Log error details for POST requests to help debug why medication creation might fail
       if (method.toUpperCase() === 'POST') {
-        console.error('❌ POST Request Failed:', {
+        devError('❌ POST Request Failed:', {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -221,7 +240,7 @@ export class ApiClient {
       // Handle 401 errors
       if (response.status === 401) {
         // Log the actual server response for debugging
-        console.error('❌ 401 Error - Server Response:', {
+        devError('❌ 401 Error - Server Response:', {
           status: response.status,
           url: response.url,
           responseData: data,
@@ -257,7 +276,7 @@ export class ApiClient {
       
       // Log full error details for debugging (only for non-404/401 errors, or 401 with token)
       if (response.status !== 404 && response.status !== 401) {
-        console.error('❌ API Error Response:', {
+        devError('❌ API Error Response:', {
           status: response.status,
           statusText: response.statusText,
           url: response.url,
@@ -286,7 +305,7 @@ export class ApiClient {
     const url = `${this.baseUrl}${endpoint}`
     
     // Log request details for debugging
-    console.log('🌐 API Request:', {
+    devLog('🌐 API Request:', {
       method: config.method,
       url,
       requiresAuth,
@@ -314,10 +333,10 @@ export class ApiClient {
         const token = await AsyncStorage.getItem('accessToken')
           if (token && token.trim()) {
             requestHeaders['Authorization'] = `Bearer ${token.trim()}`
-            console.log('🔧 Added Authorization header directly in makeRequest')
+            devLog('🔧 Added Authorization header directly in makeRequest')
           } else {
             // No token available - this should not happen if get() method worked correctly
-            console.error('❌ No token available in makeRequest despite requiresAuth=true')
+            devError('❌ No token available in makeRequest despite requiresAuth=true')
             throw {
               error: true,
               message: 'Authentication credentials were not provided.',
@@ -355,7 +374,7 @@ export class ApiClient {
       // Verify Authorization header is present and properly formatted
       const authHeader = requestConfig.headers['Authorization']
       if (requiresAuth && !authHeader) {
-        console.error('❌ CRITICAL: Authorization header missing in fetch config!', {
+        devError('❌ CRITICAL: Authorization header missing in fetch config!', {
           requiresAuth,
           allHeaders: Object.keys(requestConfig.headers),
           headerValues: requestConfig.headers
@@ -367,7 +386,7 @@ export class ApiClient {
         } as ApiError
       }
       
-      console.log('📤 Fetch request config:', {
+      devLog('📤 Fetch request config:', {
         method: requestConfig.method,
         url,
         hasAuthHeader: !!authHeader,
@@ -384,7 +403,7 @@ export class ApiClient {
       }
       
       // Log response details for debugging
-      console.log('📥 Fetch response received:', {
+      devLog('📥 Fetch response received:', {
         status: response.status,
         statusText: response.statusText,
         url: response.url,
@@ -400,7 +419,7 @@ export class ApiClient {
       }
       
       // Log detailed error information
-      console.error('❌ Fetch error:', {
+      devError('❌ Fetch error:', {
         message: error?.message,
         name: error?.name,
         code: error?.code,
@@ -418,7 +437,7 @@ export class ApiClient {
         const isRenderCom = this.baseUrl.includes('onrender.com')
         if (isRenderCom && retryCount === 0) {
           // Retry once with longer timeout (cold start on Render.com can take 30-60 seconds)
-          console.log('🔄 Retrying request with longer timeout (possible cold start on Render.com)...')
+          devLog('🔄 Retrying request with longer timeout (possible cold start on Render.com)...')
           return this.makeRequest<T>(endpoint, config, requiresAuth, retryCount + 1, 90000)
         }
         errorMessage = 'Unable to connect to the server. The server may be starting up. Please try again in a moment.'
@@ -427,7 +446,7 @@ export class ApiClient {
         const isAuthEndpoint = endpoint.includes('/auth/')
         if (isAuthEndpoint && retryCount === 0) {
           // Retry once with longer timeout for auth endpoints (cold start on Render.com)
-          console.log('🔄 Retrying auth request with longer timeout (possible cold start)...')
+          devLog('🔄 Retrying auth request with longer timeout (possible cold start)...')
           return this.makeRequest<T>(endpoint, config, requiresAuth, retryCount + 1, 90000)
         }
         errorMessage = 'Request timeout. The server may be starting up. Please try again in a moment.'
@@ -449,21 +468,21 @@ export class ApiClient {
 
     // Handle 401 Unauthorized - try to refresh token once
     if (response.status === 401 && requiresAuth && retryCount === 0) {
-      console.log('🔄 401 received, attempting token refresh...')
+      devLog('🔄 401 received, attempting token refresh...')
       const hasToken = await this.hasToken()
       
       // Only try to refresh if we have a token (might be expired)
       if (hasToken) {
-        console.log('🔄 Token exists, refreshing...')
+        devLog('🔄 Token exists, refreshing...')
         const newAccessToken = await this.refreshAccessToken()
         
         if (newAccessToken) {
-          console.log('✅ Token refreshed successfully, retrying request...')
+          devLog('✅ Token refreshed successfully, retrying request...')
           // Retry with new token
           const newHeaders = { ...config.headers }
           newHeaders['Authorization'] = `Bearer ${newAccessToken.trim()}`
           
-          console.log('🔄 Retry headers:', {
+          devLog('🔄 Retry headers:', {
             hasAuth: !!newHeaders['Authorization'],
             authHeaderPrefix: newHeaders['Authorization']?.substring(0, 50) || 'none',
             authHeaderLength: newHeaders['Authorization']?.length || 0,
@@ -485,18 +504,18 @@ export class ApiClient {
             }
           })
           
-          console.log('🔄 Final retry headers for fetch:', {
+          devLog('🔄 Final retry headers for fetch:', {
             hasAuth: !!finalRetryHeaders['Authorization'],
             authHeaderPrefix: finalRetryHeaders['Authorization']?.substring(0, 50) || 'none',
             allHeaderKeys: Object.keys(finalRetryHeaders)
           })
           
           try {
-            console.log('🔄 Retrying request with new token...')
+            devLog('🔄 Retrying request with new token...')
             
             // Verify the Authorization header is present before making the request
             if (!finalRetryHeaders['Authorization']) {
-              console.error('❌ CRITICAL: Authorization header missing in retry headers!', {
+              devError('❌ CRITICAL: Authorization header missing in retry headers!', {
                 allHeaders: Object.keys(finalRetryHeaders),
                 headerValues: finalRetryHeaders
               })
@@ -514,7 +533,7 @@ export class ApiClient {
             })
             
             // Log what was actually sent
-            console.log('📤 Retry fetch request sent:', {
+            devLog('📤 Retry fetch request sent:', {
               method: retryConfig.method,
               url,
               hasAuthHeader: !!finalRetryHeaders['Authorization'],
@@ -532,7 +551,7 @@ export class ApiClient {
               retryResponseData = { raw: retryResponseText }
             }
             
-            console.log('📥 Retry response:', {
+            devLog('📥 Retry response:', {
               status: retryResponse.status,
               ok: retryResponse.ok,
               url: retryResponse.url,
@@ -544,7 +563,7 @@ export class ApiClient {
             // Use the original response for handleResponse
             response = retryResponse
           } catch (error) {
-            console.error('❌ Retry request failed:', error)
+            devError('❌ Retry request failed:', error)
             throw {
               error: true,
               message: 'Network error. Please check your connection.',
@@ -552,10 +571,10 @@ export class ApiClient {
             } as ApiError
           }
         } else {
-          console.error('❌ Token refresh failed - no new token received')
+          devError('❌ Token refresh failed - no new token received')
         }
       } else {
-        console.error('❌ No token available to refresh')
+        devError('❌ No token available to refresh')
       }
       // If no token, let handleResponse handle it (will throw error for mutations)
     }
@@ -564,14 +583,14 @@ export class ApiClient {
   }
 
   async get<T>(endpoint: string, requiresAuth: boolean = true): Promise<T> {
-    console.log('📥 API Client GET called:', { endpoint, requiresAuth })
+    devLog('📥 API Client GET called:', { endpoint, requiresAuth })
     
     try {
       // Use the same getAuthHeaders method that POST uses (which works!)
     // For GET requests, don't include Content-Type header (no body)
-      console.log('📥 GET: About to call getAuthHeaders with requiresAuth=', requiresAuth)
+      devLog('📥 GET: About to call getAuthHeaders with requiresAuth=', requiresAuth)
       const headers = requiresAuth ? await this.getAuthHeaders(false, requiresAuth) : {}
-      console.log('📥 GET: getAuthHeaders returned:', {
+      devLog('📥 GET: getAuthHeaders returned:', {
         hasHeaders: !!headers,
         headerKeys: Object.keys(headers),
         hasAuth: !!headers['Authorization']
@@ -586,7 +605,7 @@ export class ApiClient {
       requiresAuth
     )
     } catch (error) {
-      console.error('📥 GET: Error in get method:', error)
+      devError('📥 GET: Error in get method:', error)
       throw error
     }
   }
@@ -597,12 +616,12 @@ export class ApiClient {
     requiresAuth: boolean = true,
     isFormData: boolean = false
   ): Promise<T> {
-    console.log('📤 API Client POST called:', { endpoint, requiresAuth, isFormData })
+    devLog('📤 API Client POST called:', { endpoint, requiresAuth, isFormData })
     
     try {
       const headers = requiresAuth ? await this.getAuthHeaders(!isFormData, requiresAuth) : (isFormData ? {} : { 'Content-Type': 'application/json' })
       
-      console.log('📤 POST: getAuthHeaders returned:', {
+      devLog('📤 POST: getAuthHeaders returned:', {
         hasHeaders: !!headers,
         headerKeys: Object.keys(headers),
         hasAuth: !!headers['Authorization'],
@@ -631,7 +650,7 @@ export class ApiClient {
       timeout
     )
     } catch (error) {
-      console.error('📤 POST: Error in post method:', error)
+      devError('📤 POST: Error in post method:', error)
       throw error
     }
   }
