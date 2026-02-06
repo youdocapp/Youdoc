@@ -5,6 +5,7 @@ import { notificationsService, type Notification, type NotificationPreference, t
 import createContextHook from '@nkzw/create-context-hook'
 import { Platform } from 'react-native'
 import * as Notifications from 'expo-notifications'
+import { router } from 'expo-router'
 import { useAuth } from './AuthContext'
 
 export interface NotificationsContextType {
@@ -75,6 +76,9 @@ const [NotificationsProviderBase, useNotificationsBase] = createContextHook(() =
       const { notification } = response;
       // Handle notification tap logic here
       console.log('Notification tapped:', notification);
+      // Navigate to notifications screen
+      // specific route handling can be added based on notification.request.content.data
+      router.push('/notifications');
     });
 
     return () => {

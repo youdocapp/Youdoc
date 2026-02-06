@@ -1,44 +1,50 @@
-import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import * as SplashScreen from 'expo-splash-screen';
-import React, { useEffect, useMemo, useState } from 'react';
-import { LogBox } from 'react-native';
-import { useFonts } from 'expo-font';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  DefaultTheme,
+  ThemeProvider as NavigationThemeProvider,
+} from "@react-navigation/native";
+import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import * as SplashScreen from "expo-splash-screen";
+import React, { useEffect, useMemo, useState } from "react";
+import { LogBox } from "react-native";
+import { useFonts } from "expo-font";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { ThemeProvider, useTheme } from '../contexts/ThemeContext';
-import { MedicationProvider } from '../contexts/MedicationContext';
-import { UserProvider } from '../contexts/UserContext';
-import { AuthProvider } from '../contexts/AuthContext';
-import { HealthTrackerProvider } from '../contexts/HealthTrackerContext';
-import { EmergencyContactsProvider } from '../contexts/EmergencyContactsContext';
-import { HealthRecordsProvider } from '../contexts/HealthRecordsContext';
-import { MedicalHistoryProvider } from '../contexts/MedicalHistoryContext';
-import { NotificationsProvider } from '../contexts/NotificationsContext';
+import { ThemeProvider, useTheme } from "../contexts/ThemeContext";
+import { MedicationProvider } from "../contexts/MedicationContext";
+import { UserProvider } from "../contexts/UserContext";
+import { AuthProvider } from "../contexts/AuthContext";
+import { HealthTrackerProvider } from "../contexts/HealthTrackerContext";
+import { EmergencyContactsProvider } from "../contexts/EmergencyContactsContext";
+import { HealthRecordsProvider } from "../contexts/HealthRecordsContext";
+import { MedicalHistoryProvider } from "../contexts/MedicalHistoryContext";
+import { NotificationsProvider } from "../contexts/NotificationsContext";
 
 SplashScreen.preventAutoHideAsync();
 
 LogBox.ignoreLogs([
-  'source.uri should not be an empty string',
-  'Non-serializable values were found in the navigation state',
+  "source.uri should not be an empty string",
+  "Non-serializable values were found in the navigation state",
 ]);
 
 function AppContent() {
   const { colors } = useTheme();
-  
-  const navigationTheme = useMemo(() => ({
-    ...DefaultTheme,
-    colors: {
-      ...DefaultTheme.colors,
-      background: colors.background,
-      card: colors.card,
-      text: colors.text,
-      border: colors.border,
-      primary: colors.primary,
-    }
-  }), [colors]);
-  
+
+  const navigationTheme = useMemo(
+    () => ({
+      ...DefaultTheme,
+      colors: {
+        ...DefaultTheme.colors,
+        background: colors.background,
+        card: colors.card,
+        text: colors.text,
+        border: colors.border,
+        primary: colors.primary,
+      },
+    }),
+    [colors],
+  );
+
   return (
     <NavigationThemeProvider value={navigationTheme}>
       <Stack>
@@ -56,7 +62,10 @@ function AppContent() {
         <Stack.Screen name="profile" options={{ headerShown: false }} />
         <Stack.Screen name="health-records" options={{ headerShown: false }} />
         <Stack.Screen name="see-doctor" options={{ headerShown: false }} />
-        <Stack.Screen name="emergency-contacts" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="emergency-contacts"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="medical-history" options={{ headerShown: false }} />
         <Stack.Screen name="privacy" options={{ headerShown: false }} />
         <Stack.Screen name="health-support" options={{ headerShown: false }} />
@@ -65,20 +74,29 @@ function AppContent() {
         <Stack.Screen name="health-articles" options={{ headerShown: false }} />
         <Stack.Screen name="article-detail" options={{ headerShown: false }} />
         <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
-        <Stack.Screen name="terms-of-service" options={{ headerShown: false }} />
-        <Stack.Screen name="hipaa-compliance" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="terms-of-service"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="hipaa-compliance"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="medical-grocery" options={{ headerShown: false }} />
-        <Stack.Screen name="connected-devices" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="connected-devices"
+          options={{ headerShown: false }}
+        />
         <Stack.Screen name="change-password" options={{ headerShown: false }} />
         <Stack.Screen name="download-data" options={{ headerShown: false }} />
         <Stack.Screen name="reset-password" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="+not-found" />
       </Stack>
-      <StatusBar 
-        style={colors.statusBarStyle} 
-        backgroundColor={colors.headerBackground} 
-        translucent={false} 
+      <StatusBar
+        style="light"
+        backgroundColor="transparent"
+        translucent={true}
       />
     </NavigationThemeProvider>
   );
@@ -86,24 +104,24 @@ function AppContent() {
 
 export default function RootLayout() {
   const [queryClient] = useState(() => new QueryClient());
-  
+
   const [loaded, error] = useFonts({
-    'ReadexPro-Medium': require('../assets/fonts/ReadexPro-Medium.ttf'),
+    "ReadexPro-Medium": require("../assets/fonts/ReadexPro-Medium.ttf"),
   });
 
   useEffect(() => {
-    console.log('🔧 RootLayout - Fonts loaded:', loaded, 'Error:', error);
+    console.log("🔧 RootLayout - Fonts loaded:", loaded, "Error:", error);
     if (loaded || error) {
       SplashScreen.hideAsync();
     }
   }, [loaded, error]);
 
   if (!loaded && !error) {
-    console.log('⏳ Waiting for fonts to load...');
+    console.log("⏳ Waiting for fonts to load...");
     return null;
   }
 
-  console.log('✅ RootLayout rendering with providers');
+  console.log("✅ RootLayout rendering with providers");
 
   return (
     <QueryClientProvider client={queryClient}>

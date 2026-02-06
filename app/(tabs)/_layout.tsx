@@ -19,6 +19,7 @@ export default function TabLayout() {
           backgroundColor: colors.card,
           borderTopColor: colors.border,
         },
+        unmountOnBlur: true,
       }}
     >
       <Tabs.Screen
