@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl } from 'react-native';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, Platform, StatusBar } from 'react-native';
 import { ChevronLeft, Pill, Info, RefreshCw, CheckCircle2, Trash2 } from 'lucide-react-native';
 import BottomNav from './ui/BottomNav';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -216,6 +216,7 @@ const NotificationsScreen: React.FC<NotificationsScreenProps> = ({
     container: {
       flex: 1,
       backgroundColor: colors.card,
+      paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
     },
     header: {
       flexDirection: 'row',

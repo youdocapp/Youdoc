@@ -182,6 +182,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
             Or
           </Text>
 
+          {/* GOOGLE AUTH COMMENTED OUT
           <TouchableOpacity 
             onPress={handleGoogleSignUp}
             disabled={isLoading}
@@ -215,6 +216,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onBack }) => {
               </Text>
             )}
           </TouchableOpacity>
+          */}
 
           <TouchableOpacity 
             onPress={() => console.log('Apple sign up')}

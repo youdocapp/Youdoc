@@ -12,7 +12,9 @@ import {
   TextInput,
   Alert,
   Platform,
+  PermissionsAndroid,
 } from 'react-native';
+import { BleManager, Device } from 'react-native-ble-plx';
 import {
   Smartphone,
   Watch,
@@ -34,7 +36,7 @@ interface ConnectedDevicesScreenProps {
 
 const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack }) => {
   const { colors } = useTheme();
-  const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, isLoading, addCustomDevice } =
+  const { connectedDevices, connectDevice, disconnectDevice, syncHealthData, syncWithPlatform, isLoading, addCustomDevice } =
     useHealthTracker();
   const [showAddDeviceModal, setShowAddDeviceModal] = useState(false);
   const [deviceName, setDeviceName] = useState('');
@@ -82,23 +84,70 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
     setShowAddDeviceModal(true);
   };
 
-  const handleScanBluetooth = () => {
+  // BLE Manager instance
+  const [manager] = useState(() => new BleManager());
+  
+  const requestPermissions = async () => {
+    if (Platform.OS === 'android') {
+      if ((Platform.Version as number) >= 31) {
+        const result = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_SCAN,
+          PermissionsAndroid.PERMISSIONS.BLUETOOTH_CONNECT,
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        ]);
+        return (
+          result['android.permission.BLUETOOTH_CONNECT'] === PermissionsAndroid.RESULTS.GRANTED &&
+          result['android.permission.BLUETOOTH_SCAN'] === PermissionsAndroid.RESULTS.GRANTED &&
+          result['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+        );
+      } else {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        return granted === PermissionsAndroid.RESULTS.GRANTED;
+      }
+    }
+    return true; // iOS handles permissions automatically via Info.plist
+  };
+
+  const handleScanBluetooth = async () => {
     if (Platform.OS === 'web') {
       Alert.alert('Not Available', 'Bluetooth scanning is not available on web. Please use the mobile app.');
       return;
     }
+
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) {
+      Alert.alert('Permission Denied', 'Bluetooth permissions are required to scan for devices.');
+      return;
+    }
     
     setIsScanning(true);
-    setAvailableDevices([
-      { id: '1', name: 'Fitness Band Pro' },
-      { id: '2', name: 'Smart Watch X' },
-      { id: '3', name: 'Health Monitor 3000' },
-      { id: '4', name: 'BP Monitor Plus' },
-    ]);
+    setAvailableDevices([]); // Clear previous list
+
+    manager.startDeviceScan(null, null, (error, device) => {
+      if (error) {
+        // Handle error (check only if we are scanning)
+        console.log('BLE Scan Error:', error);
+        // Don't alert immediately as it might be transient or user cancelled
+        return;
+      }
+
+      if (device && device.name) {
+        setAvailableDevices((prevDevices) => {
+          if (!prevDevices.find((d) => d.id === device.id)) {
+            return [...prevDevices, { id: device.id, name: device.name || 'Unknown Device' }];
+          }
+          return prevDevices;
+        });
+      }
+    });
     
+    // Stop scanning after 10 seconds
     setTimeout(() => {
+      manager.stopDeviceScan();
       setIsScanning(false);
-    }, 2000);
+    }, 10000);
   };
 
   const handleConnectBluetoothDevice = (device: { id: string; name: string }) => {
@@ -437,7 +486,7 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
         </View>
 
         <View style={styles.syncSection}>
-          <TouchableOpacity style={styles.syncButton} onPress={syncHealthData}>
+          <TouchableOpacity style={styles.syncButton} onPress={() => syncWithPlatform()}>
             <RefreshCw size={20} color="#FFFFFF" />
             <Text style={styles.syncButtonText}>Sync All Devices</Text>
           </TouchableOpacity>
@@ -470,12 +519,12 @@ const ConnectedDevicesScreen: React.FC<ConnectedDevicesScreenProps> = ({ onBack 
                   {device.connected ? 'Connected' : 'Not connected'}
                 </Text>
                 {device.connected && (
-                  <Text style={styles.lastSync}>Last sync: {formatLastSync(device.lastSync)}</Text>
+                   <Text style={styles.lastSync}>Last sync: {formatLastSync(device.lastSync ? new Date(device.lastSync) : null)}</Text>
                 )}
               </View>
               <Switch
                 value={device.connected}
-                onValueChange={() => handleToggleDevice(device.id, device.connected)}
+                onValueChange={(val) => handleToggleDevice(device.id, val)}
                 trackColor={{ false: '#D1D5DB', true: '#93C5FD' }}
                 thumbColor={device.connected ? '#4F7FFF' : '#F3F4F6'}
               />
