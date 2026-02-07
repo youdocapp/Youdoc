@@ -26,7 +26,8 @@
         "NSCameraUsageDescription": "Allow Youdoc to access your camera to take photos of medical documents.",
         "NSMicrophoneUsageDescription": "Allow Youdoc to access your microphone for telehealth consultations.",
         "NSAppleHealthUpdateUsageDescription": "Youdoc uses health data to track your fitness and provide personalized health insights.",
-        "NSAppleHealthShareUsageDescription": "Youdoc uses health data to track your fitness and provide personalized health insights."
+        "NSAppleHealthShareUsageDescription": "Youdoc uses health data to track your fitness and provide personalized health insights.",
+        "NSBluetoothAlwaysUsageDescription": "Allow Youdoc to connect to your health devices via Bluetooth."
       }
     },
     "android": {
